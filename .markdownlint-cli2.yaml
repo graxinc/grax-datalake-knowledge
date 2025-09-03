@@ -1,0 +1,34 @@
+# Aliases available at https://github.com/DavidAnson/vscode-markdownlint/blob/main/README.md
+config:
+  line-length: false
+  commands-show-output: false
+  # only allow image HTML tags
+  no-inline-html:
+    allowed_elements: ["img"]
+  # italics denoted with asterisks
+  emphasis-style:
+    style: "asterisk"
+  # bold denoted with asterisks
+  strong-style:
+    style: "asterisk"
+  # unordered lists use dash markers
+  ul-style:
+    style: "dash"
+  # code blocks must be fenced
+  code-block-style:
+    style: "fenced"
+  # code blocks must use backticks
+  code-fence-style:
+    style: "backtick"
+  # ATX headings only (no setext)
+  heading-style:
+    style: "atx"
+  # Dividers use standard format
+  hr-style:
+    style: "---------"
+  # Ordered Lists all use "1" as item numbers
+  ol-prefix:
+    style: "one"
+
+# Do not automatically fix errors
+fix: false
