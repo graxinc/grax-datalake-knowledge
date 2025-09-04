@@ -1,12 +1,14 @@
 # GRAX Data Lake Knowledge Base for LLM Usage
 
-Comprehensive knowledge resources for LLM models to understand and query GRAX Data Lake which contains Salesforce historical data through Amazon Athena.
+Comprehensive knowledge resources for LLM models to understand and query GRAX Data Lakehouse which contains Salesforce historical data. With GRAX Data Lakehouse + the LLM of your choice there are no [Salesforce API Limitations](https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_api.htm), [No Salesforce Query (SOQL & SOSL) Limitations](https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_soslsoql.htm), and un-restricted access.
 
 ## Getting Started
 
 This document assumes you have GRAX Data Lake and GRAX Data Lakehouse deployed. Refer to the steps and documentation below to enable this.
 
-- [What is GRAX](https://documentation.grax.com/)
+- [What is GRAX?](https://documentation.grax.com/)
+- [What is GRAX Data Lake?](https://www.grax.com/products/data-lake/)
+- [What is GRAX Data Lakehouse?](https://www.grax.com/products/data-lakehouse/)
 - [Deploying GRAX](https://documentation.grax.com/platform)
 - [Backup & Replicate Salesforce data to AWS](https://documentation.grax.com/protect-data/backup)
 - [Enable Data Lake](https://documentation.grax.com/reuse-data/data-lake#getting-started)
