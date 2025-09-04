@@ -2,11 +2,12 @@
 
 ## Overview
 
-This guide provides a framework for identifying leads that should be classified as \"Existing Customer\" but are currently marked as active prospects. This analysis prevents unnecessary sales outreach to existing customers and ensures accurate lead qualification metrics.
+This guide provides a framework for identifying leads that should be classified as "Existing Customer" but are currently marked as active prospects. This analysis prevents unnecessary sales outreach to existing customers and ensures accurate lead qualification metrics.
 
 ## Business Problem
 
 **Issue**: Active leads may actually be from existing customer organizations, leading to:
+
 - Wasted sales resources on existing customers
 - Potential customer confusion from duplicate outreach  
 - Inaccurate funnel metrics and conversion rates
@@ -16,25 +17,31 @@ This guide provides a framework for identifying leads that should be classified 
 
 ## Customer Account Definition
 
-An account is considered an \"Existing Customer\" based on **Account Type** field:
+An account is considered an "Existing Customer" based on **Account Type** field:
 
 **Customer Types**:
+
 - `Type = 'Customer'` - Primary customer accounts
 - `Type = 'Customer - Subsidiary'` - Customer subsidiary accounts
 
 **Exclusions**:
+
 - Accounts with `Type = 'Prospect'` are **NEVER** considered existing customers
 - Annual revenue is **NOT** used for customer identification
 
 ## Lead Classification Logic
 
-A lead should be classified as \"Existing Customer\" if:
+A lead should be classified as "Existing Customer" if:
 
 1. Lead Status ≠ 'Existing Customer' (current misclassification)
-2. Lead is currently active (MCL or MQL status)
-3. Lead email domain matches an existing customer account domain
-4. Matching account has `Type = 'Customer'` OR `Type = 'Customer - Subsidiary'`
-5. Matching account does NOT have `Type = 'Prospect'`
+
+1. Lead is currently active (MCL or MQL status)
+
+1. Lead email domain matches an existing customer account domain
+
+1. Matching account has `Type = 'Customer'` OR `Type = 'Customer - Subsidiary'`
+
+1. Matching account does NOT have `Type = 'Prospect'`
 
 ## Core Analysis Query
 
@@ -277,15 +284,21 @@ ORDER BY lead_count DESC
 ### Immediate Actions
 
 1. **Execute Core Analysis**: Run the main query to identify all misclassified leads
-2. **Validate Results**: Use validation queries to confirm logic correctness
-3. **Update Lead Status**: Change identified leads from active status to \"Existing Customer\"
-4. **Document Process**: Record classification rules and validation steps
+
+1. **Validate Results**: Use validation queries to confirm logic correctness
+
+1. **Update Lead Status**: Change identified leads from active status to "Existing Customer"
+
+1. **Document Process**: Record classification rules and validation steps
 
 ### Ongoing Monitoring
 
 1. **Weekly Audits**: Run analysis weekly to catch new misclassifications
-2. **Process Integration**: Build checks into lead import and qualification workflows
-3. **Training Updates**: Educate sales teams on proper customer identification
-4. **Metric Adjustment**: Update funnel reports to reflect corrected classifications
+
+1. **Process Integration**: Build checks into lead import and qualification workflows
+
+1. **Training Updates**: Educate sales teams on proper customer identification
+
+1. **Metric Adjustment**: Update funnel reports to reflect corrected classifications
 
 This comprehensive audit framework ensures accurate lead classification that respects the distinction between confirmed customers and active prospects while maintaining data integrity and supporting effective sales operations.
