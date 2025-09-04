@@ -11,6 +11,7 @@ Data quality directly impacts sales funnel accuracy, customer segmentation preci
 **Definition**: Missing critical fields required for business processes
 
 **Impact Areas**:
+
 - Lead qualification accuracy
 - Customer segmentation capability
 - Contact information for outreach
@@ -20,6 +21,7 @@ Data quality directly impacts sales funnel accuracy, customer segmentation preci
 **Definition**: Correctness of data values
 
 **Common Issues**:
+
 - Invalid email formats
 - Unrealistic revenue or employee counts
 - Outdated company information
@@ -29,6 +31,7 @@ Data quality directly impacts sales funnel accuracy, customer segmentation preci
 **Definition**: Uniformity of data across related records
 
 **Examples**:
+
 - Inconsistent company names across leads and accounts
 - Mismatched segmentation classifications
 - Conflicting data between related objects
@@ -38,6 +41,7 @@ Data quality directly impacts sales funnel accuracy, customer segmentation preci
 **Definition**: Data conforming to defined formats and business rules
 
 **Validation Rules**:
+
 - Email format validation
 - Phone number structure
 - Realistic value ranges for revenue/employees
@@ -47,6 +51,7 @@ Data quality directly impacts sales funnel accuracy, customer segmentation preci
 **Definition**: Absence of duplicate records
 
 **Duplicate Types**:
+
 - Same person with multiple lead records
 - Company with multiple account records
 - Email addresses appearing multiple times
@@ -353,23 +358,32 @@ FROM daily_metrics
 ### High Impact Issues (Address First)
 
 1. **Missing Email Addresses**: Prevents lead nurturing and outreach
-2. **Invalid Email Formats**: Causes bounce rates and delivery issues
-3. **Missing Company Names**: Blocks account matching and segmentation
-4. **Incomplete Segmentation Data**: Impacts territory assignment and targeting
-5. **Broken Conversion Relationships**: Corrupts funnel analysis
+
+1. **Invalid Email Formats**: Causes bounce rates and delivery issues
+
+1. **Missing Company Names**: Blocks account matching and segmentation
+
+1. **Incomplete Segmentation Data**: Impacts territory assignment and targeting
+
+1. **Broken Conversion Relationships**: Corrupts funnel analysis
 
 ### Medium Impact Issues (Address Second)
 
 1. **Phone Number Formatting**: Standardize for consistent communication
-2. **Industry Classification**: Improve targeting and personalization
-3. **Geographic Data**: Enable territory-based analysis
-4. **Duplicate Records**: Clean up to prevent confusion
+
+1. **Industry Classification**: Improve targeting and personalization
+
+1. **Geographic Data**: Enable territory-based analysis
+
+1. **Duplicate Records**: Clean up to prevent confusion
 
 ### Low Impact Issues (Address Last)
 
 1. **Standardized Company Suffixes**: Aesthetic improvement
-2. **Complete Address Information**: Nice-to-have for full profiles
-3. **Additional Contact Fields**: Enhanced profiling
+
+1. **Complete Address Information**: Nice-to-have for full profiles
+
+1. **Additional Contact Fields**: Enhanced profiling
 
 ## Success Metrics
 
