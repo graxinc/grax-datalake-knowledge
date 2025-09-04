@@ -14,6 +14,7 @@ This document assumes you have GRAX Data Lake and GRAX Data Lakehouse deployed.
 - [Enable Data Lake](https://documentation.grax.com/reuse-data/data-lake#getting-started)
 - [Enable Data Lakehouse](https://documentation.grax.com/reuse-data/data-lake/aws-data-lakehouse)
 - [GRAX Documentation](https://documentation.grax.com/)
+- [GRAX Data Lake Knowledge Base for LLM Usage Public Repository](https://github.com/graxinc/grax-datalake-knowledge)
 
 ## Overview
 
