@@ -80,7 +80,7 @@ Athena throws "AMBIGUOUS_NAME" errors when column names appear in multiple table
 
 ### Mandatory Solutions
 
-**1. Always Use Table Aliases**
+#### Always Use Table Aliases
 
 ❌ **ERROR-PRONE:**
 
@@ -98,7 +98,7 @@ FROM month_series ms
 LEFT JOIN mcl_data mcl ON ms.month_period = mcl.month_period
 ```
 
-**2. Qualify ALL Column References in JOINs**
+#### Qualify ALL Column References in JOINs
 
 ❌ **WILL FAIL:**
 
@@ -118,7 +118,7 @@ LEFT JOIN (
 ) mcl ON ms.month_period = mcl.mcl_month_period
 ```
 
-**3. Use Unique Column Names in Subqueries**
+#### Use Unique Column Names in Subqueries
 
 ❌ **PROBLEMATIC:**
 
@@ -136,7 +136,7 @@ LEFT JOIN (SELECT month_period as t1_month, COUNT(*) as t1_count FROM table1 GRO
 LEFT JOIN (SELECT month_period as t2_month, COUNT(*) as t2_count FROM table2 GROUP BY month_period) t2 ON ...
 ```
 
-**4. Preferred Pattern: Pre-Qualify in CTEs**
+#### Preferred Pattern: Pre-Qualify in CTEs
 
 ✅ **RECOMMENDED APPROACH:**
 
@@ -258,22 +258,30 @@ WHERE grax__deleted IS NULL
 
 ## Common Error Messages and Solutions
 
-**Error: "Column 'month_period' is ambiguous"**
+### Column Name Ambiguous Errors
+
+When you see: "Column 'month_period' is ambiguous"
 
 - **Cause:** Multiple tables/CTEs have columns with the same name
 - **Solution:** Use unique column names in each CTE or fully qualify with table aliases
 
-**Error: "Column 'day' cannot be resolved"**
+### Column Resolution Errors
+
+When you see: "Column 'day' cannot be resolved"
 
 - **Cause:** Using `DATEDIFF(DAY, ...)` syntax
 - **Solution:** Change to `DATE_DIFF('day', ...)`
 
-**Error: "Function 'datediff' not registered"**
+### Function Registration Errors
+
+When you see: "Function 'datediff' not registered"
 
 - **Cause:** Using non-Athena date function syntax
 - **Solution:** Use Athena-specific functions: `DATE_DIFF`, `DATE_ADD`, `DATE_TRUNC`
 
-**Error: "mismatched input '('. Expecting: 'BY'"**
+### Window Function Syntax Errors
+
+When you see: "mismatched input '('. Expecting: 'BY'"
 
 - **Cause:** Usually indicates window function syntax not supported in Athena
 - **Solution:** Replace `PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY field)` with `APPROX_PERCENTILE(field, 0.5)`
