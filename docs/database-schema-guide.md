@@ -301,10 +301,10 @@ COALESCE(industry, 'Unknown') AS industry_category
 ### Optimization Tips
 
 1. **Filter early**: Apply WHERE conditions in CTEs
-1. **Use EXISTS**: More efficient than IN for subqueries
-1. **Limit date ranges**: Use specific date filters to reduce scan scope
-1. **Prefer typed fields**: Use `_f` and `_ts` fields for calculations
-1. **Test with LIMIT**: Always test large queries with row limits first
+2. **Use EXISTS**: More efficient than IN for subqueries
+3. **Limit date ranges**: Use specific date filters to reduce scan scope
+4. **Prefer typed fields**: Use `_f` and `_ts` fields for calculations
+5. **Test with LIMIT**: Always test large queries with row limits first
 
 ### Common Anti-Patterns
 
