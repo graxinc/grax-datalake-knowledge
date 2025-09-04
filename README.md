@@ -13,7 +13,7 @@ This document assumes you have GRAX Data Lake and GRAX Data Lakehouse deployed.
 - [How do I Enable the GRAX Data Lakehouse?](https://documentation.grax.com/reuse-data/data-lake/aws-data-lakehouse)
 - [Where is GRAX Documentation?](https://documentation.grax.com/)
 - [Where is the `GRAX Data Lake Knowledge Base for LLM Usage` Public Repository?](https://github.com/graxinc/grax-datalake-knowledge)
-- [How do I get a free trial and demo?](mailto:sales@grax.com?Subject=Free+Trial+and+Demo+of+GRAX+Data+Lakehouse+LLM)
+- [How do I get a free trial and demo?](mailto:sales@grax.com?Subject=Free%20Trial%20for%20GRAX%20Data%20Lakehouse%20)
 
 ## Overview
 
