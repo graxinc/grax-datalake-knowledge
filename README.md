@@ -4,7 +4,7 @@ Comprehensive knowledge resources for LLM models to understand and query GRAX Da
 
 ## Getting Started
 
-This document assumes you have GRAX Data Lake and GRAX Data Lakehouse deployed. 
+This document assumes you have GRAX Data Lake and GRAX Data Lakehouse deployed.
 
 - [What is GRAX?](https://documentation.grax.com/)
 - [What is the GRAX Data Lake?](https://www.grax.com/products/data-lake/)
