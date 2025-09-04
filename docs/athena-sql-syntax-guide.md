@@ -247,13 +247,21 @@ WHERE grax__deleted IS NULL
 ### Before Running Complex Queries
 
 1. ✅ **Date Functions**: Use `DATE_DIFF('day', ...)` not `DATEDIFF(DAY, ...)`
+
 1. ✅ **Intervals**: Quote all date intervals: `'day'`, `'month'`, `'year'`
+
 1. ✅ **System Fields**: Always include `WHERE grax__deleted IS NULL`
+
 1. ✅ **Current Time**: Use `CURRENT_TIMESTAMP` or `CURRENT_DATE`
+
 1. ✅ **Type Casting**: Cast date fields to timestamp when needed: `CAST(converteddate_d AS timestamp)`
+
 1. ✅ **Table Aliases**: Use unique aliases for all tables and CTEs
+
 1. ✅ **Column Qualification**: Prefix all columns with table/alias names in JOINs
+
 1. ✅ **Unique Naming**: Use different column names in subqueries to avoid conflicts
+
 1. ✅ **Window Functions**: Use `APPROX_PERCENTILE` instead of `PERCENTILE_CONT`
 
 ## Common Error Messages and Solutions
@@ -315,9 +323,13 @@ GROUP BY DATE_TRUNC('month', createddate_ts)
 ### When Queries Fail with Ambiguous Names
 
 1. **Identify the Problem**: Look for duplicate column names across JOINs
+
 1. **Add Unique Aliases**: Give each table/CTE a clear, unique alias
+
 1. **Qualify All Columns**: Prefix every column reference with its table alias
+
 1. **Use Unique Names**: Make subquery column names distinct
+
 1. **Test Incrementally**: Build complex queries step by step
 
 ### Common Fixes for Ambiguous Errors
