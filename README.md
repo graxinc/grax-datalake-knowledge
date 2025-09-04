@@ -7,14 +7,13 @@ Comprehensive knowledge resources for LLM models to understand and query GRAX Da
 This document assumes you have GRAX Data Lake and GRAX Data Lakehouse deployed. 
 
 - [What is GRAX?](https://documentation.grax.com/)
-- [What is GRAX Data Lake?](https://www.grax.com/products/data-lake/)
-- [What is GRAX Data Lakehouse?](https://www.grax.com/products/data-lakehouse/)
-- [Deploying GRAX](https://documentation.grax.com/platform)
-- [Backup & Replicate Salesforce data to AWS](https://documentation.grax.com/protect-data/backup)
-- [Enable Data Lake](https://documentation.grax.com/reuse-data/data-lake#getting-started)
-- [Enable Data Lakehouse](https://documentation.grax.com/reuse-data/data-lake/aws-data-lakehouse)
-- [GRAX Documentation](https://documentation.grax.com/)
-- [GRAX Data Lake Knowledge Base for LLM Usage Public Repository](https://github.com/graxinc/grax-datalake-knowledge)
+- [What is the GRAX Data Lake?](https://www.grax.com/products/data-lake/)
+- [What is the GRAX Data Lakehouse?](https://www.grax.com/products/data-lakehouse/)
+- [How do I enable the GRAX Data Lake?](https://documentation.grax.com/reuse-data/data-lake#getting-started)
+- [How do I Enable the GRAX Data Lakehouse?](https://documentation.grax.com/reuse-data/data-lake/aws-data-lakehouse)
+- [Where is GRAX Documentation?](https://documentation.grax.com/)
+- [Where is the `GRAX Data Lake Knowledge Base for LLM Usage` Public Repository?](https://github.com/graxinc/grax-datalake-knowledge)
+- [How do I get a free trial and demo?](mailto:sales@grax.com?Subject=Free+Trial+and+Demo+of+GRAX+Data+Lakehouse+LLM)
 
 ## Overview
 
