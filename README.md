@@ -30,9 +30,12 @@ This repository contains structured documentation that enables large language mo
 For LLM models working with this data lake:
 
 1. **Start with** the [Database Schema Guide](./docs/database-schema-guide.md) to understand available data structures
-2. **Reference** the [Athena SQL Syntax Guide](./docs/athena-sql-syntax-guide.md) for proper query formation
-3. **Use** the [Query Templates](./docs/query-templates.md) for common analysis patterns
-4. **Follow** the [Query Best Practices](./docs/query-best-practices.md) to avoid common errors
+
+1. **Reference** the [Athena SQL Syntax Guide](./docs/athena-sql-syntax-guide.md) for proper query formation
+
+1. **Use** the [Query Templates](./docs/query-templates.md) for common analysis patterns
+
+1. **Follow** the [Query Best Practices](./docs/query-best-practices.md) to avoid common errors
 
 ## Key Principles
 
