@@ -1,6 +1,6 @@
 # GRAX Data Lake Knowledge Base for LLM Usage
 
-Comprehensive knowledge resources for LLM models to understand and query GRAX Data Lakehouse which contains Salesforce historical data. The repository and knowledge is built for Amazon Athena engine version 3 but the knowledge will work with any LLM.
+AI-ready knowledge resources that supercharge LLM models with complete historical Salesforce data from your GRAX Data Lakehouse. Built for Amazon Athena engine version 3, these resources work with any LLM to unlock the full value of your data—no limits, just intelligence-ready insights.
 
 ## Getting Started
 
