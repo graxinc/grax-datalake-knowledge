@@ -42,7 +42,7 @@ Every table contains these mandatory system fields:
 
 **Primary Purpose**: Lead qualification and conversion tracking
 
-#### Key Identification Fields
+#### Lead Identification Fields
 
 - `id` (varchar) - Unique lead identifier
 - `email` (varchar) - Lead email address
@@ -56,7 +56,7 @@ Every table contains these mandatory system fields:
   - `'Converted'` - Successfully converted
   - `'Disqualified'` - Not viable leads
 
-#### Date Fields
+#### Lead Date Fields
 
 - `createddate_ts` (timestamp) - Lead creation date - **USE FOR MCL DATE**
 - `converteddate_d` (date) - Conversion date
@@ -80,7 +80,7 @@ Every table contains these mandatory system fields:
 
 **Primary Purpose**: Sales pipeline and opportunity management
 
-#### Key Identification Fields
+#### Opportunity Identification Fields
 
 - `id` (varchar) - Unique opportunity identifier
 - `name` (varchar) - Opportunity name
@@ -103,7 +103,7 @@ Every table contains these mandatory system fields:
 - `probability_f` (double) - Win probability percentage
 - `expectedrevenue_f` (double) - Weighted pipeline value
 
-#### Date Management
+#### Opportunity Date Management
 
 - `createddate_ts` (timestamp) - Opportunity creation date
 - `closedate_d` (date) - Expected/actual close date
@@ -117,7 +117,7 @@ Every table contains these mandatory system fields:
 
 **Primary Purpose**: Customer account management and segmentation
 
-#### Key Identification Fields
+#### Account Identification Fields
 
 - `id` (varchar) - Unique account identifier
 - `name` (varchar) - Account name
@@ -140,7 +140,7 @@ Every table contains these mandatory system fields:
 - `billingstate` (varchar) - Billing state/province
 - `billingcity` (varchar) - Billing city
 
-#### Date Fields
+#### Account Date Fields
 
 - `createddate_ts` (timestamp) - Account creation date
 - `lastmodifieddate_ts` (timestamp) - Last modification date
@@ -149,7 +149,7 @@ Every table contains these mandatory system fields:
 
 **Primary Purpose**: Contact relationship management
 
-#### Key Identification Fields
+#### Contact Identification Fields
 
 - `id` (varchar) - Unique contact identifier
 - `accountid` (varchar) - Related account ID
@@ -162,13 +162,13 @@ Every table contains these mandatory system fields:
 - `phone` (varchar) - Phone number
 - `title` (varchar) - Job title
 
-#### Address Fields
+#### Mailing Address Fields
 
 - `mailingcountry` (varchar) - Mailing country
 - `mailingstate` (varchar) - Mailing state/province
 - `mailingcity` (varchar) - Mailing city
 
-#### Date Fields
+#### Contact Date Fields
 
 - `createddate_ts` (timestamp) - Contact creation date
 - `lastmodifieddate_ts` (timestamp) - Last modification date
@@ -177,7 +177,7 @@ Every table contains these mandatory system fields:
 
 **Primary Purpose**: User management and activity tracking
 
-#### Key Fields
+#### User Profile Fields
 
 - `id` (varchar) - User ID
 - `name` (varchar) - User full name
@@ -195,7 +195,7 @@ Every table contains these mandatory system fields:
 
 **Primary Purpose**: Customer support and service tracking
 
-#### Key Fields
+#### Case Management Fields
 
 - `id` (varchar) - Unique case identifier
 - `subject` (varchar) - Case subject
