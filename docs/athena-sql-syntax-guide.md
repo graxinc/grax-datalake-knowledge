@@ -74,7 +74,7 @@ DATE_TRUNC('day', some_timestamp)      -- Midnight of day
 
 ## CTE Column Scope and Availability Rules
 
-### The Problem
+### Column Scope Issues
 
 Athena throws "Column cannot be resolved" errors when attempting to reference columns that are out of scope or unavailable in the current query context.
 
@@ -252,7 +252,7 @@ Before writing complex aggregations:
 
 ## Avoiding Ambiguous Column Name Errors
 
-### The Problem
+### Ambiguous Column Issues
 
 Athena throws "AMBIGUOUS_NAME" errors when column names appear in multiple tables without proper qualification. This is especially common in complex JOINs with multiple CTEs.
 
