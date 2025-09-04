@@ -280,10 +280,14 @@ AND EXISTS (
 **If you get column resolution errors:**
 
 1. Check if the column exists in the table schema
-2. Verify you're using the correct CTE that contains the column
-3. Confirm field naming follows `_f`, `_ts`, `_d`, `_b` pattern
-4. Ensure you're not referencing derived columns before they're created
-5. Use `SELECT *` temporarily to see what columns are actually available
+
+1. Verify you're using the correct CTE that contains the column
+
+1. Confirm field naming follows `_f`, `_ts`, `_d`, `_b` pattern
+
+1. Ensure you're not referencing derived columns before they're created
+
+1. Use `SELECT *` temporarily to see what columns are actually available
 
 ## Performance Optimization
 
