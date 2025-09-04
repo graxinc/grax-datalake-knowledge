@@ -8,7 +8,7 @@ Amazon Athena requires specific SQL syntax patterns that differ from standard SQ
 
 ### Date Functions
 
-**Date Difference Functions**
+#### Date Difference Functions
 
 ❌ **INCORRECT (Standard SQL):**
 
@@ -22,7 +22,7 @@ DATEDIFF(DAY, start_date, end_date)  -- This will FAIL in Athena
 DATE_DIFF('day', start_date, end_date)  -- Note the underscore and quoted interval
 ```
 
-**Key Differences:**
+#### Key Differences
 
 - Use `DATE_DIFF` (with underscore) instead of `DATEDIFF`
 - Interval must be quoted: `'day'`, `'month'`, `'year'`
@@ -54,7 +54,7 @@ CURRENT_DATE       -- For date-only comparisons
 
 ### Date Arithmetic Functions
 
-**Date Addition:**
+#### Date Addition
 
 ```sql
 -- Add time to date
@@ -63,7 +63,7 @@ DATE_ADD('month', -6, CURRENT_DATE)    -- Subtract 6 months
 DATE_ADD('year', 1, some_date)         -- Add 1 year
 ```
 
-**Date Truncation:**
+#### Date Truncation
 
 ```sql
 -- Truncate to specific period
@@ -244,7 +244,7 @@ WHERE grax__deleted IS NULL
 
 ## Error Prevention Checklist
 
-**Before Running Complex Queries:**
+### Before Running Complex Queries
 
 1. ✅ **Date Functions**: Use `DATE_DIFF('day', ...)` not `DATEDIFF(DAY, ...)`
 1. ✅ **Intervals**: Quote all date intervals: `'day'`, `'month'`, `'year'`
@@ -304,7 +304,7 @@ GROUP BY DATE_TRUNC('month', createddate_ts)
 
 ## Troubleshooting Guide
 
-**When Queries Fail with Ambiguous Names:**
+### When Queries Fail with Ambiguous Names
 
 1. **Identify the Problem**: Look for duplicate column names across JOINs
 1. **Add Unique Aliases**: Give each table/CTE a clear, unique alias
@@ -312,7 +312,7 @@ GROUP BY DATE_TRUNC('month', createddate_ts)
 1. **Use Unique Names**: Make subquery column names distinct
 1. **Test Incrementally**: Build complex queries step by step
 
-**Common Fixes for Ambiguous Errors:**
+### Common Fixes for Ambiguous Errors
 
 ```sql
 -- If this fails with ambiguous error:
