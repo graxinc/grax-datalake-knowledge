@@ -1,10 +1,10 @@
 # GRAX Data Lake Knowledge Base for LLM Usage
 
-Comprehensive knowledge resources for LLM models to understand and query GRAX Data Lakehouse which contains Salesforce historical data. With GRAX Data Lakehouse + the LLM of your choice there are no [Salesforce API Limitations](https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_api.htm), [No Salesforce Query (SOQL & SOSL) Limitations](https://developer.salesforce.com/docs/atlas.en-us.salesforce_app_limits_cheatsheet.meta/salesforce_app_limits_cheatsheet/salesforce_app_limits_platform_soslsoql.htm), and un-restricted access.
+Comprehensive knowledge resources for LLM models to understand and query GRAX Data Lakehouse which contains Salesforce historical data.
 
 ## Getting Started
 
-This document assumes you have GRAX Data Lake and GRAX Data Lakehouse deployed. Refer to the steps and documentation below to enable this.
+This document assumes you have GRAX Data Lake and GRAX Data Lakehouse deployed. 
 
 - [What is GRAX?](https://documentation.grax.com/)
 - [What is GRAX Data Lake?](https://www.grax.com/products/data-lake/)
