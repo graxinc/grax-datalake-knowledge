@@ -1,6 +1,19 @@
-# Data Lake Knowledge Base
+# GRAX Data Lake Knowledge Base for LLM Usage
 
-Comprehensive knowledge resources for LLM models to understand and query Salesforce data through Amazon Athena.
+AI-ready knowledge resources that supercharge LLM models with complete historical Salesforce data from your GRAX Data Lakehouse. Built for Amazon Athena engine version 3, these resources work with any LLM to unlock the full value of your data—no limits, just intelligence-ready insights.
+
+## Getting Started
+
+This document assumes you have GRAX Data Lake and GRAX Data Lakehouse deployed.
+
+- [What is GRAX?](https://documentation.grax.com/)
+- [What is the GRAX Data Lake?](https://www.grax.com/products/data-lake/)
+- [What is the GRAX Data Lakehouse?](https://www.grax.com/products/data-lakehouse/)
+- [How do I enable the GRAX Data Lake?](https://documentation.grax.com/reuse-data/data-lake#getting-started)
+- [How do I Enable the GRAX Data Lakehouse?](https://documentation.grax.com/reuse-data/data-lake/aws-data-lakehouse)
+- [Where is GRAX Documentation?](https://documentation.grax.com/)
+- [Where is the `GRAX Data Lake Knowledge Base for LLM Usage` Public Repository?](https://github.com/graxinc/grax-datalake-knowledge)
+- [How do I get a free trial and demo?](mailto:sales@grax.com?Subject=Free%20Trial%20for%20GRAX%20Data%20Lakehouse%20)
 
 ## Overview
 
