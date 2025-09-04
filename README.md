@@ -4,13 +4,14 @@ Comprehensive knowledge resources for LLM models to understand and query GRAX Da
 
 ## Getting Started
 
-This document assumes you have GRAX Data Lake and GRAX Data Lakehouse deployed. Refer to the steps and dcoumentation below to enable this.
+This document assumes you have GRAX Data Lake and GRAX Data Lakehouse deployed. Refer to the steps and documentation below to enable this.
 
 - [What is GRAX](https://documentation.grax.com/)
 - [Deploying GRAX](https://documentation.grax.com/platform)
 - [Backup & Replicate Salesforce data to AWS](https://documentation.grax.com/protect-data/backup)
 - [Enable Data Lake](https://documentation.grax.com/reuse-data/data-lake#getting-started)
 - [Enable Data Lakehouse](https://documentation.grax.com/reuse-data/data-lake/aws-data-lakehouse)
+- [GRAX Documentation](https://documentation.grax.com/)
 
 ## Overview
 
