@@ -72,9 +72,187 @@ DATE_TRUNC('week', some_timestamp)     -- Beginning of week
 DATE_TRUNC('day', some_timestamp)      -- Midnight of day
 ```
 
+## CTE Column Scope and Availability Rules
+
+### Column Scope Issues
+
+Athena throws "Column cannot be resolved" errors when attempting to reference columns that are out of scope or unavailable in the current query context.
+
+### Critical Scope Rules
+
+#### Rule 1: CTE Column Boundaries
+
+❌ **WILL FAIL - Column Out of Scope:**
+
+```sql
+WITH base_data AS (
+    SELECT id, createddate_ts, amount_f 
+    FROM lakehouse.object_opportunity
+    WHERE grax__deleted IS NULL
+),
+aggregated_data AS (
+    SELECT 
+        DATE_TRUNC('month', createddate_ts) as report_month,
+        COUNT(*) as opp_count,
+        SUM(amount_f) as total_amount
+    FROM base_data
+    GROUP BY DATE_TRUNC('month', createddate_ts)
+)
+SELECT 
+    report_month,
+    opp_count,
+    total_amount,
+    AVG(createddate_ts)  -- ERROR: createddate_ts not available after GROUP BY
+FROM aggregated_data
+```
+
+✅ **CORRECT - Calculate Before Aggregation:**
+
+```sql
+WITH base_data AS (
+    SELECT 
+        id, 
+        createddate_ts, 
+        amount_f,
+        -- Calculate derived fields BEFORE aggregation
+        DATE_DIFF('day', createddate_ts, CURRENT_TIMESTAMP) as age_days
+    FROM lakehouse.object_opportunity
+    WHERE grax__deleted IS NULL
+),
+aggregated_data AS (
+    SELECT 
+        DATE_TRUNC('month', createddate_ts) as report_month,
+        COUNT(*) as opp_count,
+        SUM(amount_f) as total_amount,
+        AVG(age_days) as avg_age_days  -- Now this works
+    FROM base_data
+    GROUP BY DATE_TRUNC('month', createddate_ts)
+)
+SELECT * FROM aggregated_data
+```
+
+#### Rule 2: GROUP BY Context Limitations
+
+After GROUP BY operations, only the following are available:
+
+- Columns in the GROUP BY clause
+- Aggregate functions (COUNT, SUM, AVG, etc.)
+- Expressions that were calculated before the GROUP BY
+
+❌ **INVALID After GROUP BY:**
+
+```sql
+-- After GROUP BY, individual row columns are not available
+SELECT 
+    customer_segment,
+    COUNT(*) as record_count,
+    createddate_ts  -- ERROR: Not in GROUP BY and not aggregated
+FROM base_data
+GROUP BY customer_segment
+```
+
+✅ **VALID After GROUP BY:**
+
+```sql
+SELECT 
+    customer_segment,
+    COUNT(*) as record_count,
+    AVG(DATE_DIFF('day', createddate_ts, CURRENT_TIMESTAMP)) as avg_age  -- Aggregated calculation
+FROM base_data
+GROUP BY customer_segment
+```
+
+#### Rule 3: Calculation Placement Strategy
+
+**Place calculations at the appropriate CTE level:**
+
+```sql
+WITH base_calculations AS (
+    -- Level 1: Basic field calculations (before any aggregation)
+    SELECT 
+        *,
+        DATE_DIFF('day', createddate_ts, CURRENT_TIMESTAMP) as record_age_days,
+        CASE WHEN amount_f > 50000 THEN 'High Value' ELSE 'Standard' END as deal_category
+    FROM latest_opportunity
+),
+segment_calculations AS (
+    -- Level 2: Add segmentation logic
+    SELECT 
+        *,
+        CASE 
+            WHEN record_age_days > 365 THEN 'Aged'
+            WHEN record_age_days > 180 THEN 'Mature'
+            ELSE 'Recent'
+        END as age_category
+    FROM base_calculations
+),
+aggregated_results AS (
+    -- Level 3: Aggregation (only grouped columns and aggregates available)
+    SELECT 
+        deal_category,
+        age_category,
+        COUNT(*) as opportunity_count,
+        AVG(record_age_days) as avg_age,  -- Using pre-calculated field
+        AVG(amount_f) as avg_amount
+    FROM segment_calculations
+    GROUP BY deal_category, age_category
+)
+SELECT * FROM aggregated_results
+```
+
+### Column Scope Best Practices
+
+#### 1. Early Calculation Pattern
+
+```sql
+-- Calculate everything you need before aggregation
+WITH enriched_data AS (
+    SELECT 
+        *,
+        -- All calculations needed downstream
+        DATE_DIFF('day', createddate_ts, CURRENT_TIMESTAMP) as age_days,
+        DATE_TRUNC('month', createddate_ts) as created_month,
+        CASE WHEN amount_f > 50000 THEN 'Large' ELSE 'Standard' END as deal_size
+    FROM base_table
+),
+final_aggregation AS (
+    SELECT 
+        created_month,
+        deal_size,
+        COUNT(*) as deals,
+        AVG(age_days) as avg_age  -- Now available
+    FROM enriched_data
+    GROUP BY created_month, deal_size
+)
+SELECT * FROM final_aggregation
+```
+
+#### 2. Scope Testing Pattern
+
+```sql
+-- Test column availability with SELECT * first
+WITH test_scope AS (
+    SELECT 
+        DATE_TRUNC('month', createddate_ts) as report_month,
+        COUNT(*) as record_count
+    FROM base_data
+    GROUP BY DATE_TRUNC('month', createddate_ts)
+)
+SELECT * FROM test_scope  -- See what columns are actually available
+```
+
+#### 3. Error Prevention Checklist
+
+Before writing complex aggregations:
+
+1. ✅ **Identify Required Calculations**: List all fields needed in final output
+1. ✅ **Plan Calculation Placement**: Put calculations before aggregation steps
+1. ✅ **Test Scope Boundaries**: Use SELECT * to verify column availability
+1. ✅ **Use Descriptive Names**: Make calculated columns clearly identifiable
+
 ## Avoiding Ambiguous Column Name Errors
 
-### The Problem
+### Ambiguous Column Issues
 
 Athena throws "AMBIGUOUS_NAME" errors when column names appear in multiple tables without proper qualification. This is especially common in complex JOINs with multiple CTEs.
 
@@ -264,6 +442,10 @@ WHERE grax__deleted IS NULL
 
 1. ✅ **Window Functions**: Use `APPROX_PERCENTILE` instead of `PERCENTILE_CONT`
 
+1. ✅ **Column Scope**: Place calculations before aggregation steps
+
+1. ✅ **Scope Testing**: Verify column availability with SELECT * when building complex CTEs
+
 ## Common Error Messages and Solutions
 
 ### Column Name Ambiguous Errors
@@ -274,6 +456,11 @@ When you see: "Column 'month_period' is ambiguous"
 - **Solution:** Use unique column names in each CTE or fully qualify with table aliases
 
 ### Column Resolution Errors
+
+When you see: "Column 'createddate_ts' cannot be resolved"
+
+- **Cause:** Referencing a column that's out of scope (often after GROUP BY)
+- **Solution:** Move the calculation to a CTE before aggregation or use appropriate aggregate functions
 
 When you see: "Column 'day' cannot be resolved"
 
@@ -320,6 +507,18 @@ GROUP BY DATE_TRUNC('month', createddate_ts)
 
 ## Troubleshooting Guide
 
+### When Queries Fail with Column Resolution Errors
+
+1. **Identify the Scope Problem**: Check if the column exists in the current CTE/table context
+
+1. **Check Aggregation Context**: If using GROUP BY, ensure columns are either grouped or aggregated
+
+1. **Move Calculations Earlier**: Place complex calculations before aggregation steps
+
+1. **Test Scope Incrementally**: Use SELECT * to see what columns are available at each step
+
+1. **Use Descriptive Names**: Make calculated columns clearly identifiable
+
 ### When Queries Fail with Ambiguous Names
 
 1. **Identify the Problem**: Look for duplicate column names across JOINs
@@ -331,6 +530,41 @@ GROUP BY DATE_TRUNC('month', createddate_ts)
 1. **Use Unique Names**: Make subquery column names distinct
 
 1. **Test Incrementally**: Build complex queries step by step
+
+### Common Fixes for Column Resolution Errors
+
+```sql
+-- If this fails with column resolution error:
+WITH aggregated AS (
+    SELECT 
+        customer_segment,
+        COUNT(*) as record_count
+    FROM base_data
+    GROUP BY customer_segment
+)
+SELECT 
+    customer_segment,
+    record_count,
+    AVG(created_date)  -- ERROR: created_date not available after GROUP BY
+FROM aggregated
+
+-- Fix by calculating before aggregation:
+WITH calculations AS (
+    SELECT 
+        *,
+        DATE_DIFF('day', createddate_ts, CURRENT_TIMESTAMP) as age_days
+    FROM base_data
+),
+aggregated AS (
+    SELECT 
+        customer_segment,
+        COUNT(*) as record_count,
+        AVG(age_days) as avg_age  -- Now this works
+    FROM calculations
+    GROUP BY customer_segment
+)
+SELECT * FROM aggregated
+```
 
 ### Common Fixes for Ambiguous Errors
 
