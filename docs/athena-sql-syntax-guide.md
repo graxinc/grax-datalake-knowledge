@@ -76,7 +76,7 @@ DATE_TRUNC('day', some_timestamp)      -- Midnight of day
 
 ### The Problem
 
-Athena throws \"AMBIGUOUS_NAME\" errors when column names appear in multiple tables without proper qualification. This is especially common in complex JOINs with multiple CTEs.
+Athena throws "AMBIGUOUS_NAME" errors when column names appear in multiple tables without proper qualification. This is especially common in complex JOINs with multiple CTEs.
 
 ### Mandatory Solutions
 
@@ -247,33 +247,33 @@ WHERE grax__deleted IS NULL
 **Before Running Complex Queries:**
 
 1. ✅ **Date Functions**: Use `DATE_DIFF('day', ...)` not `DATEDIFF(DAY, ...)`
-2. ✅ **Intervals**: Quote all date intervals: `'day'`, `'month'`, `'year'`
-3. ✅ **System Fields**: Always include `WHERE grax__deleted IS NULL`
-4. ✅ **Current Time**: Use `CURRENT_TIMESTAMP` or `CURRENT_DATE`
-5. ✅ **Type Casting**: Cast date fields to timestamp when needed: `CAST(converteddate_d AS timestamp)`
-6. ✅ **Table Aliases**: Use unique aliases for all tables and CTEs
-7. ✅ **Column Qualification**: Prefix all columns with table/alias names in JOINs
-8. ✅ **Unique Naming**: Use different column names in subqueries to avoid conflicts
-9. ✅ **Window Functions**: Use `APPROX_PERCENTILE` instead of `PERCENTILE_CONT`
+1. ✅ **Intervals**: Quote all date intervals: `'day'`, `'month'`, `'year'`
+1. ✅ **System Fields**: Always include `WHERE grax__deleted IS NULL`
+1. ✅ **Current Time**: Use `CURRENT_TIMESTAMP` or `CURRENT_DATE`
+1. ✅ **Type Casting**: Cast date fields to timestamp when needed: `CAST(converteddate_d AS timestamp)`
+1. ✅ **Table Aliases**: Use unique aliases for all tables and CTEs
+1. ✅ **Column Qualification**: Prefix all columns with table/alias names in JOINs
+1. ✅ **Unique Naming**: Use different column names in subqueries to avoid conflicts
+1. ✅ **Window Functions**: Use `APPROX_PERCENTILE` instead of `PERCENTILE_CONT`
 
 ## Common Error Messages and Solutions
 
-**Error: \"Column 'month_period' is ambiguous\"**
+**Error: "Column 'month_period' is ambiguous"**
 
 - **Cause:** Multiple tables/CTEs have columns with the same name
 - **Solution:** Use unique column names in each CTE or fully qualify with table aliases
 
-**Error: \"Column 'day' cannot be resolved\"**
+**Error: "Column 'day' cannot be resolved"**
 
 - **Cause:** Using `DATEDIFF(DAY, ...)` syntax
 - **Solution:** Change to `DATE_DIFF('day', ...)`
 
-**Error: \"Function 'datediff' not registered\"**
+**Error: "Function 'datediff' not registered"**
 
 - **Cause:** Using non-Athena date function syntax
 - **Solution:** Use Athena-specific functions: `DATE_DIFF`, `DATE_ADD`, `DATE_TRUNC`
 
-**Error: \"mismatched input '('. Expecting: 'BY'\"**
+**Error: "mismatched input '('. Expecting: 'BY'"**
 
 - **Cause:** Usually indicates window function syntax not supported in Athena
 - **Solution:** Replace `PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY field)` with `APPROX_PERCENTILE(field, 0.5)`
@@ -307,10 +307,10 @@ GROUP BY DATE_TRUNC('month', createddate_ts)
 **When Queries Fail with Ambiguous Names:**
 
 1. **Identify the Problem**: Look for duplicate column names across JOINs
-2. **Add Unique Aliases**: Give each table/CTE a clear, unique alias
-3. **Qualify All Columns**: Prefix every column reference with its table alias
-4. **Use Unique Names**: Make subquery column names distinct
-5. **Test Incrementally**: Build complex queries step by step
+1. **Add Unique Aliases**: Give each table/CTE a clear, unique alias
+1. **Qualify All Columns**: Prefix every column reference with its table alias
+1. **Use Unique Names**: Make subquery column names distinct
+1. **Test Incrementally**: Build complex queries step by step
 
 **Common Fixes for Ambiguous Errors:**
 
