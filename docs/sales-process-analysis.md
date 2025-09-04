@@ -137,7 +137,7 @@ Every **ACTIVE** opportunity must be counted in all stages it has logically pass
 
 ### Progression Flow
 
-```
+```text
 MCL → MQL → SQL → SQO → Proposal → Contracts → Closed Won
                                                ↘ Closed Lost (EXCLUDED)
 ```
