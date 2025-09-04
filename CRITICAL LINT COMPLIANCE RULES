@@ -1,0 +1,71 @@
+# CRITICAL LINT COMPLIANCE RULES - MUST FOLLOW EVERY TIME
+
+## MANDATORY PRE-COMMIT VALIDATION
+Before ANY documentation commits, you MUST:
+1. Review .markdownlint-cli2.yaml rules
+2. Validate content against EVERY rule 
+3. Ensure file ends with single newline (MD047)
+4. **SCAN FOR DUPLICATE HEADINGS (MD024)** - Extract ALL headings and verify uniqueness
+5. Verify all other lint requirements
+
+## ABSOLUTE REQUIREMENTS (ZERO TOLERANCE)
+- ❌ NO documentation that fails ANY lint rule
+- ❌ NO duplicate headings at ANY level (MD024 - MOST COMMON VIOLATION)
+- ❌ NO files without trailing newline (MD047)
+- ❌ NO commits without lint validation
+- ✅ EVERY file must pass ALL .markdownlint-cli2.yaml rules
+
+## MD024 DUPLICATE HEADING PREVENTION PROTOCOL
+
+### MANDATORY HEADING ANALYSIS BEFORE COMMIT
+1. **Extract ALL Headings**: List every heading (# ## ### ####) with their text
+2. **Check for Exact Duplicates**: Any heading text that appears twice = VIOLATION
+3. **Context-Specific Naming**: Use descriptive, unique names for each section
+
+### COMMON MD024 VIOLATION PATTERNS TO AVOID
+- ❌ Multiple "The Problem" headings in same document
+- ❌ Multiple "Overview" sections at same level  
+- ❌ Repeated "Examples" or "Usage" headings
+- ❌ Generic headings like "Introduction", "Background", "Details"
+
+### REQUIRED HEADING UNIQUENESS STRATEGIES
+1. **Context Prefixes**: "Column Scope Issues" vs "Ambiguous Column Issues" 
+2. **Specific Descriptors**: "CTE Error Prevention" vs "JOIN Error Prevention"
+3. **Functional Names**: "Query Troubleshooting" vs "Performance Troubleshooting"
+4. **Sequential Numbering**: Only when content is inherently sequential
+
+### MD024 COMPLIANCE CHECKLIST
+Before committing ANY markdown file:
+- [ ] Extract all headings into a list
+- [ ] Verify NO heading text appears more than once
+- [ ] Replace any duplicate headings with unique, descriptive alternatives
+- [ ] Test that headings are contextually meaningful
+- [ ] Confirm headings work for document navigation
+
+## VALIDATION PROCESS
+1. Write documentation content
+2. **EXTRACT AND ANALYZE ALL HEADINGS** 
+3. **ELIMINATE ANY DUPLICATE HEADING TEXT**
+4. Check against .markdownlint-cli2.yaml line by line
+5. Test with markdown linter if possible
+6. Only commit if 100% compliant
+
+## CONSEQUENCES
+- Failed lint = Failed PR = Wasted effort
+- Must fix and recommit properly
+- MD024 violations are the #1 cause of failed documentation PRs
+
+## EMERGENCY FIX PROTOCOL
+If MD024 violation discovered in existing PR:
+1. Immediately identify ALL duplicate headings
+2. Rename each duplicate with unique, descriptive text
+3. Maintain semantic meaning and document flow
+4. Commit fix with clear message: "Fix MD024 violation: [specific changes]"
+5. Update PR description to document the fix
+
+## HEADING BEST PRACTICES
+- Use descriptive, specific language
+- Include context when generic terms are tempting
+- Make headings meaningful for navigation
+- Consider the full document structure when naming
+- Test that each heading is unique and purposeful
