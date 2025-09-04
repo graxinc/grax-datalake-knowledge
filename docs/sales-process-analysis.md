@@ -9,10 +9,12 @@
 **Definition**: Lead that has demonstrated initial interest and meets basic qualification criteria.
 
 **Qualification Criteria**:
-- Lead Status = \"Open\" OR any lead in the system
+
+- Lead Status = "Open" OR any lead in the system
 - **Date Assignment**: Always use lead creation date (`createddate_ts`)
 
 **Query Pattern**:
+
 ```sql
 CASE WHEN status = 'Open' THEN createddate_ts ELSE NULL END as mcl_date
 ```
@@ -22,10 +24,13 @@ CASE WHEN status = 'Open' THEN createddate_ts ELSE NULL END as mcl_date
 **Definition**: Lead qualified by marketing with demonstrated interest and fit for sales engagement.
 
 **Qualification Criteria** (Priority Order):
+
 1. **Primary**: Lead Status = 'Working'
-2. **Fallback**: Lead converted but never achieved 'Working' status
+
+1. **Fallback**: Lead converted but never achieved 'Working' status
 
 **Date Assignment Logic**:
+
 ```sql
 CASE 
     WHEN status = 'Working' THEN createddate_ts
@@ -41,15 +46,18 @@ END as mql_date
 **Definition**: Opportunity qualified by sales with defined business potential.
 
 **Qualification Criteria**:
+
 - **ALL opportunities are SQL by definition at creation**
 - **Excludes**: Closed Lost opportunities
 
 **Date Assignment**: Always use opportunity creation date
+
 ```sql
 createddate_ts as sql_date
 ```
 
 **Count Logic**:
+
 ```sql
 COUNT(CASE WHEN stagename != 'Closed Lost' THEN 1 END) as sql_count
 ```
@@ -59,10 +67,12 @@ COUNT(CASE WHEN stagename != 'Closed Lost' THEN 1 END) as sql_count
 **Definition**: Opportunity where proof of value has been demonstrated.
 
 **Qualification Criteria**:
+
 - Current stage = 'Proof of Value (SQO)' OR beyond
 - **Excludes**: Closed Lost opportunities
 
 **Date Assignment Logic**:
+
 ```sql
 CASE 
     WHEN stagename = 'Proof of Value (SQO)' THEN laststagechangedate_ts
@@ -72,6 +82,7 @@ END as sqo_date
 ```
 
 **Count Logic**:
+
 ```sql
 COUNT(CASE WHEN stagename IN ('Proof of Value (SQO)', 'Proposal', 'Contracts', 'Closed Won') 
       THEN 1 END) as sqo_count
@@ -82,10 +93,12 @@ COUNT(CASE WHEN stagename IN ('Proof of Value (SQO)', 'Proposal', 'Contracts', '
 **Definition**: Formal proposal delivered with detailed solution and pricing.
 
 **Qualification Criteria**:
+
 - Current stage = 'Proposal' OR beyond
 - **Excludes**: Closed Lost opportunities
 
 **Count Logic**:
+
 ```sql
 COUNT(CASE WHEN stagename IN ('Proposal', 'Contracts', 'Closed Won')
       THEN 1 END) as proposal_count
@@ -96,9 +109,11 @@ COUNT(CASE WHEN stagename IN ('Proposal', 'Contracts', 'Closed Won')
 **Definition**: Contract negotiation and legal review phase.
 
 **Qualification Criteria**:
+
 - Current stage = 'Contracts' OR 'Closed Won'
 
 **Count Logic**:
+
 ```sql
 COUNT(CASE WHEN stagename IN ('Contracts', 'Closed Won')
       THEN 1 END) as contracts_count
@@ -109,6 +124,7 @@ COUNT(CASE WHEN stagename IN ('Contracts', 'Closed Won')
 **Definition**: Successfully closed opportunity with executed contracts.
 
 **Count Logic**:
+
 ```sql
 COUNT(CASE WHEN stagename = 'Closed Won' THEN 1 END) as closed_won_count
 ```
