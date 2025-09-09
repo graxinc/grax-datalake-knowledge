@@ -32,6 +32,10 @@ This repository contains structured documentation that enables large language mo
 
 - **[Claude Execution Guidelines](./docs/claude-execution-guidelines.md)** - **CRITICAL**: When to execute queries vs provide code templates
 
+### Reporting and Brand Standards
+
+- **[Reporting and Brand Standards](./docs/reporting-brand-standards.md)** - **ESSENTIAL**: Professional branding and HTML artifact requirements for all GRAX reports
+
 ### Multi-Customer Support
 
 - **[Customer Fallback Instructions](./docs/customer-fallback-instructions.md)** - Adapting queries for different Salesforce implementations
@@ -55,6 +59,8 @@ For LLM models working with this data lake:
 
 1. **CRITICAL**: Read [Claude Execution Guidelines](./docs/claude-execution-guidelines.md) to understand when to execute vs provide code
 
+1. **ESSENTIAL**: Review [Reporting and Brand Standards](./docs/reporting-brand-standards.md) for professional HTML artifact requirements
+
 1. **Understand**: Review [Database Schema Guide](./docs/database-schema-guide.md) for available data structures
 
 1. **Reference**: Use [Athena SQL Syntax Guide](./docs/athena-sql-syntax-guide.md) for proper query formation
@@ -69,6 +75,7 @@ For LLM models working with this data lake:
 
 - **Configuration First**: Always reference the Configuration Reference for business-specific values
 - **Execute First**: When customers ask for reports/analysis, execute queries and provide insights
+- **Professional Presentation**: ALL GRAX reports must be delivered as polished HTML artifacts following brand standards
 - **Graceful Adaptation**: Use fallback strategies when customer configurations differ from defaults
 - All queries must filter deleted records using `grax__deleted IS NULL`
 - Use latest records pattern for current state analysis
