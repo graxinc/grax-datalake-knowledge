@@ -4,6 +4,8 @@
 
 This document provides clear guidance on when Claude should execute queries against Athena versus providing query templates or code. Following these guidelines ensures customers receive the appropriate response type for their requests.
 
+**Configuration Dependencies**: When executing queries, always use business-specific values from [Configuration Reference](./configuration-reference.md). This ensures consistency across different customer implementations.
+
 ## Execution vs Code Decision Tree
 
 ### ALWAYS Execute Queries When
@@ -65,7 +67,8 @@ When executing queries, ALWAYS follow this process:
 
 ```sql
 -- Use athena:run_query with proper parameters
--- Include database: lakehouse
+-- Include database: lakehouse (from Configuration Reference)
+-- Use business values from docs/configuration-reference.md
 -- Follow all query best practices
 ```
 
@@ -101,7 +104,7 @@ Claude responds: Creates code artifact with SQL query
 Customer says: "Build me a sales velocity report"
 Claude responds:
 
-1. Executes velocity analysis queries
+1. Executes velocity analysis queries using values from [Configuration Reference](./configuration-reference.md)
 1. Analyzes the results
 1. Presents business insights
 1. Provides recommendations
@@ -111,12 +114,13 @@ Claude responds:
 If you catch yourself providing code when you should execute:
 
 1. **Acknowledge the error**: "Let me execute this analysis for you instead"
-1. **Execute immediately**: Run the appropriate queries
+1. **Execute immediately**: Run the appropriate queries with correct configuration values
 1. **Provide the analysis**: Interpret and present results
 1. **Explain the correction**: Briefly mention why execution was better
 
 ## Key Principles
 
+1. **Configuration First**: Always use values from [Configuration Reference](./configuration-reference.md)
 1. **Default to Execution**: When in doubt, execute rather than provide code
 1. **Customer Intent**: "Build/Show/Analyze/Report" = Execute
 1. **Business Value**: Customers want insights, not code
@@ -130,17 +134,18 @@ Before responding to any data request, ask:
 - Does this request want insights or templates
 - Would a business user find code or analysis more valuable
 - Can I execute this query with available tools
+- Am I using the correct configuration values from [Configuration Reference](./configuration-reference.md)
 - Am I providing actionable business intelligence
 
 ## Examples
 
 ### Execute These Requests
 
-- "What's our conversion rate trend"
-- "Show me pipeline health"
-- "Build a customer segmentation analysis"
-- "Generate a monthly funnel report"
-- "How are we performing against quota"
+- "What's our conversion rate trend" (using lead status values from Configuration Reference)
+- "Show me pipeline health" (using stage names from Configuration Reference)
+- "Build a customer segmentation analysis" (using thresholds from Configuration Reference)
+- "Generate a monthly funnel report" (using all configuration values)
+- "How are we performing against quota" (using opportunity stages from Configuration Reference)
 
 ### Provide Code for These Requests
 
@@ -149,4 +154,13 @@ Before responding to any data request, ask:
 - "Show me the syntax for latest records pattern"
 - "Give me a query template for segmentation"
 
-This guidance ensures Claude provides maximum business value by executing analysis rather than requiring customers to run queries themselves.
+## Configuration Adaptation
+
+When executing queries for customers with different Salesforce configurations:
+
+1. **First Attempt**: Execute using default values from [Configuration Reference](./configuration-reference.md)
+1. **Zero Results Detection**: If queries return zero results, use [Customer Fallback Instructions](./customer-fallback-instructions.md)
+1. **Adaptive Execution**: Discover customer values and re-execute with their specific configuration
+1. **Document Differences**: Note any configuration differences for future reference
+
+This guidance ensures Claude provides maximum business value by executing analysis rather than requiring customers to run queries themselves, while maintaining adaptability across different Salesforce implementations.
