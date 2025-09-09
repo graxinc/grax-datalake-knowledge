@@ -104,3 +104,17 @@ The knowledge base is built with GRAX's default Salesforce configuration but can
 ## Contributing
 
 This knowledge base is designed for programmatic consumption by LLM models. All documentation follows strict markdown linting rules and is optimized for clarity and precision in automated query generation.
+
+## Support
+
+We'd love to help you get the most out of the GRAX Data Lake Knowledge Base! If you need assistance, have questions, or run into any issues:
+
+- **Get Help**: Email us at [help@grax.com](mailto:help@grax.com?Subject=grax-datalake-knowledge%20Help%20Needed) - we're here to help!
+- **Documentation & Guides**: Visit our comprehensive documentation at [https://documentation.grax.com/support](https://documentation.grax.com/support)
+- **Report Issues**: Found a bug or have a feature request? Please open an issue in this repository
+
+Our team is committed to helping you succeed with your data lake implementation and we welcome all feedback to make this knowledge base even better.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
