@@ -2,13 +2,13 @@
 
 ## Overview
 
-This knowledge base was originally built for GRAX's specific Salesforce implementation (but generalized where possible). When used by other customers, queries may return zero results due to customer-specific field values, stage names, and data structures.
+This knowledge base uses centralized configuration values defined in the [Configuration Reference](./configuration-reference.md). When used by customers with different Salesforce implementations, queries may return zero results due to customer-specific field values, stage names, and data structures that differ from the default configuration.
 
 ## Universal Fallback Strategy
 
 ### Step 1: Initial Query Attempt
 
-Execute the query as documented using GRAX-specific values.
+Execute the query using values from the [Configuration Reference](./configuration-reference.md).
 
 ### Step 2: Zero Results Detection
 
@@ -32,7 +32,7 @@ Rebuild query using discovered values and inform customer of the adaptation.
 
 ### Lead Status Values
 
-**GRAX Values**:
+**Default Configuration** (from [Configuration Reference](./configuration-reference.md)):
 
 - `'Open'` (MCL)
 - `'Working'` (MQL)
@@ -53,11 +53,11 @@ ORDER BY lead_count DESC
 
 **Adaptive Response Pattern**:
 
-"I notice this query returned zero results with the standard lead status values. Let me check what status values your organization uses..."
+"I notice this query returned zero results with the standard lead status values from our configuration. Let me check what status values your organization uses..."
 
 ### Opportunity Stage Names
 
-**GRAX Values**:
+**Default Configuration** (from [Configuration Reference](./configuration-reference.md)):
 
 - `'SQL'`
 - `'Proof of Value (SQO)'`
@@ -79,7 +79,7 @@ ORDER BY opp_count DESC
 
 ### Account Type Classifications
 
-**GRAX Values**:
+**Default Configuration** (from [Configuration Reference](./configuration-reference.md)):
 
 - `'Customer'`
 - `'Customer - Subsidiary'`
@@ -126,17 +126,6 @@ FROM lakehouse.object_account
 WHERE grax__deleted IS NULL
 ```
 
-### Schema Validation
-
-```sql
--- Verify expected fields exist in customer's schema
-SELECT column_name, data_type
-FROM information_schema.columns
-WHERE table_name = 'object_[objectname]'
-  AND table_schema = 'lakehouse'
-ORDER BY column_name
-```
-
 ## Fallback Communication Patterns
 
 ### When Zero Results Detected
@@ -144,7 +133,7 @@ ORDER BY column_name
 **Template Response**:
 
 ```text
-I notice this analysis returned zero results using standard field values. This suggests your Salesforce instance uses different value configurations than the default setup.
+I notice this analysis returned zero results using our standard configuration values. This suggests your Salesforce instance uses different value configurations than our defaults.
 
 Let me discover your organization's specific values and rebuild the analysis...
 
@@ -167,7 +156,7 @@ It appears some expected fields may not be present or may have different names i
 
 Let me check your available fields and adapt the analysis accordingly...
 
-[Execute schema discovery]
+[Execute discovery queries]
 
 I've found these available fields for the analysis:
 - [List available fields]
@@ -177,9 +166,9 @@ Here's the adapted analysis using your available data...
 
 ## Progressive Fallback Strategy
 
-### Level 1: Value Substitution
+### Level 1: Configuration Value Substitution
 
-- Replace GRAX-specific values with discovered values
+- Replace default configuration values with discovered values
 - Maintain original query logic
 - Document changes made
 
@@ -205,7 +194,8 @@ Here's the adapted analysis using your available data...
 
 ### Education
 
-- Explain why differences occur (custom Salesforce configs)
+- Explain why differences occur (custom Salesforce configurations)
+- Reference the [Configuration Reference](./configuration-reference.md) for standard values
 - Suggest data standardization if relevant
 - Provide guidance on improving data structure
 
@@ -219,7 +209,7 @@ Here's the adapted analysis using your available data...
 
 ### For Every Query Execution
 
-1. ✅ **Execute Original**: Try GRAX-specific values first
+1. ✅ **Execute Original**: Try default configuration values first
 1. ✅ **Detect Zero Results**: Check if meaningful data returned
 1. ✅ **Discover Values**: Run field discovery queries if needed
 1. ✅ **Adapt Query**: Rebuild with customer-specific values
@@ -235,7 +225,7 @@ Here's the adapted analysis using your available data...
 
 ## Error Handling Patterns
 
-### When Standard Values Fail
+### When Configuration Values Fail
 
 ```sql
 -- Instead of hard-coded values, use dynamic discovery
@@ -262,4 +252,13 @@ WHERE grax__deleted IS NULL
 - Explain business context limitations
 - Provide alternative insights where possible
 
-This fallback strategy ensures the knowledge base provides value to any customer while gracefully handling organizational differences in Salesforce implementation.
+## Configuration Updates
+
+### When Customer Differences Are Identified
+
+1. **Document Discoveries**: Record what values the customer actually uses
+2. **Consider Updates**: Evaluate if discoveries should update the [Configuration Reference](./configuration-reference.md)
+3. **Share Learnings**: Contribute common variations back to the central configuration
+4. **Maintain Flexibility**: Keep fallback patterns robust for edge cases
+
+This fallback strategy ensures the knowledge base provides value to any customer while gracefully handling organizational differences in Salesforce implementation by leveraging the centralized [Configuration Reference](./configuration-reference.md).
