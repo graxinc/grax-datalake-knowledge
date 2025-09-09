@@ -95,9 +95,9 @@ CONFIDENTIAL | [MM/DD/YYYY] [HH:MM] | Produced from GRAX Analytics Platform
 When appropriate for business reports, lead with:
 
 1. **Key Insight Statement** - How this analysis enables "Adapt Faster"
-2. **Critical Metrics** - 3-5 most important findings in call-out format
-3. **Strategic Implications** - Business impact and recommended actions
-4. **Historical Intelligence** - Unique insights only possible with complete data history
+1. **Critical Metrics** - 3-5 most important findings in call-out format
+1. **Strategic Implications** - Business impact and recommended actions
+1. **Historical Intelligence** - Unique insights only possible with complete data history
 
 **Example Opening**:
 
@@ -112,10 +112,10 @@ strategic intelligence for pipeline optimization and revenue forecasting.
 #### Main Content Structure
 
 1. **Historical Context** - What the complete data history reveals
-2. **Current State Analysis** - Present situation with full historical perspective  
-3. **Trend Intelligence** - Patterns and changes over time
-4. **Forward Insights** - Predictive indicators and strategic opportunities
-5. **Recommendations** - Specific actions enabled by historical intelligence
+1. **Current State Analysis** - Present situation with full historical perspective  
+1. **Trend Intelligence** - Patterns and changes over time
+1. **Forward Insights** - Predictive indicators and strategic opportunities
+1. **Recommendations** - Specific actions enabled by historical intelligence
 
 #### Data Visualization Guidelines
 
@@ -159,25 +159,29 @@ helps [organization] Adapt Faster than competitors."
 #### Finding Presentation Pattern
 
 1. **Historical Context**: "Over the past [timeframe], your data shows..."
-2. **Unique Insight**: "This complete history reveals [pattern] that indicates..."
-3. **Strategic Advantage**: "Organizations can Adapt Faster by..."
-4. **Specific Action**: "Recommended next steps include..."
+1. **Unique Insight**: "This complete history reveals [pattern] that indicates..."
+1. **Strategic Advantage**: "Organizations can Adapt Faster by..."
+1. **Specific Action**: "Recommended next steps include..."
 
 ### Industry-Specific Messaging
 
 #### Financial Services Focus
+
 Focus: Regulatory compliance, risk management, audit trails
 Message: "Complete data lineage and historical compliance reporting"
 
 #### Healthcare Focus
+
 Focus: Patient data retention, HIPAA compliance, operational continuity
 Message: "Comprehensive patient history with enterprise-grade security"
 
 #### Technology and SaaS Focus
+
 Focus: Growth analytics, customer journey intelligence, product optimization
 Message: "Complete customer lifecycle intelligence for product-led growth"
 
 #### Manufacturing Focus
+
 Focus: Supply chain data, quality traceability, operational excellence
 Message: "End-to-end supply chain intelligence and quality assurance"
 
@@ -221,9 +225,9 @@ Message: "End-to-end supply chain intelligence and quality assurance"
 ### Dashboard Layout Principles
 
 1. **Information Hierarchy**: Most critical metrics prominently featured
-2. **Visual Flow**: Left-to-right, top-to-bottom information progression
-3. **Consistent Spacing**: Uniform grid system and element spacing
-4. **Brand Integration**: Subtle brand elements without overwhelming data
+1. **Visual Flow**: Left-to-right, top-to-bottom information progression
+1. **Consistent Spacing**: Uniform grid system and element spacing
+1. **Brand Integration**: Subtle brand elements without overwhelming data
 
 ### Dashboard Color Application
 
@@ -267,9 +271,9 @@ Message: "End-to-end supply chain intelligence and quality assurance"
 ### Brand Consistency Validation
 
 1. **Color Usage**: Verify hex codes match brand standards exactly
-2. **Typography**: Confirm typefaces and sizing follow hierarchy
-3. **Messaging**: Ensure core brand promise integration
-4. **Visual Elements**: Check for consistent spacing and alignment
+1. **Typography**: Confirm typefaces and sizing follow hierarchy
+1. **Messaging**: Ensure core brand promise integration
+1. **Visual Elements**: Check for consistent spacing and alignment
 
 ## Configuration Adaptation
 
@@ -280,18 +284,18 @@ For organizations requiring customized branding:
 Update the [Configuration Reference](./configuration-reference.md) document with:
 
 1. **Color Palette**: Modify hex codes to match organizational brand
-2. **Typography**: Adjust typeface selections for brand consistency
-3. **Messaging**: Adapt core value proposition for industry context
-4. **Logo Usage**: Update logo URLs and positioning requirements
-5. **Footer Content**: Customize platform attribution and legal requirements
+1. **Typography**: Adjust typeface selections for brand consistency
+1. **Messaging**: Adapt core value proposition for industry context
+1. **Logo Usage**: Update logo URLs and positioning requirements
+1. **Footer Content**: Customize platform attribution and legal requirements
 
 ### Implementation Process
 
 1. **Brand Review**: Compare organizational brand guidelines to GRAX standards
-2. **Configuration Update**: Modify [Configuration Reference](./configuration-reference.md) with approved changes
-3. **Template Testing**: Validate all report templates with new brand elements
-4. **Documentation**: Record customizations for consistency across team
-5. **Quality Assurance**: Establish review process for brand compliance
+1. **Configuration Update**: Modify [Configuration Reference](./configuration-reference.md) with approved changes
+1. **Template Testing**: Validate all report templates with new brand elements
+1. **Documentation**: Record customizations for consistency across team
+1. **Quality Assurance**: Establish review process for brand compliance
 
 ## LLM Output Requirements
 
@@ -304,7 +308,7 @@ Update the [Configuration Reference](./configuration-reference.md) document with
    - Proper heading hierarchy (H1 → H2 → H3)
    - Accessible markup with ARIA labels where appropriate
 
-2. **Complete CSS Styling Implementation**
+1. **Complete CSS Styling Implementation**
 
    ```css
    /* MANDATORY: Include all brand colors as CSS custom properties */
@@ -321,14 +325,14 @@ Update the [Configuration Reference](./configuration-reference.md) document with
    }
    ```
 
-3. **Professional Visual Elements**
+1. **Professional Visual Elements**
    - GRAX logo in header using: `https://www.grax.com/wp-content/uploads/2025/07/GRAX-Logo-K-Horizontal.png`
    - Branded color scheme throughout
    - Professional typography with Work Sans and Inter fonts
    - Interactive elements (hover states, clickable metrics)
    - Responsive grid layout
 
-4. **Data Visualization Requirements**
+1. **Data Visualization Requirements**
    - Charts and graphs using brand colors
    - Interactive hover effects
    - Professional styling with subtle shadows and gradients
@@ -371,13 +375,13 @@ Update the [Configuration Reference](./configuration-reference.md) document with
    - Professional card layouts for metrics
    - Gradient backgrounds using brand colors
 
-2. **Interactive Element Standards**
+1. **Interactive Element Standards**
    - Clickable metric cards with hover effects
    - Expandable sections for detailed analysis
    - Smooth scrolling and navigation
    - Professional button styling with GRAX colors
 
-3. **Data Presentation Standards**
+1. **Data Presentation Standards**
    - Tables with zebra striping and hover highlighting
    - Charts with professional styling and legends
    - Color-coded metrics using brand palette
@@ -410,18 +414,18 @@ When creating HTML reports, LLMs must:
    - Analyze results for business insights
    - Identify key metrics and trends
 
-2. **Apply Brand Messaging**
+1. **Apply Brand Messaging**
    - Integrate "Adapt Faster" value proposition
    - Use historical intelligence framework
    - Include industry-appropriate messaging
 
-3. **Create Professional HTML**
+1. **Create Professional HTML**
    - Implement complete visual branding
    - Use interactive elements and professional styling
    - Include all mandatory header/footer elements
    - Apply proper information hierarchy
 
-4. **Validate Output Quality**
+1. **Validate Output Quality**
    - Ensure professional, polished appearance
    - Verify all brand colors and typography
    - Test interactive elements work correctly
@@ -432,22 +436,22 @@ When creating HTML reports, LLMs must:
 ### Report Generation Workflow
 
 1. **Data Analysis**: Execute queries using patterns from [Query Templates](./query-templates.md)
-2. **Insight Development**: Apply historical intelligence framework
-3. **HTML Artifact Creation**: Build professional, branded HTML report with complete styling
-4. **Visual Design**: Implement all brand standards and interactive elements
-5. **Content Review**: Validate messaging and brand consistency
-6. **Quality Check**: Complete pre-publication checklist ensuring professional polish
-7. **Delivery**: Present as polished HTML artifact with full GRAX branding
+1. **Insight Development**: Apply historical intelligence framework
+1. **HTML Artifact Creation**: Build professional, branded HTML report with complete styling
+1. **Visual Design**: Implement all brand standards and interactive elements
+1. **Content Review**: Validate messaging and brand consistency
+1. **Quality Check**: Complete pre-publication checklist ensuring professional polish
+1. **Delivery**: Present as polished HTML artifact with full GRAX branding
 
 ### LLM Implementation Guidelines
 
 **For Claude and other LLMs using this knowledge**:
 
 1. **Always Create HTML Artifacts** - Never provide plain text or markdown reports
-2. **Apply Complete Branding** - Use all specified colors, fonts, and styling
-3. **Make It Interactive** - Include hover effects, clickable elements, smooth animations
-4. **Professional Polish** - Ensure output looks enterprise-grade and presentation-ready
-5. **Responsive Design** - Make reports work on desktop, tablet, and mobile
-6. **Semantic HTML** - Use proper HTML5 structure for accessibility and SEO
+1. **Apply Complete Branding** - Use all specified colors, fonts, and styling
+1. **Make It Interactive** - Include hover effects, clickable elements, smooth animations
+1. **Professional Polish** - Ensure output looks enterprise-grade and presentation-ready
+1. **Responsive Design** - Make reports work on desktop, tablet, and mobile
+1. **Semantic HTML** - Use proper HTML5 structure for accessibility and SEO
 
 This comprehensive branding and reporting standard ensures all GRAX data lake analytics outputs maintain professional consistency while effectively communicating the unique value of complete historical data intelligence through polished, interactive HTML presentations.
