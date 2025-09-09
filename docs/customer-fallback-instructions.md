@@ -257,8 +257,8 @@ WHERE grax__deleted IS NULL
 ### When Customer Differences Are Identified
 
 1. **Document Discoveries**: Record what values the customer actually uses
-2. **Consider Updates**: Evaluate if discoveries should update the [Configuration Reference](./configuration-reference.md)
-3. **Share Learnings**: Contribute common variations back to the central configuration
-4. **Maintain Flexibility**: Keep fallback patterns robust for edge cases
+1. **Consider Updates**: Evaluate if discoveries should update the [Configuration Reference](./configuration-reference.md)
+1. **Share Learnings**: Contribute common variations back to the central configuration
+1. **Maintain Flexibility**: Keep fallback patterns robust for edge cases
 
 This fallback strategy ensures the knowledge base provides value to any customer while gracefully handling organizational differences in Salesforce implementation by leveraging the centralized [Configuration Reference](./configuration-reference.md).
