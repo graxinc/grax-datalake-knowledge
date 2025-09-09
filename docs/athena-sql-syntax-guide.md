@@ -4,6 +4,8 @@
 
 Amazon Athena requires specific SQL syntax patterns that differ from standard SQL databases. This guide provides the correct syntax for common operations and helps prevent common errors.
 
+**Configuration Dependencies**: Example queries in this document use standardized values from [Configuration Reference](./configuration-reference.md). Organizations with different Salesforce configurations should reference their customized configuration values.
+
 ## Critical Syntax Corrections
 
 ### Date Functions
@@ -176,7 +178,7 @@ WITH base_calculations AS (
     FROM latest_opportunity
 ),
 segment_calculations AS (
-    -- Level 2: Add segmentation logic
+    -- Level 2: Add segmentation logic using thresholds from docs/configuration-reference.md
     SELECT 
         *,
         CASE 
@@ -328,6 +330,7 @@ mcl_monthly AS (
         DATE_TRUNC('month', createddate_ts) as mcl_month,  -- Unique name
         COUNT(*) as mcl_count
     FROM latest_lead
+    -- Using lead status values from docs/configuration-reference.md
     WHERE (status = 'Open')
     GROUP BY DATE_TRUNC('month', createddate_ts)
 ),
@@ -336,6 +339,7 @@ mql_monthly AS (
         DATE_TRUNC('month', createddate_ts) as mql_month,  -- Unique name
         COUNT(*) as mql_count
     FROM latest_lead
+    -- Using lead status values from docs/configuration-reference.md
     WHERE (status = 'Working')
     GROUP BY DATE_TRUNC('month', createddate_ts)
 )
@@ -585,3 +589,23 @@ FROM (SELECT month_period as reporting_month, count1 as metric1 FROM table1) t1
 LEFT JOIN (SELECT month_period as join_month, count2 as metric2 FROM table2) t2 
   ON t1.reporting_month = t2.join_month
 ```
+
+## Configuration Adaptation
+
+For organizations with different Salesforce implementations, remember that example queries use values from [Configuration Reference](./configuration-reference.md):
+
+### Configuration-Dependent Elements
+
+- **Lead Status Values**: Examples use `'Open'`, `'Working'`, etc.
+- **Opportunity Stages**: Examples reference `'Proof of Value (SQO)'`, `'Closed Won'`, etc.
+- **Segmentation Thresholds**: Calculations use specific employee/revenue limits
+- **Account Types**: Customer classification examples use specific type values
+
+### Adaptation Process
+
+1. **Update Configuration**: Modify [Configuration Reference](./configuration-reference.md) with your values
+1. **Test Syntax Patterns**: Ensure Athena syntax rules work with your data
+1. **Validate Examples**: Run sample queries with your configuration
+1. **Document Changes**: Record any syntax adaptations needed for your environment
+
+This syntax guide ensures reliable query execution across different Salesforce implementations while maintaining Athena-specific correctness.
