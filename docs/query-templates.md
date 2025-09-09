@@ -1,5 +1,11 @@
 # Query Templates
 
+## Overview
+
+All query templates in this document use the standardized configuration values from [Configuration Reference](./configuration-reference.md). Organizations with different Salesforce configurations should update that document to match their specific values rather than modifying individual queries.
+
+**Configuration Dependencies**: The templates below reference business-specific values defined in [Configuration Reference](./configuration-reference.md) including lead status values, opportunity stage names, account types, and segmentation thresholds.
+
 ## Core Query Patterns
 
 ### Latest Records Pattern (MANDATORY)
@@ -119,15 +125,15 @@ WITH latest_lead AS (
 lead_with_qualification AS (
     SELECT 
         *,
-        -- MCL qualification
+        -- Using lead status values from docs/configuration-reference.md
         CASE WHEN status = 'Open' THEN createddate_ts ELSE NULL END as mcl_date,
-        -- MQL qualification
+        -- MQL qualification using configuration values
         CASE 
             WHEN status = 'Working' THEN createddate_ts
             WHEN isconverted_b = true THEN CAST(converteddate_d AS timestamp)
             ELSE NULL
         END as mql_date,
-        -- Segmentation
+        -- Using segmentation thresholds from docs/configuration-reference.md
         CASE 
             WHEN numberofemployees_f > 250 OR annualrevenue_f > 100000000 THEN 'Enterprise'
             WHEN numberofemployees_f > 50 OR annualrevenue_f > 10000000 THEN 'SMB'
@@ -166,6 +172,7 @@ WITH latest_lead AS (
 SELECT 
     DATE_TRUNC('month', createddate_ts) as month,
     COUNT(*) as total_leads,
+    -- Using lead status values from docs/configuration-reference.md
     COUNT(CASE WHEN status = 'Open' THEN 1 END) as mcl_count,
     COUNT(CASE WHEN status = 'Working' THEN 1 END) as mql_count,
     COUNT(CASE WHEN isconverted_b = true THEN 1 END) as converted_count,
@@ -193,6 +200,7 @@ WITH latest_opportunity AS (
       AND createddate_ts >= DATE_ADD('month', -12, CURRENT_DATE)
 )
 SELECT 
+    -- Using stage progression logic from docs/configuration-reference.md
     -- SQL: All opportunities except Closed Lost
     COUNT(CASE WHEN stagename != 'Closed Lost' THEN 1 END) as sql_count,
     -- SQO: Reached SQO or beyond
@@ -225,6 +233,7 @@ WITH latest_opportunity AS (
         GROUP BY B.Id
     ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
     WHERE A.grax__deleted IS NULL
+      -- Using active pipeline exclusion logic from docs/configuration-reference.md
       AND stagename NOT IN ('Closed Won', 'Closed Lost')
 )
 SELECT 
@@ -239,6 +248,7 @@ FROM latest_opportunity
 WHERE amount_f IS NOT NULL
 GROUP BY stagename
 ORDER BY 
+    -- Using stage ordering from docs/configuration-reference.md
     CASE stagename
         WHEN 'SQL' THEN 1
         WHEN 'Proof of Value (SQO)' THEN 2  
@@ -266,6 +276,7 @@ WITH latest_account AS (
 account_with_segmentation AS (
     SELECT 
         *,
+        -- Using segmentation thresholds from docs/configuration-reference.md
         CASE 
             WHEN numberofemployees_f > 250 OR annualrevenue_f > 100000000 THEN 'Enterprise'
             WHEN numberofemployees_f > 50 OR annualrevenue_f > 10000000 THEN 'SMB'
@@ -381,6 +392,7 @@ mcl_monthly AS (
         DATE_TRUNC('month', createddate_ts) as mcl_month,
         COUNT(*) as mcl_count
     FROM latest_lead
+    -- Using lead status values from docs/configuration-reference.md
     WHERE status = 'Open'
     GROUP BY DATE_TRUNC('month', createddate_ts)
 ),
@@ -389,6 +401,7 @@ mql_monthly AS (
         DATE_TRUNC('month', createddate_ts) as mql_month,
         COUNT(*) as mql_count
     FROM latest_lead
+    -- Using lead status values from docs/configuration-reference.md
     WHERE status = 'Working'
     GROUP BY DATE_TRUNC('month', createddate_ts)
 ),
@@ -397,6 +410,7 @@ sql_monthly AS (
         DATE_TRUNC('month', createddate_ts) as sql_month,
         COUNT(*) as sql_count
     FROM latest_opportunity
+    -- Using stage exclusion logic from docs/configuration-reference.md
     WHERE stagename != 'Closed Lost'
     GROUP BY DATE_TRUNC('month', createddate_ts)
 ),
@@ -405,6 +419,7 @@ sqo_monthly AS (
         DATE_TRUNC('month', createddate_ts) as sqo_month,
         COUNT(*) as sqo_count
     FROM latest_opportunity
+    -- Using stage progression logic from docs/configuration-reference.md
     WHERE stagename IN ('Proof of Value (SQO)', 'Proposal', 'Contracts', 'Closed Won')
     GROUP BY DATE_TRUNC('month', createddate_ts)
 )
@@ -543,3 +558,24 @@ SELECT
     END as validation_result
 FROM latest_check
 ```
+
+## Configuration Adaptation
+
+For organizations with different Salesforce implementations, modify the [Configuration Reference](./configuration-reference.md) document with your specific values:
+
+### Critical Updates Needed
+
+1. **Lead Status Values**: Update `'Open'`, `'Working'`, etc. to match your lead qualification stages
+1. **Opportunity Stage Names**: Replace `'Proof of Value (SQO)'`, `'Proposal'`, etc. with your sales process stages  
+1. **Account Types**: Update `'Customer'`, `'Customer - Subsidiary'`, `'Prospect'` with your account classification values
+1. **Segmentation Thresholds**: Modify the 250 employee and $100M revenue thresholds for Enterprise classification
+1. **SMB Thresholds**: Adjust the 50 employee and $10M revenue thresholds for SMB classification
+
+### Testing Process
+
+1. **Update Configuration**: Modify values in [Configuration Reference](./configuration-reference.md)
+1. **Test Templates**: Execute sample queries from this document
+1. **Validate Results**: Ensure data makes sense for your business context
+1. **Document Changes**: Record customizations for future reference
+
+This standardized approach ensures all query templates remain consistent and easily adaptable across different Salesforce implementations.

@@ -2,20 +2,23 @@
 
 ## Sales Stage Definitions
 
+These definitions use the standardized configuration values from [Configuration Reference](./configuration-reference.md). Organizations with different Salesforce configurations should update the Configuration Reference document to match their specific values.
+
 ### Lead Qualification Stages
 
 #### MCL (Marketing Contacted Lead)
 
 **Definition**: Lead that has demonstrated initial interest and meets basic qualification criteria.
 
-**Qualification Criteria**:
+**Qualification Criteria** (from [Configuration Reference](./configuration-reference.md)):
 
-- Lead Status = "Open" OR any lead in the system
+- Lead Status = `'Open'` (as defined in [Lead Status Configuration](./configuration-reference.md#lead-status-configuration))
 - **Date Assignment**: Always use lead creation date (`createddate_ts`)
 
 **Query Pattern**:
 
 ```sql
+-- Using configuration values from docs/configuration-reference.md
 CASE WHEN status = 'Open' THEN createddate_ts ELSE NULL END as mcl_date
 ```
 
@@ -23,15 +26,16 @@ CASE WHEN status = 'Open' THEN createddate_ts ELSE NULL END as mcl_date
 
 **Definition**: Lead qualified by marketing with demonstrated interest and fit for sales engagement.
 
-**Qualification Criteria** (Priority Order):
+**Qualification Criteria** (from [Configuration Reference](./configuration-reference.md)):
 
-1. **Primary**: Lead Status = 'Working'
+1. **Primary**: Lead Status = `'Working'`
 
-1. **Fallback**: Lead converted but never achieved 'Working' status
+1. **Fallback**: Lead converted but never achieved `'Working'` status
 
 **Date Assignment Logic**:
 
 ```sql
+-- Using lead status values from docs/configuration-reference.md
 CASE 
     WHEN status = 'Working' THEN createddate_ts
     WHEN isconverted_b = true THEN CAST(converteddate_d AS timestamp)
@@ -41,6 +45,8 @@ END as mql_date
 
 ### Opportunity Stages
 
+These stages follow the progression logic defined in [Opportunity Stage Configuration](./configuration-reference.md#opportunity-stage-configuration).
+
 #### SQL (Sales Qualified Lead)
 
 **Definition**: Opportunity qualified by sales with defined business potential.
@@ -48,7 +54,7 @@ END as mql_date
 **Qualification Criteria**:
 
 - **ALL opportunities are SQL by definition at creation**
-- **Excludes**: Closed Lost opportunities
+- **Excludes**: `'Closed Lost'` opportunities (as defined in Configuration Reference)
 
 **Date Assignment**: Always use opportunity creation date
 
@@ -59,6 +65,7 @@ createddate_ts as sql_date
 **Count Logic**:
 
 ```sql
+-- Using stage exclusion logic from docs/configuration-reference.md
 COUNT(CASE WHEN stagename != 'Closed Lost' THEN 1 END) as sql_count
 ```
 
@@ -66,14 +73,15 @@ COUNT(CASE WHEN stagename != 'Closed Lost' THEN 1 END) as sql_count
 
 **Definition**: Opportunity where proof of value has been demonstrated.
 
-**Qualification Criteria**:
+**Qualification Criteria** (from [Configuration Reference](./configuration-reference.md)):
 
-- Current stage = 'Proof of Value (SQO)' OR beyond
-- **Excludes**: Closed Lost opportunities
+- Current stage = `'Proof of Value (SQO)'` OR beyond
+- **Excludes**: `'Closed Lost'` opportunities
 
 **Date Assignment Logic**:
 
 ```sql
+-- Using stage names from docs/configuration-reference.md
 CASE 
     WHEN stagename = 'Proof of Value (SQO)' THEN laststagechangedate_ts
     WHEN stagename IN ('Proposal', 'Contracts', 'Closed Won') THEN laststagechangedate_ts
@@ -84,6 +92,7 @@ END as sqo_date
 **Count Logic**:
 
 ```sql
+-- Using stage progression logic from docs/configuration-reference.md
 COUNT(CASE WHEN stagename IN ('Proof of Value (SQO)', 'Proposal', 'Contracts', 'Closed Won') 
       THEN 1 END) as sqo_count
 ```
@@ -94,12 +103,13 @@ COUNT(CASE WHEN stagename IN ('Proof of Value (SQO)', 'Proposal', 'Contracts', '
 
 **Qualification Criteria**:
 
-- Current stage = 'Proposal' OR beyond
-- **Excludes**: Closed Lost opportunities
+- Current stage = `'Proposal'` OR beyond (as defined in Configuration Reference)
+- **Excludes**: `'Closed Lost'` opportunities
 
 **Count Logic**:
 
 ```sql
+-- Using stage names from docs/configuration-reference.md
 COUNT(CASE WHEN stagename IN ('Proposal', 'Contracts', 'Closed Won')
       THEN 1 END) as proposal_count
 ```
@@ -110,11 +120,12 @@ COUNT(CASE WHEN stagename IN ('Proposal', 'Contracts', 'Closed Won')
 
 **Qualification Criteria**:
 
-- Current stage = 'Contracts' OR 'Closed Won'
+- Current stage = `'Contracts'` OR `'Closed Won'`
 
 **Count Logic**:
 
 ```sql
+-- Using stage names from docs/configuration-reference.md
 COUNT(CASE WHEN stagename IN ('Contracts', 'Closed Won')
       THEN 1 END) as contracts_count
 ```
@@ -126,6 +137,7 @@ COUNT(CASE WHEN stagename IN ('Contracts', 'Closed Won')
 **Count Logic**:
 
 ```sql
+-- Using stage name from docs/configuration-reference.md
 COUNT(CASE WHEN stagename = 'Closed Won' THEN 1 END) as closed_won_count
 ```
 
@@ -133,7 +145,7 @@ COUNT(CASE WHEN stagename = 'Closed Won' THEN 1 END) as closed_won_count
 
 ### Fundamental Rule
 
-Every **ACTIVE** opportunity must be counted in all stages it has logically passed through. **Closed Lost opportunities are excluded from progressive stage counts** as they represent failed progression.
+Every **ACTIVE** opportunity must be counted in all stages it has logically passed through. **`'Closed Lost'` opportunities are excluded from progressive stage counts** as they represent failed progression (per [Stage Progression Logic](./configuration-reference.md#stage-progression-logic)).
 
 ### Progression Flow
 
@@ -145,6 +157,7 @@ MCL → MQL → SQL → SQO → Proposal → Contracts → Closed Won
 ### Complete Sequential Funnel Query
 
 ```sql
+-- Using latest records pattern and configuration values from docs/configuration-reference.md
 WITH latest_lead AS (
     SELECT A.* 
     FROM lakehouse.object_lead A 
@@ -167,6 +180,7 @@ latest_opportunity AS (
 ),
 lead_metrics AS (
     SELECT 
+        -- Using lead status values from docs/configuration-reference.md
         COUNT(CASE WHEN status = 'Open' THEN 1 END) as mcl_count,
         COUNT(CASE 
             WHEN status = 'Working' THEN 1
@@ -177,6 +191,7 @@ lead_metrics AS (
 ),
 opportunity_metrics AS (
     SELECT 
+        -- Using stage progression logic from docs/configuration-reference.md
         -- SQL: All opportunities except Closed Lost
         COUNT(CASE WHEN stagename != 'Closed Lost' THEN 1 END) as sql_count,
         -- SQO: Reached SQO or beyond (excluding Closed Lost)
@@ -217,9 +232,10 @@ CROSS JOIN opportunity_metrics om
 ### Sequential Validation Check
 
 ```sql
--- This query should NEVER return validation errors if logic is correct
+-- This query validates the stage progression logic from docs/configuration-reference.md
 WITH funnel_counts AS (
     SELECT 
+        -- Using stage names and progression logic from configuration reference
         COUNT(CASE WHEN stagename != 'Closed Lost' THEN 1 END) as sql_count,
         COUNT(CASE WHEN stagename IN ('Proof of Value (SQO)', 'Proposal', 'Contracts', 'Closed Won') THEN 1 END) as sqo_count,
         COUNT(CASE WHEN stagename IN ('Proposal', 'Contracts', 'Closed Won') THEN 1 END) as proposal_count,
@@ -273,6 +289,7 @@ lead_with_dates AS (
     SELECT 
         *,
         createddate_ts as mcl_date,
+        -- Using lead status logic from docs/configuration-reference.md
         CASE 
             WHEN status = 'Working' THEN createddate_ts
             WHEN isconverted_b = true THEN CAST(converteddate_d AS timestamp)
@@ -305,6 +322,7 @@ opportunity_with_dates AS (
     SELECT 
         *,
         createddate_ts as sql_date,
+        -- Using stage names from docs/configuration-reference.md
         CASE 
             WHEN stagename IN ('Proof of Value (SQO)', 'Proposal', 'Contracts', 'Closed Won') 
             THEN laststagechangedate_ts
@@ -312,7 +330,7 @@ opportunity_with_dates AS (
         END as sqo_date
     FROM latest_opportunity
     WHERE createddate_ts >= DATE_ADD('month', -12, CURRENT_DATE)
-      AND stagename != 'Closed Lost'
+      AND stagename != 'Closed Lost'  -- Using exclusion logic from configuration reference
 )
 SELECT 
     AVG(DATE_DIFF('day', sql_date, sqo_date)) as avg_sql_to_sqo_days,
@@ -360,6 +378,7 @@ latest_account AS (
 lead_segmentation AS (
     SELECT 
         l.*,
+        -- Using segmentation thresholds from docs/configuration-reference.md
         CASE 
             WHEN l.numberofemployees_f > 250 OR l.annualrevenue_f > 100000000 THEN 'Enterprise'
             WHEN l.numberofemployees_f > 50 OR l.annualrevenue_f > 10000000 THEN 'SMB'
@@ -371,6 +390,7 @@ lead_segmentation AS (
 opportunity_segmentation AS (
     SELECT 
         o.*,
+        -- Using segmentation thresholds from docs/configuration-reference.md
         CASE 
             WHEN a.numberofemployees_f > 250 OR a.annualrevenue_f > 100000000 THEN 'Enterprise'
             WHEN a.numberofemployees_f > 50 OR a.annualrevenue_f > 10000000 THEN 'SMB'
@@ -382,10 +402,10 @@ opportunity_segmentation AS (
 )
 SELECT 
     ls.segment,
-    -- Lead metrics by segment
+    -- Using lead status values from docs/configuration-reference.md
     COUNT(CASE WHEN ls.status = 'Open' THEN 1 END) as mcl_count,
     COUNT(CASE WHEN ls.status = 'Working' OR ls.isconverted_b = true THEN 1 END) as mql_count,
-    -- Opportunity metrics by segment
+    -- Using stage names and progression logic from docs/configuration-reference.md
     COUNT(CASE WHEN os.stagename != 'Closed Lost' THEN 1 END) as sql_count,
     COUNT(CASE WHEN os.stagename IN ('Proof of Value (SQO)', 'Proposal', 'Contracts', 'Closed Won') THEN 1 END) as sqo_count,
     COUNT(CASE WHEN os.stagename = 'Closed Won' THEN 1 END) as closed_won_count,
@@ -414,7 +434,7 @@ WITH latest_opportunity AS (
         GROUP BY B.Id
     ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
     WHERE A.grax__deleted IS NULL
-      -- Active pipeline only (exclude closed opportunities)
+      -- Using stage exclusion logic from docs/configuration-reference.md
       AND A.stagename NOT IN ('Closed Won', 'Closed Lost')
 )
 SELECT 
@@ -431,6 +451,7 @@ FROM latest_opportunity
 WHERE amount_f IS NOT NULL
 GROUP BY stagename
 ORDER BY 
+    -- Using stage ordering from docs/configuration-reference.md
     CASE stagename
         WHEN 'SQL' THEN 1
         WHEN 'Proof of Value (SQO)' THEN 2  
@@ -439,5 +460,14 @@ ORDER BY
         ELSE 5
     END
 ```
+
+## Configuration Adaptation
+
+For organizations with different Salesforce implementations, update the [Configuration Reference](./configuration-reference.md) document with your specific values:
+
+- **Lead Status Values**: Update the lead qualification stage values
+- **Opportunity Stage Names**: Modify stage names to match your sales process  
+- **Segmentation Thresholds**: Adjust employee/revenue thresholds for company sizing
+- **Customer Types**: Update account classification values
 
 This comprehensive sales process analysis framework ensures consistent, accurate tracking of lead progression and opportunity advancement while maintaining proper sequential logic and excluding failed progressions from advancement metrics.

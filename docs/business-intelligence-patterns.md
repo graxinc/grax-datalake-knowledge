@@ -4,6 +4,8 @@
 
 This guide provides advanced analytics patterns for extracting strategic insights from Salesforce data. These patterns focus on revenue intelligence, customer lifecycle analysis, and predictive indicators that drive business decisions.
 
+**Configuration Reference**: All business-specific values used in these patterns are defined in [Configuration Reference](./configuration-reference.md). Organizations with different Salesforce configurations should update that document to match their specific values.
+
 ## Revenue Intelligence Patterns
 
 ### Pipeline Velocity Analysis
@@ -32,6 +34,7 @@ latest_account AS (
 opportunity_with_segment AS (
     SELECT 
         o.*,
+        -- Using segmentation thresholds from docs/configuration-reference.md
         CASE 
             WHEN a.numberofemployees_f > 250 OR a.annualrevenue_f > 100000000 THEN 'Enterprise'
             WHEN a.numberofemployees_f > 50 OR a.annualrevenue_f > 10000000 THEN 'SMB'
@@ -43,6 +46,7 @@ opportunity_with_segment AS (
         DATE_DIFF('day', o.laststagechangedate_ts, CURRENT_TIMESTAMP) as days_in_current_stage
     FROM latest_opportunity o
     LEFT JOIN latest_account a ON o.accountid = a.id
+    -- Using stage exclusion logic from docs/configuration-reference.md
     WHERE o.stagename NOT IN ('Closed Won', 'Closed Lost')
       AND o.createddate_ts >= DATE_ADD('month', -24, CURRENT_DATE)
 ),
@@ -77,6 +81,7 @@ SELECT
     aged_opportunities,
     ROUND(aged_opportunities * 100.0 / opportunity_count, 1) as aging_rate_pct
 FROM velocity_analysis
+-- Using stage ordering from docs/configuration-reference.md
 ORDER BY customer_segment, 
     CASE stagename
         WHEN 'SQL' THEN 1
@@ -120,6 +125,7 @@ closed_opportunities AS (
         o.createddate_ts,
         CAST(o.closedate_d AS timestamp) as closedate_ts,
         DATE_DIFF('day', o.createddate_ts, CAST(o.closedate_d AS timestamp)) as sales_cycle_days,
+        -- Using segmentation thresholds from docs/configuration-reference.md
         CASE 
             WHEN a.numberofemployees_f > 250 OR a.annualrevenue_f > 100000000 THEN 'Enterprise'
             WHEN a.numberofemployees_f > 50 OR a.annualrevenue_f > 10000000 THEN 'SMB'
@@ -129,6 +135,7 @@ closed_opportunities AS (
         DATE_TRUNC('quarter', CAST(o.closedate_d AS timestamp)) as close_quarter
     FROM latest_opportunity o
     LEFT JOIN latest_account a ON o.accountid = a.id
+    -- Using closed stage names from docs/configuration-reference.md
     WHERE o.stagename IN ('Closed Won', 'Closed Lost')
       AND o.closedate_d >= DATE_ADD('month', -24, CURRENT_DATE)
       AND o.amount_f IS NOT NULL
@@ -140,6 +147,7 @@ SELECT
     
     -- Volume metrics
     COUNT(*) as total_closed,
+    -- Using stage names from docs/configuration-reference.md
     COUNT(CASE WHEN stagename = 'Closed Won' THEN 1 END) as won_count,
     COUNT(CASE WHEN stagename = 'Closed Lost' THEN 1 END) as lost_count,
     
@@ -217,6 +225,7 @@ forecast_data AS (
         END as timeline_category
     FROM latest_opportunity o
     LEFT JOIN latest_user u ON o.ownerid = u.id
+    -- Using active pipeline exclusion logic from docs/configuration-reference.md
     WHERE o.stagename NOT IN ('Closed Won', 'Closed Lost')
       AND o.closedate_d IS NOT NULL
       AND o.amount_f IS NOT NULL
@@ -310,7 +319,7 @@ customer_journey AS (
         DATE_DIFF('day', o.createddate_ts, CAST(o.closedate_d AS timestamp)) as opportunity_lifecycle_days,
         DATE_DIFF('day', l.createddate_ts, CAST(o.closedate_d AS timestamp)) as total_journey_days,
         
-        -- Customer segmentation
+        -- Using segmentation thresholds from docs/configuration-reference.md
         CASE 
             WHEN a.numberofemployees_f > 250 OR a.annualrevenue_f > 100000000 THEN 'Enterprise'
             WHEN a.numberofemployees_f > 50 OR a.annualrevenue_f > 10000000 THEN 'SMB'
@@ -336,7 +345,7 @@ SELECT
     ROUND(AVG(opportunity_lifecycle_days), 0) as avg_opportunity_lifecycle_days,
     ROUND(AVG(total_journey_days), 0) as avg_total_journey_days,
     
-    -- Revenue analysis
+    -- Revenue analysis using stage names from docs/configuration-reference.md
     COUNT(CASE WHEN current_stage = 'Closed Won' THEN 1 END) as won_count,
     ROUND(AVG(CASE WHEN current_stage = 'Closed Won' THEN opportunity_amount END), 0) as avg_won_deal_size,
     SUM(CASE WHEN current_stage = 'Closed Won' THEN opportunity_amount ELSE 0 END) as total_won_revenue,
@@ -386,13 +395,14 @@ account_revenue_history AS (
         a.name as account_name,
         a.type as account_type,
         a.industry,
+        -- Using segmentation thresholds from docs/configuration-reference.md
         CASE 
             WHEN a.numberofemployees_f > 250 OR a.annualrevenue_f > 100000000 THEN 'Enterprise'
             WHEN a.numberofemployees_f > 50 OR a.annualrevenue_f > 10000000 THEN 'SMB'
             ELSE 'Self Service'
         END as customer_segment,
         
-        -- First deal metrics
+        -- First deal metrics using stage names from docs/configuration-reference.md
         MIN(CASE WHEN o.stagename = 'Closed Won' THEN CAST(o.closedate_d AS timestamp) END) as first_purchase_date,
         MIN(CASE WHEN o.stagename = 'Closed Won' THEN o.amount_f END) as first_deal_amount,
         
@@ -413,12 +423,13 @@ account_revenue_history AS (
                  AND CAST(o.closedate_d AS timestamp) >= DATE_ADD('month', -12, CURRENT_DATE) 
                  THEN o.amount_f ELSE 0 END) as recent_revenue,
         
-        -- Active pipeline
+        -- Active pipeline using exclusion logic from docs/configuration-reference.md
         COUNT(CASE WHEN o.stagename NOT IN ('Closed Won', 'Closed Lost') THEN 1 END) as active_opportunities,
         SUM(CASE WHEN o.stagename NOT IN ('Closed Won', 'Closed Lost') THEN o.amount_f ELSE 0 END) as pipeline_value
         
     FROM latest_account a
     LEFT JOIN latest_opportunity o ON a.id = o.accountid
+    -- Using account types from docs/configuration-reference.md
     WHERE a.type IN ('Customer', 'Customer - Subsidiary', 'Prospect')
     GROUP BY a.id, a.name, a.type, a.industry, a.numberofemployees_f, a.annualrevenue_f
 ),
@@ -542,13 +553,14 @@ customer_health_metrics AS (
         a.id as account_id,
         a.name as account_name,
         a.type as account_type,
+        -- Using segmentation thresholds from docs/configuration-reference.md
         CASE 
             WHEN a.numberofemployees_f > 250 OR a.annualrevenue_f > 100000000 THEN 'Enterprise'
             WHEN a.numberofemployees_f > 50 OR a.annualrevenue_f > 10000000 THEN 'SMB'
             ELSE 'Self Service'
         END as customer_segment,
         
-        -- Revenue trends
+        -- Revenue trends using stage names from docs/configuration-reference.md
         SUM(CASE WHEN o.stagename = 'Closed Won' 
                  AND CAST(o.closedate_d AS timestamp) >= DATE_ADD('month', -12, CURRENT_DATE) 
                  THEN o.amount_f ELSE 0 END) as revenue_last_12m,
@@ -575,6 +587,7 @@ customer_health_metrics AS (
     FROM latest_account a
     LEFT JOIN latest_opportunity o ON a.id = o.accountid
     LEFT JOIN latest_case c ON a.id = c.accountid
+    -- Using customer account types from docs/configuration-reference.md
     WHERE a.type IN ('Customer', 'Customer - Subsidiary')
     GROUP BY a.id, a.name, a.type, a.numberofemployees_f, a.annualrevenue_f
 ),
@@ -692,7 +705,7 @@ sales_performance AS (
         u.name as sales_rep_name,
         u.email as sales_rep_email,
         
-        -- Current quarter performance
+        -- Current quarter performance using stage names from docs/configuration-reference.md
         COUNT(CASE WHEN o.stagename = 'Closed Won' 
                    AND DATE_TRUNC('quarter', CAST(o.closedate_d AS timestamp)) = DATE_TRUNC('quarter', CURRENT_DATE)
                    THEN 1 END) as q_won_deals,
@@ -708,7 +721,7 @@ sales_performance AS (
                  AND EXTRACT(year FROM CAST(o.closedate_d AS timestamp)) = EXTRACT(year FROM CURRENT_DATE)
                  THEN o.amount_f ELSE 0 END) as ytd_won_revenue,
         
-        -- Pipeline metrics
+        -- Pipeline metrics using exclusion logic from docs/configuration-reference.md
         COUNT(CASE WHEN o.stagename NOT IN ('Closed Won', 'Closed Lost') THEN 1 END) as active_pipeline_count,
         SUM(CASE WHEN o.stagename NOT IN ('Closed Won', 'Closed Lost') THEN o.amount_f ELSE 0 END) as active_pipeline_value,
         SUM(CASE WHEN o.stagename NOT IN ('Closed Won', 'Closed Lost') 
@@ -776,4 +789,25 @@ WHERE ytd_won_deals > 0 OR active_pipeline_count > 0  -- Focus on active sellers
 ORDER BY ytd_won_revenue DESC
 ```
 
-These business intelligence patterns provide comprehensive insights into revenue trends, customer behavior, predictive indicators, and sales performance, enabling data-driven decision making and strategic business optimization.
+## Configuration Adaptation
+
+For organizations with different Salesforce implementations:
+
+### Update Configuration Values
+
+Modify the [Configuration Reference](./configuration-reference.md) document to match your organization's specific values:
+
+- **Opportunity Stage Names**: Update to match your sales process stages
+- **Segmentation Thresholds**: Adjust employee count and revenue thresholds for Enterprise/SMB/Self-Service classification
+- **Account Types**: Update customer classification values  
+- **Lead Status Values**: Modify lead qualification stage names
+- **Field Names**: Update if using custom field names
+
+### Validation Process
+
+1. **Test Queries**: Execute sample queries with your configuration values
+1. **Validate Results**: Ensure data makes sense for your business context
+1. **Document Changes**: Record customizations for future reference
+1. **Share Updates**: Consider contributing common variations back to the knowledge base
+
+These business intelligence patterns provide comprehensive insights into revenue trends, customer behavior, predictive indicators, and sales performance, enabling data-driven decision making and strategic business optimization across different Salesforce implementations.

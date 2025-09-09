@@ -23,6 +23,7 @@ This repository contains structured documentation that enables large language mo
 
 ### Core Reference Materials
 
+- **[Configuration Reference](./docs/configuration-reference.md)** - **START HERE**: Centralized configuration for all business-specific values
 - **[Database Schema Guide](./docs/database-schema-guide.md)** - Complete field reference and data structure documentation
 - **[Query Best Practices](./docs/query-best-practices.md)** - Performance optimization and error prevention guidelines
 - **[Athena SQL Syntax Guide](./docs/athena-sql-syntax-guide.md)** - Athena-specific SQL patterns and corrections
@@ -30,6 +31,10 @@ This repository contains structured documentation that enables large language mo
 ### LLM Execution Guidance
 
 - **[Claude Execution Guidelines](./docs/claude-execution-guidelines.md)** - **CRITICAL**: When to execute queries vs provide code templates
+
+### Multi-Customer Support
+
+- **[Customer Fallback Instructions](./docs/customer-fallback-instructions.md)** - Adapting queries for different Salesforce implementations
 
 ### Query Templates and Patterns
 
@@ -46,19 +51,25 @@ This repository contains structured documentation that enables large language mo
 
 For LLM models working with this data lake:
 
-1. **FIRST**: Read [Claude Execution Guidelines](./docs/claude-execution-guidelines.md) to understand when to execute vs provide code
+1. **FIRST**: Read [Configuration Reference](./docs/configuration-reference.md) to understand all business-specific values
 
-1. **Start with** the [Database Schema Guide](./docs/database-schema-guide.md) to understand available data structures
+1. **CRITICAL**: Read [Claude Execution Guidelines](./docs/claude-execution-guidelines.md) to understand when to execute vs provide code
 
-1. **Reference** the [Athena SQL Syntax Guide](./docs/athena-sql-syntax-guide.md) for proper query formation
+1. **Understand**: Review [Database Schema Guide](./docs/database-schema-guide.md) for available data structures
 
-1. **Use** the [Query Templates](./docs/query-templates.md) for common analysis patterns
+1. **Reference**: Use [Athena SQL Syntax Guide](./docs/athena-sql-syntax-guide.md) for proper query formation
 
-1. **Follow** the [Query Best Practices](./docs/query-best-practices.md) to avoid common errors
+1. **Apply**: Use [Query Templates](./docs/query-templates.md) for common analysis patterns
+
+1. **Follow**: Apply [Query Best Practices](./docs/query-best-practices.md) to avoid common errors
+
+1. **Adapt**: Use [Customer Fallback Instructions](./docs/customer-fallback-instructions.md) when queries return zero results
 
 ## Key Principles
 
+- **Configuration First**: Always reference the Configuration Reference for business-specific values
 - **Execute First**: When customers ask for reports/analysis, execute queries and provide insights
+- **Graceful Adaptation**: Use fallback strategies when customer configurations differ from defaults
 - All queries must filter deleted records using `grax__deleted IS NULL`
 - Use latest records pattern for current state analysis
 - Follow proper field naming conventions with type suffixes
@@ -81,6 +92,28 @@ For LLM models working with this data lake:
 - `_b` suffix: Boolean fields
 - `_i` suffix: Integer fields
 
+## Customization for Different Organizations
+
+The knowledge base is built with GRAX's default Salesforce configuration but can be easily adapted:
+
+1. **Review** the [Configuration Reference](./docs/configuration-reference.md) for all default values
+1. **Modify** configuration values to match your organization's Salesforce setup
+1. **Test** queries with your specific field values and stage names
+1. **Use** the [Customer Fallback Instructions](./docs/customer-fallback-instructions.md) for automatic adaptation
+
 ## Contributing
 
 This knowledge base is designed for programmatic consumption by LLM models. All documentation follows strict markdown linting rules and is optimized for clarity and precision in automated query generation.
+
+## Support
+
+We'd love to help you get the most out of the GRAX Data Lake Knowledge Base! If you need assistance, have questions, or run into any issues:
+
+- **Get Help**: Email us at [help@grax.com](mailto:help@grax.com?Subject=grax-datalake-knowledge%20Help%20Needed) - we're here to help!
+- **Documentation & Guides**: Visit our comprehensive documentation at [https://documentation.grax.com/support](https://documentation.grax.com/support)
+
+Our team is committed to helping you succeed with your data lake implementation and we welcome all feedback to make this knowledge base even better.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
