@@ -1,5 +1,11 @@
 # Query Best Practices
 
+## Overview
+
+This guide provides essential patterns for reliable query formation and error prevention in the GRAX Data Lake environment. Following these practices ensures consistent results and optimal performance.
+
+**Configuration Dependencies**: All business-specific values referenced in examples use standardized configuration from [Configuration Reference](./configuration-reference.md). Organizations should update that document to match their specific values rather than modifying individual queries.
+
 ## Critical Query Formation Rules
 
 ### 1. Never Reference Non-Existent Columns
@@ -22,7 +28,7 @@ FROM latest_lead
 -- Create the derived column first, then reference it
 SELECT 
     createddate_ts,
-    -- Create the mql_date calculation here
+    -- Create the mql_date calculation here using values from docs/configuration-reference.md
     CASE 
         WHEN status = 'Working' THEN createddate_ts
         ELSE NULL
@@ -46,7 +52,7 @@ SELECT MIN(CASE WHEN status = 'Working' THEN some_historical_date END) as mql_da
 SELECT 
     id,
     createddate_ts as lead_created,
-    -- MQL Date Logic based on CURRENT status
+    -- MQL Date Logic using status values from docs/configuration-reference.md
     CASE 
         WHEN status = 'Working' THEN createddate_ts
         WHEN isconverted_b = true AND converteddate_d IS NOT NULL THEN CAST(converteddate_d AS timestamp)
@@ -80,7 +86,7 @@ latest_lead AS (
 lead_with_dates AS (
     SELECT 
         *,
-        -- Calculate MQL date based on current status
+        -- Calculate MQL date using status values from docs/configuration-reference.md
         CASE 
             WHEN status = 'Working' THEN createddate_ts
             WHEN isconverted_b = true THEN CAST(converteddate_d AS timestamp)
@@ -93,6 +99,7 @@ mcl_analysis AS (
         DATE_TRUNC('month', createddate_ts) as mcl_month,
         COUNT(*) as mcl_count
     FROM lead_with_dates  -- Use the CTE with derived columns
+    -- Using lead status from docs/configuration-reference.md
     WHERE status = 'Open'
     GROUP BY DATE_TRUNC('month', createddate_ts)
 ),
@@ -157,6 +164,7 @@ createddate_ts as mcl_date
 **MQL Date**: Use status-based logic with creation date
 
 ```sql
+-- Using lead status values from docs/configuration-reference.md
 CASE 
     WHEN status = 'Working' THEN createddate_ts
     WHEN isconverted_b = true THEN CAST(converteddate_d AS timestamp)
@@ -175,6 +183,7 @@ createddate_ts as sql_date  -- ALL opportunities are SQL at creation
 **SQO Date**: Use stage change date with fallback
 
 ```sql
+-- Using stage names from docs/configuration-reference.md
 CASE 
     WHEN stagename = 'Proof of Value (SQO)' THEN laststagechangedate_ts
     WHEN stagename IN ('Proposal', 'Contracts', 'Closed Won') THEN laststagechangedate_ts
@@ -189,12 +198,14 @@ END as sqo_date
 **SQL Stage**: All opportunities except Closed Lost
 
 ```sql
+-- Using stage exclusion logic from docs/configuration-reference.md
 COUNT(CASE WHEN stagename != 'Closed Lost' THEN 1 END) as sql_count
 ```
 
 **SQO Stage**: Reached SQO or beyond (excluding Closed Lost)
 
 ```sql
+-- Using stage progression logic from docs/configuration-reference.md
 COUNT(CASE WHEN stagename IN ('Proof of Value (SQO)', 'Proposal', 'Contracts', 'Closed Won') 
       THEN 1 END) as sqo_count
 ```
@@ -202,6 +213,7 @@ COUNT(CASE WHEN stagename IN ('Proof of Value (SQO)', 'Proposal', 'Contracts', '
 **Proposal Stage**: Reached Proposal or beyond
 
 ```sql
+-- Using stage names from docs/configuration-reference.md
 COUNT(CASE WHEN stagename IN ('Proposal', 'Contracts', 'Closed Won')
       THEN 1 END) as proposal_count
 ```
@@ -240,6 +252,7 @@ WITH filtered_opportunities AS (
     SELECT * 
     FROM latest_opportunity
     WHERE createddate_ts >= DATE_ADD('month', -12, CURRENT_DATE)
+      -- Using stage exclusion logic from docs/configuration-reference.md
       AND stagename != 'Closed Lost'
 )
 -- Then use filtered_opportunities in subsequent analysis
@@ -264,7 +277,7 @@ AND EXISTS (
 - Reference columns that don't exist in the current table/CTE
 - Assume historical stage dates exist in latest records
 - Forget `WHERE grax__deleted IS NULL`
-- Include Closed Lost in progressive stage counts
+- Include `'Closed Lost'` in progressive stage counts (per [Configuration Reference](./configuration-reference.md))
 - Use ambiguous column names in JOINs
 
 ### ALWAYS
@@ -274,6 +287,7 @@ AND EXISTS (
 - Use unique column names in subqueries to prevent ambiguous errors
 - Test with LIMIT 10 before running full queries
 - Validate that all referenced columns actually exist in the schema
+- Reference business values from [Configuration Reference](./configuration-reference.md)
 
 ## Quick Debug Checklist
 
@@ -309,4 +323,57 @@ AND EXISTS (
 - **Apply filters before joins**: Reduce data volume early
 - **Use appropriate join types**: LEFT JOIN vs INNER JOIN based on requirements
 
-Following these best practices will ensure reliable, performant queries that accurately represent business logic and avoid common pitfalls in the data lake environment.
+## Configuration-Dependent Patterns
+
+### Segmentation Logic
+
+```sql
+-- Using thresholds from docs/configuration-reference.md
+CASE 
+    WHEN numberofemployees_f > 250 OR annualrevenue_f > 100000000 THEN 'Enterprise'
+    WHEN numberofemployees_f > 50 OR annualrevenue_f > 10000000 THEN 'SMB'
+    ELSE 'Self Service'
+END as customer_segment
+```
+
+### Lead Status Filtering
+
+```sql
+-- Using lead status values from docs/configuration-reference.md
+WHERE status IN ('Open', 'Working')  -- Active leads only
+```
+
+### Opportunity Stage Filtering
+
+```sql
+-- Using stage names from docs/configuration-reference.md
+WHERE stagename IN ('Proof of Value (SQO)', 'Proposal', 'Contracts', 'Closed Won')
+```
+
+### Account Classification
+
+```sql
+-- Using account types from docs/configuration-reference.md
+WHERE type IN ('Customer', 'Customer - Subsidiary') AND type != 'Prospect'
+```
+
+## Configuration Adaptation
+
+For organizations with different Salesforce implementations:
+
+### Update Process
+
+1. **Modify Configuration**: Update [Configuration Reference](./configuration-reference.md) with your specific values
+1. **Test Query Patterns**: Ensure all patterns work with your configuration
+1. **Validate Results**: Confirm business logic produces expected outcomes
+1. **Document Changes**: Record any pattern modifications needed
+
+### Key Areas for Adaptation
+
+- **Lead Status Values**: Update status names used in filtering and logic
+- **Opportunity Stage Names**: Modify stage progression patterns
+- **Account Classification**: Adjust customer identification logic
+- **Segmentation Thresholds**: Update employee/revenue limits
+- **Field Names**: Adapt if using custom field naming
+
+Following these best practices ensures reliable, performant queries that accurately represent business logic while maintaining adaptability across different Salesforce implementations through centralized configuration management.
