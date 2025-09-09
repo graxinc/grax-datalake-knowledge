@@ -4,6 +4,8 @@
 
 The data lake contains complete historical Salesforce data with comprehensive versioning and change tracking capabilities. This guide provides field-level documentation for all major business objects.
 
+**Configuration Dependencies**: All business-specific values documented below are defined in [Configuration Reference](./configuration-reference.md). Organizations with different Salesforce configurations should update that central document rather than modifying individual field examples.
+
 ## Universal System Fields
 
 Every table contains these mandatory system fields:
@@ -50,7 +52,7 @@ Every table contains these mandatory system fields:
 
 #### Qualification Fields
 
-- `status` (varchar) - Lead status values:
+- `status` (varchar) - Lead status values (defined in [Lead Status Configuration](./configuration-reference.md#lead-status-configuration)):
   - `'Open'` - New leads (MCL criteria)
   - `'Working'` - Active leads (MQL criteria)
   - `'Converted'` - Successfully converted
@@ -73,8 +75,8 @@ Every table contains these mandatory system fields:
 
 - `company` (varchar) - Company name
 - `industry` (varchar) - Industry classification
-- `numberofemployees_f` (double) - Company size
-- `annualrevenue_f` (double) - Company revenue
+- `numberofemployees_f` (double) - Company size (used in [Segmentation Configuration](./configuration-reference.md#segmentation-configuration))
+- `annualrevenue_f` (double) - Company revenue (used in [Segmentation Configuration](./configuration-reference.md#segmentation-configuration))
 
 ### object_opportunity
 
@@ -88,7 +90,7 @@ Every table contains these mandatory system fields:
 
 #### Stage Management
 
-- `stagename` (varchar) - Current stage values:
+- `stagename` (varchar) - Current stage values (defined in [Opportunity Stage Configuration](./configuration-reference.md#opportunity-stage-configuration)):
   - `'SQL'` - Sales Qualified Lead
   - `'Proof of Value (SQO)'` - Sales Qualified Opportunity
   - `'Proposal'` - Formal proposal delivered
@@ -124,10 +126,10 @@ Every table contains these mandatory system fields:
 
 #### Segmentation Fields
 
-- `type` (varchar) - Account type
+- `type` (varchar) - Account type (values defined in [Account Classification Configuration](./configuration-reference.md#account-classification-configuration))
 - `industry` (varchar) - Industry classification
-- `numberofemployees_f` (double) - Company size
-- `annualrevenue_f` (double) - Company revenue
+- `numberofemployees_f` (double) - Company size (used in [Segmentation Thresholds](./configuration-reference.md#segmentation-configuration))
+- `annualrevenue_f` (double) - Company revenue (used in [Segmentation Thresholds](./configuration-reference.md#segmentation-configuration))
 
 #### Contact Information
 
@@ -253,6 +255,7 @@ LEFT JOIN latest_users u ON opp.ownerid = u.id
 ### Customer Segmentation
 
 ```sql
+-- Using thresholds from docs/configuration-reference.md
 CASE 
     WHEN numberofemployees_f > 250 OR annualrevenue_f > 100000000 THEN 'Enterprise'
     WHEN numberofemployees_f > 50 OR annualrevenue_f > 10000000 THEN 'SMB'  
@@ -263,6 +266,7 @@ END AS segment
 ### Company Size Categories
 
 ```sql
+-- Using categorization from docs/configuration-reference.md
 CASE 
     WHEN numberofemployees_f IS NULL THEN 'Unknown'
     WHEN numberofemployees_f <= 50 THEN 'Small (1-50)'
@@ -337,3 +341,26 @@ WHERE amount_f = 1000
 -- Use timestamp fields for dates
 WHERE createddate_ts >= DATE('2024-01-01')
 ```
+
+## Configuration Adaptation
+
+For organizations with different Salesforce implementations:
+
+### Update Configuration Values
+
+Modify the [Configuration Reference](./configuration-reference.md) document to match your organization's specific values:
+
+- **Lead Status Values**: Update lead qualification stage names
+- **Opportunity Stage Names**: Modify sales process stage values  
+- **Account Types**: Update customer classification values
+- **Segmentation Thresholds**: Adjust employee count and revenue thresholds
+- **Field Naming**: Update if using custom field names or structures
+
+### Testing Process
+
+1. **Update Configuration**: Modify values in [Configuration Reference](./configuration-reference.md)
+1. **Test Schema Patterns**: Execute sample queries with your configuration
+1. **Validate Results**: Ensure field mappings work correctly for your data
+1. **Document Changes**: Record customizations for future reference
+
+This schema guide provides the foundation for understanding your Salesforce data structure while maintaining adaptability across different organizational implementations through centralized configuration management.
