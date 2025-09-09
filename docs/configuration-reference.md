@@ -245,17 +245,17 @@ WHERE grax__deleted IS NULL
 ### For Different Organizations
 
 1. **Lead Status Values**: Update lead qualification stage values in this document
-2. **Opportunity Stages**: Modify stage names to match organization's sales process
-3. **Account Types**: Adjust customer classification values
-4. **Segmentation Thresholds**: Change employee/revenue thresholds for company sizing
-5. **Field Names**: Update field naming if custom fields are used
+1. **Opportunity Stages**: Modify stage names to match organization's sales process
+1. **Account Types**: Adjust customer classification values
+1. **Segmentation Thresholds**: Change employee/revenue thresholds for company sizing
+1. **Field Names**: Update field naming if custom fields are used
 
 ### Implementation Process
 
 1. **Identify Differences**: Compare organization's values to defaults
-2. **Update Configuration**: Modify values in this document
-3. **Test Queries**: Validate all query templates work with new values
-4. **Document Changes**: Record customizations for future reference
+1. **Update Configuration**: Modify values in this document
+1. **Test Queries**: Validate all query templates work with new values
+1. **Document Changes**: Record customizations for future reference
 
 ### Validation Queries
 
