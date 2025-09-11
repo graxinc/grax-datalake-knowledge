@@ -95,11 +95,13 @@ When executing queries, ALWAYS follow this process:
 ### 4. Include Visual Elements When Applicable
 
 **Default Behavior**: Always include charts, graphs, and visual elements unless:
+
 - Customer explicitly requests "no graphs" or "text only"
 - Data is not suitable for visualization (e.g., single data points)
 - Technical limitations prevent chart creation
 
 **Chart Types to Include**:
+
 - Trend lines for time-series data
 - Bar charts for comparisons
 - Pie charts for distributions
