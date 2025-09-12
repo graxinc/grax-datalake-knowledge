@@ -1,278 +1,51 @@
-# Sales Process Analysis
+# Lead Status Audit
 
-## Sales Stage Definitions
+## Overview
 
-These definitions use the standardized configuration values from [Configuration Reference](./configuration-reference.md). Organizations with different Salesforce configurations should update the Configuration Reference document to match their specific values.
+This guide provides a framework for identifying leads that should be classified as "Existing Customer" but are currently marked as active prospects. This analysis prevents unnecessary sales outreach to existing customers and ensures accurate lead qualification metrics.
 
-### Lead Qualification Stages
+**Configuration Dependencies**: All lead status values, account types, and classification logic in this document use standardized values from [Configuration Reference](./configuration-reference.md). Organizations with different Salesforce configurations should update that document to match their specific values.
 
-#### MCL (Marketing Contacted Lead)
+## Business Problem
 
-**Definition**: Lead that has demonstrated initial interest and meets basic qualification criteria.
+**Issue**: Active leads may actually be from existing customer organizations, leading to:
 
-**Qualification Criteria** (from [Configuration Reference](./configuration-reference.md)):
+- Wasted sales resources on existing customers
+- Potential customer confusion from duplicate outreach  
+- Inaccurate funnel metrics and conversion rates
+- Missed opportunities for account expansion vs new acquisition
 
-- Lead Status = `'Open'` (as defined in [Lead Status Configuration](./configuration-reference.md#lead-status-configuration))
-- **Date Assignment**: Always use lead creation date (`createddate_ts`)
+**Goal**: Identify leads where the email domain matches existing customer accounts to enable proper lead status correction.
 
-**Query Pattern**:
+## Customer Account Definition
 
-```sql
--- Using configuration values from docs/configuration-reference.md
-CASE WHEN status = 'Open' THEN createddate_ts ELSE NULL END as mcl_date
-```
+An account is considered an "Existing Customer" based on **Account Type** field values defined in [Configuration Reference](./configuration-reference.md):
 
-#### MQL (Marketing Qualified Lead)
+**Customer Types** (from [Account Classification Configuration](./configuration-reference.md#account-classification-configuration)):
 
-**Definition**: Lead qualified by marketing with demonstrated interest and fit for sales engagement.
+- `Type = 'Customer'` - Primary customer accounts
+- `Type = 'Customer - Subsidiary'` - Customer subsidiary accounts
 
-**Qualification Criteria** (from [Configuration Reference](./configuration-reference.md)):
+**Exclusions**:
 
-1. **Primary**: Lead Status = `'Working'`
+- Accounts with `Type = 'Prospect'` are **NEVER** considered existing customers
+- Annual revenue is **NOT** used for customer identification (following [Customer Identification Logic](./configuration-reference.md#customer-identification-logic))
 
-1. **Fallback**: Lead converted but never achieved `'Working'` status
+## Lead Classification Logic
 
-**Date Assignment Logic**:
+A lead should be classified as "Existing Customer" if:
 
-```sql
--- Using lead status values from docs/configuration-reference.md
-CASE 
-    WHEN status = 'Working' THEN createddate_ts
-    WHEN isconverted_b = true THEN CAST(converteddate_d AS timestamp)
-    ELSE NULL
-END as mql_date
-```
+1. Lead Status ≠ `'Existing Customer'` (current misclassification)
 
-### Opportunity Stages
+1. Lead is currently active (MCL or MQL status using values from [Configuration Reference](./configuration-reference.md))
 
-These stages follow the progression logic defined in [Opportunity Stage Configuration](./configuration-reference.md#opportunity-stage-configuration).
+1. Lead email domain matches an existing customer account domain
 
-#### SQL (Sales Qualified Lead)
+1. Matching account has `Type = 'Customer'` OR `Type = 'Customer - Subsidiary'`
 
-**Definition**: Opportunity qualified by sales with defined business potential.
+1. Matching account does NOT have `Type = 'Prospect'`
 
-**Qualification Criteria**:
-
-- **ALL opportunities are SQL by definition at creation**
-- **Excludes**: `'Closed Lost'` opportunities (as defined in Configuration Reference)
-
-**Date Assignment**: Always use opportunity creation date
-
-```sql
-createddate_ts as sql_date
-```
-
-**Count Logic**:
-
-```sql
--- Using stage exclusion logic from docs/configuration-reference.md
-COUNT(CASE WHEN stagename != 'Closed Lost' THEN 1 END) as sql_count
-```
-
-#### SQO (Sales Qualified Opportunity)
-
-**Definition**: Opportunity where proof of value has been demonstrated.
-
-**Qualification Criteria** (from [Configuration Reference](./configuration-reference.md)):
-
-- Current stage = `'Proof of Value (SQO)'` OR beyond
-- **Excludes**: `'Closed Lost'` opportunities
-
-**Date Assignment Logic**:
-
-```sql
--- Using stage names from docs/configuration-reference.md
-CASE 
-    WHEN stagename = 'Proof of Value (SQO)' THEN laststagechangedate_ts
-    WHEN stagename IN ('Proposal', 'Contracts', 'Closed Won') THEN laststagechangedate_ts
-    ELSE NULL
-END as sqo_date
-```
-
-**Count Logic**:
-
-```sql
--- Using stage progression logic from docs/configuration-reference.md
-COUNT(CASE WHEN stagename IN ('Proof of Value (SQO)', 'Proposal', 'Contracts', 'Closed Won') 
-      THEN 1 END) as sqo_count
-```
-
-#### Proposal Stage
-
-**Definition**: Formal proposal delivered with detailed solution and pricing.
-
-**Qualification Criteria**:
-
-- Current stage = `'Proposal'` OR beyond (as defined in Configuration Reference)
-- **Excludes**: `'Closed Lost'` opportunities
-
-**Count Logic**:
-
-```sql
--- Using stage names from docs/configuration-reference.md
-COUNT(CASE WHEN stagename IN ('Proposal', 'Contracts', 'Closed Won')
-      THEN 1 END) as proposal_count
-```
-
-#### Contracts Stage
-
-**Definition**: Contract negotiation and legal review phase.
-
-**Qualification Criteria**:
-
-- Current stage = `'Contracts'` OR `'Closed Won'`
-
-**Count Logic**:
-
-```sql
--- Using stage names from docs/configuration-reference.md
-COUNT(CASE WHEN stagename IN ('Contracts', 'Closed Won')
-      THEN 1 END) as contracts_count
-```
-
-#### Closed Won
-
-**Definition**: Successfully closed opportunity with executed contracts.
-
-**Count Logic**:
-
-```sql
--- Using stage name from docs/configuration-reference.md
-COUNT(CASE WHEN stagename = 'Closed Won' THEN 1 END) as closed_won_count
-```
-
-## Sequential Stage Progression Logic
-
-### Fundamental Rule
-
-Every **ACTIVE** opportunity must be counted in all stages it has logically passed through. **`'Closed Lost'` opportunities are excluded from progressive stage counts** as they represent failed progression (per [Stage Progression Logic](./configuration-reference.md#stage-progression-logic)).
-
-### Progression Flow
-
-```text
-MCL → MQL → SQL → SQO → Proposal → Contracts → Closed Won
-                                               ↘ Closed Lost (EXCLUDED)
-```
-
-### Complete Sequential Funnel Query
-
-```sql
--- Using latest records pattern and configuration values from docs/configuration-reference.md
-WITH latest_lead AS (
-    SELECT A.* 
-    FROM lakehouse.object_lead A 
-    INNER JOIN (
-        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
-        FROM lakehouse.object_lead B 
-        GROUP BY B.Id
-    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
-    WHERE A.grax__deleted IS NULL
-),
-latest_opportunity AS (
-    SELECT A.* 
-    FROM lakehouse.object_opportunity A 
-    INNER JOIN (
-        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
-        FROM lakehouse.object_opportunity B 
-        GROUP BY B.Id
-    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
-    WHERE A.grax__deleted IS NULL
-),
-lead_metrics AS (
-    SELECT 
-        -- Using lead status values from docs/configuration-reference.md
-        COUNT(CASE WHEN status = 'Open' THEN 1 END) as mcl_count,
-        COUNT(CASE 
-            WHEN status = 'Working' THEN 1
-            WHEN isconverted_b = true THEN 1
-        END) as mql_count
-    FROM latest_lead
-    WHERE createddate_ts >= DATE_ADD('month', -12, CURRENT_DATE)
-),
-opportunity_metrics AS (
-    SELECT 
-        -- Using stage progression logic from docs/configuration-reference.md
-        -- SQL: All opportunities except Closed Lost
-        COUNT(CASE WHEN stagename != 'Closed Lost' THEN 1 END) as sql_count,
-        -- SQO: Reached SQO or beyond (excluding Closed Lost)
-        COUNT(CASE WHEN stagename IN ('Proof of Value (SQO)', 'Proposal', 'Contracts', 'Closed Won') 
-              THEN 1 END) as sqo_count,
-        -- Proposal: Reached Proposal or beyond
-        COUNT(CASE WHEN stagename IN ('Proposal', 'Contracts', 'Closed Won')
-              THEN 1 END) as proposal_count,
-        -- Contracts: Reached Contracts or beyond
-        COUNT(CASE WHEN stagename IN ('Contracts', 'Closed Won')
-              THEN 1 END) as contracts_count,
-        -- Closed Won: Successfully completed
-        COUNT(CASE WHEN stagename = 'Closed Won' THEN 1 END) as closed_won_count,
-        -- Closed Lost: Failed progression (tracked separately)
-        COUNT(CASE WHEN stagename = 'Closed Lost' THEN 1 END) as closed_lost_count
-    FROM latest_opportunity
-    WHERE createddate_ts >= DATE_ADD('month', -12, CURRENT_DATE)
-)
-SELECT 
-    lm.mcl_count,
-    lm.mql_count,
-    om.sql_count,
-    om.sqo_count,
-    om.proposal_count,
-    om.contracts_count,
-    om.closed_won_count,
-    om.closed_lost_count,
-    -- Conversion rates
-    ROUND(lm.mql_count * 100.0 / NULLIF(lm.mcl_count, 0), 2) as mcl_to_mql_rate,
-    ROUND(om.sqo_count * 100.0 / NULLIF(om.sql_count, 0), 2) as sql_to_sqo_rate,
-    ROUND(om.closed_won_count * 100.0 / NULLIF(om.sql_count, 0), 2) as sql_to_won_rate
-FROM lead_metrics lm
-CROSS JOIN opportunity_metrics om
-```
-
-## Validation Queries
-
-### Sequential Validation Check
-
-```sql
--- This query validates the stage progression logic from docs/configuration-reference.md
-WITH funnel_counts AS (
-    SELECT 
-        -- Using stage names and progression logic from configuration reference
-        COUNT(CASE WHEN stagename != 'Closed Lost' THEN 1 END) as sql_count,
-        COUNT(CASE WHEN stagename IN ('Proof of Value (SQO)', 'Proposal', 'Contracts', 'Closed Won') THEN 1 END) as sqo_count,
-        COUNT(CASE WHEN stagename IN ('Proposal', 'Contracts', 'Closed Won') THEN 1 END) as proposal_count,
-        COUNT(CASE WHEN stagename IN ('Contracts', 'Closed Won') THEN 1 END) as contracts_count,
-        COUNT(CASE WHEN stagename = 'Closed Won' THEN 1 END) as closed_won_count
-    FROM (
-        SELECT A.* 
-        FROM lakehouse.object_opportunity A 
-        INNER JOIN (
-            SELECT B.Id, MAX(B.grax__idseq) AS Latest 
-            FROM lakehouse.object_opportunity B 
-            GROUP BY B.Id
-        ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
-        WHERE A.grax__deleted IS NULL
-          AND A.createddate_ts >= DATE_ADD('month', -12, CURRENT_DATE)
-    ) latest_opportunity
-)
-SELECT 
-    sql_count,
-    sqo_count,
-    proposal_count,
-    contracts_count,
-    closed_won_count,
-    -- Validation checks
-    CASE 
-        WHEN sqo_count > sql_count THEN 'ERROR: SQO > SQL'
-        WHEN proposal_count > sqo_count THEN 'ERROR: Proposal > SQO' 
-        WHEN contracts_count > proposal_count THEN 'ERROR: Contracts > Proposal'
-        WHEN closed_won_count > contracts_count THEN 'ERROR: Closed Won > Contracts'
-        ELSE 'VALID: Sequential logic maintained'
-    END as validation_result
-FROM funnel_counts
-```
-
-## Velocity Analysis
-
-### Lead Velocity Calculation
+## Core Analysis Query
 
 ```sql
 WITH latest_lead AS (
@@ -281,86 +54,6 @@ WITH latest_lead AS (
     INNER JOIN (
         SELECT B.Id, MAX(B.grax__idseq) AS Latest 
         FROM lakehouse.object_lead B 
-        GROUP BY B.Id
-    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
-    WHERE A.grax__deleted IS NULL
-),
-lead_with_dates AS (
-    SELECT 
-        *,
-        createddate_ts as mcl_date,
-        -- Using lead status logic from docs/configuration-reference.md
-        CASE 
-            WHEN status = 'Working' THEN createddate_ts
-            WHEN isconverted_b = true THEN CAST(converteddate_d AS timestamp)
-            ELSE NULL
-        END as mql_date
-    FROM latest_lead
-    WHERE createddate_ts >= DATE_ADD('month', -12, CURRENT_DATE)
-)
-SELECT 
-    AVG(DATE_DIFF('day', mcl_date, mql_date)) as avg_mcl_to_mql_days,
-    AVG(DATE_DIFF('day', createddate_ts, CAST(converteddate_d AS timestamp))) as avg_lead_to_conversion_days
-FROM lead_with_dates
-WHERE mql_date IS NOT NULL
-```
-
-### Opportunity Velocity Calculation
-
-```sql
-WITH latest_opportunity AS (
-    SELECT A.* 
-    FROM lakehouse.object_opportunity A 
-    INNER JOIN (
-        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
-        FROM lakehouse.object_opportunity B 
-        GROUP BY B.Id
-    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
-    WHERE A.grax__deleted IS NULL
-),
-opportunity_with_dates AS (
-    SELECT 
-        *,
-        createddate_ts as sql_date,
-        -- Using stage names from docs/configuration-reference.md
-        CASE 
-            WHEN stagename IN ('Proof of Value (SQO)', 'Proposal', 'Contracts', 'Closed Won') 
-            THEN laststagechangedate_ts
-            ELSE NULL
-        END as sqo_date
-    FROM latest_opportunity
-    WHERE createddate_ts >= DATE_ADD('month', -12, CURRENT_DATE)
-      AND stagename != 'Closed Lost'  -- Using exclusion logic from configuration reference
-)
-SELECT 
-    AVG(DATE_DIFF('day', sql_date, sqo_date)) as avg_sql_to_sqo_days,
-    AVG(DATE_DIFF('day', createddate_ts, CAST(closedate_d AS timestamp))) as avg_sql_to_close_days
-FROM opportunity_with_dates
-WHERE sqo_date IS NOT NULL
-  AND stagename = 'Closed Won'
-```
-
-## Customer Segmentation Integration
-
-### Funnel Analysis by Segment
-
-```sql
-WITH latest_lead AS (
-    SELECT A.* 
-    FROM lakehouse.object_lead A 
-    INNER JOIN (
-        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
-        FROM lakehouse.object_lead B 
-        GROUP BY B.Id
-    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
-    WHERE A.grax__deleted IS NULL
-),
-latest_opportunity AS (
-    SELECT A.* 
-    FROM lakehouse.object_opportunity A 
-    INNER JOIN (
-        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
-        FROM lakehouse.object_opportunity B 
         GROUP BY B.Id
     ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
     WHERE A.grax__deleted IS NULL
@@ -375,99 +68,262 @@ latest_account AS (
     ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
     WHERE A.grax__deleted IS NULL
 ),
-lead_segmentation AS (
-    SELECT 
-        l.*,
-        -- Using segmentation thresholds from docs/configuration-reference.md
-        CASE 
-            WHEN l.numberofemployees_f > 250 OR l.annualrevenue_f > 100000000 THEN 'Enterprise'
-            WHEN l.numberofemployees_f > 50 OR l.annualrevenue_f > 10000000 THEN 'SMB'
-            ELSE 'Self Service'
-        END as segment
-    FROM latest_lead l
-    WHERE l.createddate_ts >= DATE_ADD('month', -12, CURRENT_DATE)
-),
-opportunity_segmentation AS (
-    SELECT 
-        o.*,
-        -- Using segmentation thresholds from docs/configuration-reference.md
-        CASE 
-            WHEN a.numberofemployees_f > 250 OR a.annualrevenue_f > 100000000 THEN 'Enterprise'
-            WHEN a.numberofemployees_f > 50 OR a.annualrevenue_f > 10000000 THEN 'SMB'
-            ELSE 'Self Service'
-        END as segment
-    FROM latest_opportunity o
-    LEFT JOIN latest_account a ON o.accountid = a.id
-    WHERE o.createddate_ts >= DATE_ADD('month', -12, CURRENT_DATE)
-)
-SELECT 
-    ls.segment,
-    -- Using lead status values from docs/configuration-reference.md
-    COUNT(CASE WHEN ls.status = 'Open' THEN 1 END) as mcl_count,
-    COUNT(CASE WHEN ls.status = 'Working' OR ls.isconverted_b = true THEN 1 END) as mql_count,
-    -- Using stage names and progression logic from docs/configuration-reference.md
-    COUNT(CASE WHEN os.stagename != 'Closed Lost' THEN 1 END) as sql_count,
-    COUNT(CASE WHEN os.stagename IN ('Proof of Value (SQO)', 'Proposal', 'Contracts', 'Closed Won') THEN 1 END) as sqo_count,
-    COUNT(CASE WHEN os.stagename = 'Closed Won' THEN 1 END) as closed_won_count,
-    -- Conversion rates by segment
-    ROUND(COUNT(CASE WHEN ls.status = 'Working' OR ls.isconverted_b = true THEN 1 END) * 100.0 / 
-          NULLIF(COUNT(CASE WHEN ls.status = 'Open' THEN 1 END), 0), 2) as mcl_to_mql_rate,
-    ROUND(COUNT(CASE WHEN os.stagename = 'Closed Won' THEN 1 END) * 100.0 / 
-          NULLIF(COUNT(CASE WHEN os.stagename != 'Closed Lost' THEN 1 END), 0), 2) as sql_to_won_rate
-FROM lead_segmentation ls
-LEFT JOIN opportunity_segmentation os ON ls.segment = os.segment
-GROUP BY ls.segment
-ORDER BY mcl_count DESC
-```
-
-## Active Pipeline Analysis
-
-### Current Pipeline Health
-
-```sql
-WITH latest_opportunity AS (
+latest_contact AS (
     SELECT A.* 
-    FROM lakehouse.object_opportunity A 
+    FROM lakehouse.object_contact A 
     INNER JOIN (
         SELECT B.Id, MAX(B.grax__idseq) AS Latest 
-        FROM lakehouse.object_opportunity B 
+        FROM lakehouse.object_contact B 
         GROUP BY B.Id
     ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
     WHERE A.grax__deleted IS NULL
-      -- Using stage exclusion logic from docs/configuration-reference.md
-      AND A.stagename NOT IN ('Closed Won', 'Closed Lost')
+),
+-- Extract email domains from leads
+lead_domains AS (
+    SELECT 
+        l.*,
+        LOWER(TRIM(SUBSTRING(l.email, POSITION('@' IN l.email) + 1))) as email_domain
+    FROM latest_lead l
+    WHERE l.email IS NOT NULL 
+      AND l.email LIKE '%@%'
+      -- Using status exclusion logic from docs/configuration-reference.md
+      AND l.status != 'Existing Customer'
+      -- Using active lead criteria from docs/configuration-reference.md
+      AND (l.status IN ('Open', 'Working'))
+),
+-- Extract domains from customer accounts using account types from docs/configuration-reference.md
+account_domains AS (
+    SELECT DISTINCT
+        a.id as account_id,
+        a.name as account_name,
+        a.type as account_type,
+        -- Extract domain from website field
+        LOWER(TRIM(REPLACE(REPLACE(REPLACE(a.website, 'http://', ''), 'https://', ''), 'www.', ''))) as account_domain
+    FROM latest_account a
+    -- Using customer types from docs/configuration-reference.md
+    WHERE a.type IN ('Customer', 'Customer - Subsidiary')  -- Only customer types
+      AND a.type != 'Prospect'                              -- Explicitly exclude prospects
+      AND a.website IS NOT NULL
+      AND LENGTH(TRIM(a.website)) > 0
+),
+-- Alternative domain extraction from customer account contacts
+contact_domains AS (
+    SELECT DISTINCT
+        c.accountid,
+        LOWER(TRIM(SUBSTRING(c.email, POSITION('@' IN c.email) + 1))) as contact_domain
+    FROM latest_contact c
+    WHERE c.email IS NOT NULL 
+      AND c.email LIKE '%@%'
+      AND c.accountid IN (
+          SELECT a.id 
+          FROM latest_account a 
+          -- Using customer types from docs/configuration-reference.md
+          WHERE a.type IN ('Customer', 'Customer - Subsidiary')  -- Only customer types
+            AND a.type != 'Prospect'                              -- Explicitly exclude prospects
+      )
+),
+-- Combine customer domains from multiple sources
+all_customer_domains AS (
+    SELECT account_id, account_name, account_type, account_domain as domain
+    FROM account_domains
+    WHERE account_domain IS NOT NULL AND LENGTH(account_domain) > 0
+    
+    UNION
+    
+    SELECT 
+        a.id as account_id, 
+        a.name as account_name, 
+        a.type as account_type,
+        cd.contact_domain as domain
+    FROM latest_account a
+    INNER JOIN contact_domains cd ON a.id = cd.accountid
+    -- Using customer types from docs/configuration-reference.md
+    WHERE a.type IN ('Customer', 'Customer - Subsidiary')  -- Only customer types
+      AND a.type != 'Prospect'                              -- Explicitly exclude prospects
+)
+-- Final results: Leads that should be marked as Existing Customer
+SELECT 
+    ld.id as lead_id,
+    ld.name as lead_name,
+    ld.email as lead_email,
+    ld.company as lead_company,
+    ld.status as current_lead_status,
+    ld.email_domain,
+    ld.createddate_ts as lead_created_date,
+    
+    -- Matching customer account info
+    acd.account_id,
+    acd.account_name,
+    acd.account_type,
+    acd.domain as matching_domain,
+    
+    -- Validation using account types from docs/configuration-reference.md
+    CASE 
+        WHEN acd.account_type NOT IN ('Customer', 'Customer - Subsidiary') THEN 'ERROR: Non-customer matched'
+        WHEN acd.account_type = 'Prospect' THEN 'ERROR: Prospect matched (should be impossible)'
+        ELSE 'Valid Customer Match'
+    END as match_validation,
+    
+    -- Customer classification using types from docs/configuration-reference.md
+    CASE 
+        WHEN acd.account_type = 'Customer' THEN 'Customer Account'
+        WHEN acd.account_type = 'Customer - Subsidiary' THEN 'Customer Subsidiary Account'
+        ELSE 'Other Customer Type'
+    END as customer_classification,
+    
+    -- Age analysis
+    DATE_DIFF('day', ld.createddate_ts, CURRENT_TIMESTAMP) as days_since_lead_created
+    
+FROM lead_domains ld
+INNER JOIN all_customer_domains acd ON ld.email_domain = acd.domain
+-- Final safety check using account types from docs/configuration-reference.md
+WHERE acd.account_type IN ('Customer', 'Customer - Subsidiary')
+  AND acd.account_type != 'Prospect'
+ORDER BY 
+    acd.account_type, 
+    ld.createddate_ts DESC
+```
+
+## Validation Queries
+
+### Account Type Distribution Check
+
+```sql
+-- Verify account type distribution for domain matching candidates
+WITH latest_account AS (
+    SELECT A.* 
+    FROM lakehouse.object_account A 
+    INNER JOIN (
+        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
+        FROM lakehouse.object_account B 
+        GROUP BY B.Id
+    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
+    WHERE A.grax__deleted IS NULL
+),
+latest_contact AS (
+    SELECT A.* 
+    FROM lakehouse.object_contact A 
+    INNER JOIN (
+        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
+        FROM lakehouse.object_contact B 
+        GROUP BY B.Id
+    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
+    WHERE A.grax__deleted IS NULL
+),
+all_accounts_with_domains AS (
+    SELECT 
+        type as account_type,
+        COUNT(*) as account_count,
+        COUNT(CASE WHEN website IS NOT NULL AND LENGTH(TRIM(website)) > 0 THEN 1 END) as with_website,
+        COUNT(CASE 
+            WHEN id IN (
+                SELECT DISTINCT accountid 
+                FROM latest_contact 
+                WHERE email IS NOT NULL
+            ) THEN 1 
+        END) as with_contacts
+    FROM latest_account
+    GROUP BY type
 )
 SELECT 
-    stagename as current_stage,
-    COUNT(*) as opportunity_count,
-    SUM(amount_f) as pipeline_value,
-    AVG(amount_f) as avg_deal_size,
-    AVG(probability_f) as avg_probability,
-    SUM(amount_f * probability_f / 100) as weighted_value,
-    ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) as stage_percentage,
-    -- Age analysis
-    AVG(DATE_DIFF('day', createddate_ts, CURRENT_DATE)) as avg_age_days
-FROM latest_opportunity  
-WHERE amount_f IS NOT NULL
-GROUP BY stagename
-ORDER BY 
-    -- Using stage ordering from docs/configuration-reference.md
-    CASE stagename
-        WHEN 'SQL' THEN 1
-        WHEN 'Proof of Value (SQO)' THEN 2  
-        WHEN 'Proposal' THEN 3
-        WHEN 'Contracts' THEN 4
-        ELSE 5
-    END
+    account_type,
+    account_count,
+    with_website,
+    with_contacts,
+    -- Flag which types are included in customer matching using configuration from docs/configuration-reference.md
+    CASE 
+        WHEN account_type IN ('Customer', 'Customer - Subsidiary') THEN 'INCLUDED in customer matching'
+        WHEN account_type = 'Prospect' THEN 'EXCLUDED from customer matching'
+        ELSE 'OTHER - Review inclusion criteria'
+    END as matching_inclusion
+FROM all_accounts_with_domains
+ORDER BY account_count DESC
 ```
+
+## Summary Analysis
+
+### Misclassified Leads by Customer Type
+
+```sql
+-- Summarize misclassified leads using the core analysis as a CTE
+WITH misclassified_leads AS (
+    -- [Insert complete core analysis query above]
+)
+SELECT 
+    customer_classification,
+    COUNT(*) as lead_count,
+    -- Using lead status values from docs/configuration-reference.md
+    COUNT(CASE WHEN current_lead_status = 'Open' THEN 1 END) as mcl_leads,
+    COUNT(CASE WHEN current_lead_status = 'Working' THEN 1 END) as mql_leads,
+    AVG(days_since_lead_created) as avg_days_old,
+    -- Validation check
+    COUNT(CASE WHEN match_validation LIKE '%ERROR%' THEN 1 END) as validation_errors
+FROM misclassified_leads
+GROUP BY customer_classification
+ORDER BY lead_count DESC
+```
+
+## Business Impact Analysis
+
+### Revenue Protection
+
+- Prevents sales outreach conflicts with existing customer success teams
+- Ensures prospect accounts remain in active sales pipeline
+- Eliminates false positive customer classifications
+- Reduces risk of customer confusion from properly classified customers
+
+### Process Efficiency
+
+- Eliminates wasted sales development resources on actual existing customers
+- Preserves sales opportunities with ALL prospect accounts
+- Improves lead qualification accuracy using Account Type governance from [Configuration Reference](./configuration-reference.md)
+- Enables better territory and quota planning
+
+### Data Governance
+
+- Establishes Account Type as single source of truth for customer classification (per [Configuration Reference](./configuration-reference.md))
+- Simplifies customer identification process
+- Removes dependency on financial metrics for customer status
+- Creates clear, auditable classification rules
+
+## Implementation Recommendations
+
+### Immediate Actions
+
+1. **Execute Core Analysis**: Run the main query to identify all misclassified leads
+
+1. **Validate Results**: Use validation queries to confirm logic correctness
+
+1. **Update Lead Status**: Change identified leads from active status to `'Existing Customer'` (using status value from [Configuration Reference](./configuration-reference.md))
+
+1. **Document Process**: Record classification rules and validation steps
+
+### Ongoing Monitoring
+
+1. **Weekly Audits**: Run analysis weekly to catch new misclassifications
+
+1. **Process Integration**: Build checks into lead import and qualification workflows
+
+1. **Training Updates**: Educate sales teams on proper customer identification using values from [Configuration Reference](./configuration-reference.md)
+
+1. **Metric Adjustment**: Update funnel reports to reflect corrected classifications
 
 ## Configuration Adaptation
 
 For organizations with different Salesforce implementations, update the [Configuration Reference](./configuration-reference.md) document with your specific values:
 
-- **Lead Status Values**: Update the lead qualification stage values
-- **Opportunity Stage Names**: Modify stage names to match your sales process  
-- **Segmentation Thresholds**: Adjust employee/revenue thresholds for company sizing
-- **Customer Types**: Update account classification values
+### Lead Status Audit Configuration Updates
 
-This comprehensive sales process analysis framework ensures consistent, accurate tracking of lead progression and opportunity advancement while maintaining proper sequential logic and excluding failed progressions from advancement metrics.
+1. **Lead Status Values**: Update `'Open'`, `'Working'`, `'Existing Customer'` to match your lead qualification stages
+1. **Account Types**: Modify `'Customer'`, `'Customer - Subsidiary'`, `'Prospect'` with your account classification values
+1. **Active Lead Criteria**: Adjust which status values indicate active leads requiring audit
+1. **Exclusion Logic**: Update which account types should be excluded from customer matching
+
+### Validation Process
+
+1. **Update Configuration**: Modify values in [Configuration Reference](./configuration-reference.md)
+1. **Test Analysis**: Execute the core analysis query with your configuration
+1. **Validate Logic**: Ensure classification results make sense for your business context
+1. **Document Changes**: Record customizations for audit trail purposes
+
+This comprehensive audit framework ensures accurate lead classification that respects the distinction between confirmed customers and active prospects while maintaining data integrity and supporting effective sales operations across different Salesforce implementations.
