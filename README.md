@@ -35,6 +35,7 @@ This repository contains structured documentation that enables large language mo
 ### Reporting and Brand Standards
 
 - **[Reporting and Brand Standards](./docs/reporting-brand-standards.md)** - **ESSENTIAL**: Professional branding and HTML artifact requirements for all GRAX reports
+- **[HTML Report Template](./docs/html-report-template.md)** - **MANDATORY**: Complete HTML template with CSS styling for all GRAX reports
 
 ### Multi-Customer Support
 
@@ -61,6 +62,8 @@ For LLM models working with this data lake:
 
 1. **ESSENTIAL**: Review [Reporting and Brand Standards](./docs/reporting-brand-standards.md) for professional HTML artifact requirements
 
+1. **MANDATORY**: Use [HTML Report Template](./docs/html-report-template.md) for all GRAX reports with complete branding and visualizations
+
 1. **Understand**: Review [Database Schema Guide](./docs/database-schema-guide.md) for available data structures
 
 1. **Reference**: Use [Athena SQL Syntax Guide](./docs/athena-sql-syntax-guide.md) for proper query formation
@@ -75,7 +78,8 @@ For LLM models working with this data lake:
 
 - **Configuration First**: Always reference the Configuration Reference for business-specific values
 - **Execute First**: When customers ask for reports/analysis, execute queries and provide insights
-- **Professional Presentation**: ALL GRAX reports must be delivered as polished HTML artifacts following brand standards
+- **Professional Presentation**: ALL GRAX reports must be delivered as polished HTML artifacts following brand standards using the mandatory HTML template
+- **Interactive Visualizations**: Include charts, graphs, and interactive elements in all reports unless explicitly requested otherwise
 - **Graceful Adaptation**: Use fallback strategies when customer configurations differ from defaults
 - All queries must filter deleted records using `grax__deleted IS NULL`
 - Use latest records pattern for current state analysis
