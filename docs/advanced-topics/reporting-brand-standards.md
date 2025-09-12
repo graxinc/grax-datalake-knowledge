@@ -4,7 +4,7 @@
 
 This document establishes comprehensive reporting and brand standards for all GRAX data lake analytics outputs. These standards ensure consistent visual identity, messaging alignment, and professional presentation across all customer-facing reports, dashboards, and analysis deliverables.
 
-**Configuration Dependencies**: All business-specific values referenced in examples use standardized configuration from [Configuration Reference](./configuration-reference.md). Organizations should update that document to match their specific branding requirements rather than modifying individual templates.
+**Configuration Dependencies**: All business-specific values referenced in examples use standardized configuration from [Configuration Reference](/docs/core-reference/configuration-reference.md). Organizations should update that document to match their specific branding requirements rather than modifying individual templates.
 
 ## Core Brand Identity
 
@@ -191,7 +191,7 @@ Message: "End-to-end supply chain intelligence and quality assurance"
 
 **Mandatory Elements**:
 
-- Lead qualification funnel using values from [Configuration Reference](./configuration-reference.md)
+- Lead qualification funnel using values from [Configuration Reference](/docs/core-reference/configuration-reference.md)
 - Pipeline velocity analysis with historical baselines
 - Win/loss analysis with complete data history
 - Territory performance with trend intelligence
@@ -202,7 +202,7 @@ Message: "End-to-end supply chain intelligence and quality assurance"
 
 **Mandatory Elements**:
 
-- Customer segmentation using thresholds from [Configuration Reference](./configuration-reference.md)
+- Customer segmentation using thresholds from [Configuration Reference](/docs/core-reference/configuration-reference.md)
 - Lifetime value analysis with complete interaction history
 - Churn prediction with early warning indicators
 - Expansion opportunity identification
@@ -266,7 +266,7 @@ Message: "End-to-end supply chain intelligence and quality assurance"
 - [ ] All data sourced from GRAX Analytics Platform
 - [ ] Proper confidentiality markings applied
 - [ ] Generation timestamp included
-- [ ] Configuration values referenced from [Configuration Reference](./configuration-reference.md)
+- [ ] Configuration values referenced from [Configuration Reference](/docs/core-reference/configuration-reference.md)
 
 ### Brand Consistency Validation
 
@@ -281,7 +281,7 @@ For organizations requiring customized branding:
 
 ### Customizable Elements
 
-Update the [Configuration Reference](./configuration-reference.md) document with:
+Update the [Configuration Reference](/docs/core-reference/configuration-reference.md) document with:
 
 1. **Color Palette**: Modify hex codes to match organizational brand
 1. **Typography**: Adjust typeface selections for brand consistency
@@ -292,7 +292,7 @@ Update the [Configuration Reference](./configuration-reference.md) document with
 ### Implementation Process
 
 1. **Brand Review**: Compare organizational brand guidelines to GRAX standards
-1. **Configuration Update**: Modify [Configuration Reference](./configuration-reference.md) with approved changes
+1. **Configuration Update**: Modify [Configuration Reference](/docs/core-reference/configuration-reference.md) with approved changes
 1. **Template Testing**: Validate all report templates with new brand elements
 1. **Documentation**: Record customizations for consistency across team
 1. **Quality Assurance**: Establish review process for brand compliance
@@ -410,7 +410,7 @@ Update the [Configuration Reference](./configuration-reference.md) document with
 When creating HTML reports, LLMs must:
 
 1. **Execute Data Analysis First**
-   - Run appropriate queries using [Query Templates](./query-templates.md)
+   - Run appropriate queries using [Query Templates](/docs/query-guidance/query-templates.md)
    - Analyze results for business insights
    - Identify key metrics and trends
 
@@ -435,7 +435,7 @@ When creating HTML reports, LLMs must:
 
 ### Report Generation Workflow
 
-1. **Data Analysis**: Execute queries using patterns from [Query Templates](./query-templates.md)
+1. **Data Analysis**: Execute queries using patterns from [Query Templates](/docs/query-guidance/query-templates.md)
 1. **Insight Development**: Apply historical intelligence framework
 1. **HTML Artifact Creation**: Build professional, branded HTML report with complete styling
 1. **Visual Design**: Implement all brand standards and interactive elements

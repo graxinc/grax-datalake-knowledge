@@ -2,7 +2,7 @@
 
 ## Sales Stage Definitions
 
-These definitions use the standardized configuration values from [Configuration Reference](./configuration-reference.md). Organizations with different Salesforce configurations should update the Configuration Reference document to match their specific values.
+These definitions use the standardized configuration values from [Configuration Reference](/docs/core-reference/configuration-reference.md). Organizations with different Salesforce configurations should update the Configuration Reference document to match their specific values.
 
 ### Lead Qualification Stages
 
@@ -10,9 +10,9 @@ These definitions use the standardized configuration values from [Configuration 
 
 **Definition**: Lead that has demonstrated initial interest and meets basic qualification criteria.
 
-**Qualification Criteria** (from [Configuration Reference](./configuration-reference.md)):
+**Qualification Criteria** (from [Configuration Reference](/docs/core-reference/configuration-reference.md)):
 
-- Lead Status = `'Open'` (as defined in [Lead Status Configuration](./configuration-reference.md#lead-status-configuration))
+- Lead Status = `'Open'` (as defined in [Lead Status Configuration](/docs/core-reference/configuration-reference.md#lead-status-configuration))
 - **Date Assignment**: Always use lead creation date (`createddate_ts`)
 
 **Query Pattern**:
@@ -26,7 +26,7 @@ CASE WHEN status = 'Open' THEN createddate_ts ELSE NULL END as mcl_date
 
 **Definition**: Lead qualified by marketing with demonstrated interest and fit for sales engagement.
 
-**Qualification Criteria** (from [Configuration Reference](./configuration-reference.md)):
+**Qualification Criteria** (from [Configuration Reference](/docs/core-reference/configuration-reference.md)):
 
 1. **Primary**: Lead Status = `'Working'`
 
@@ -45,7 +45,7 @@ END as mql_date
 
 ### Opportunity Stages
 
-These stages follow the progression logic defined in [Opportunity Stage Configuration](./configuration-reference.md#opportunity-stage-configuration).
+These stages follow the progression logic defined in [Opportunity Stage Configuration](/docs/core-reference/configuration-reference.md#opportunity-stage-configuration).
 
 #### SQL (Sales Qualified Lead)
 
@@ -73,7 +73,7 @@ COUNT(CASE WHEN stagename != 'Closed Lost' THEN 1 END) as sql_count
 
 **Definition**: Opportunity where proof of value has been demonstrated.
 
-**Qualification Criteria** (from [Configuration Reference](./configuration-reference.md)):
+**Qualification Criteria** (from [Configuration Reference](/docs/core-reference/configuration-reference.md)):
 
 - Current stage = `'Proof of Value (SQO)'` OR beyond
 - **Excludes**: `'Closed Lost'` opportunities
@@ -145,7 +145,7 @@ COUNT(CASE WHEN stagename = 'Closed Won' THEN 1 END) as closed_won_count
 
 ### Fundamental Rule
 
-Every **ACTIVE** opportunity must be counted in all stages it has logically passed through. **`'Closed Lost'` opportunities are excluded from progressive stage counts** as they represent failed progression (per [Stage Progression Logic](./configuration-reference.md#stage-progression-logic)).
+Every **ACTIVE** opportunity must be counted in all stages it has logically passed through. **`'Closed Lost'` opportunities are excluded from progressive stage counts** as they represent failed progression (per [Stage Progression Logic](/docs/core-reference/configuration-reference.md#stage-progression-logic)).
 
 ### Progression Flow
 
@@ -463,7 +463,7 @@ ORDER BY
 
 ## Configuration Adaptation
 
-For organizations with different Salesforce implementations, update the [Configuration Reference](./configuration-reference.md) document with your specific values:
+For organizations with different Salesforce implementations, update the [Configuration Reference](/docs/core-reference/configuration-reference.md) document with your specific values:
 
 - **Lead Status Values**: Update the lead qualification stage values
 - **Opportunity Stage Names**: Modify stage names to match your sales process  

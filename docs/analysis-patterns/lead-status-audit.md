@@ -4,7 +4,7 @@
 
 This guide provides a framework for identifying leads that should be classified as "Existing Customer" but are currently marked as active prospects. This analysis prevents unnecessary sales outreach to existing customers and ensures accurate lead qualification metrics.
 
-**Configuration Dependencies**: All lead status values, account types, and classification logic in this document use standardized values from [Configuration Reference](./configuration-reference.md). Organizations with different Salesforce configurations should update that document to match their specific values.
+**Configuration Dependencies**: All lead status values, account types, and classification logic in this document use standardized values from [Configuration Reference](/docs/core-reference/configuration-reference.md). Organizations with different Salesforce configurations should update that document to match their specific values.
 
 ## Business Problem
 
@@ -19,9 +19,9 @@ This guide provides a framework for identifying leads that should be classified 
 
 ## Customer Account Definition
 
-An account is considered an "Existing Customer" based on **Account Type** field values defined in [Configuration Reference](./configuration-reference.md):
+An account is considered an "Existing Customer" based on **Account Type** field values defined in [Configuration Reference](/docs/core-reference/configuration-reference.md):
 
-**Customer Types** (from [Account Classification Configuration](./configuration-reference.md#account-classification-configuration)):
+**Customer Types** (from [Account Classification Configuration](/docs/core-reference/configuration-reference.md#account-classification-configuration)):
 
 - `Type = 'Customer'` - Primary customer accounts
 - `Type = 'Customer - Subsidiary'` - Customer subsidiary accounts
@@ -29,7 +29,7 @@ An account is considered an "Existing Customer" based on **Account Type** field 
 **Exclusions**:
 
 - Accounts with `Type = 'Prospect'` are **NEVER** considered existing customers
-- Annual revenue is **NOT** used for customer identification (following [Customer Identification Logic](./configuration-reference.md#customer-identification-logic))
+- Annual revenue is **NOT** used for customer identification (following [Customer Identification Logic](/docs/core-reference/configuration-reference.md#customer-identification-logic))
 
 ## Lead Classification Logic
 
@@ -37,7 +37,7 @@ A lead should be classified as "Existing Customer" if:
 
 1. Lead Status ≠ `'Existing Customer'` (current misclassification)
 
-1. Lead is currently active (MCL or MQL status using values from [Configuration Reference](./configuration-reference.md))
+1. Lead is currently active (MCL or MQL status using values from [Configuration Reference](/docs/core-reference/configuration-reference.md))
 
 1. Lead email domain matches an existing customer account domain
 
@@ -276,12 +276,12 @@ ORDER BY lead_count DESC
 
 - Eliminates wasted sales development resources on actual existing customers
 - Preserves sales opportunities with ALL prospect accounts
-- Improves lead qualification accuracy using Account Type governance from [Configuration Reference](./configuration-reference.md)
+- Improves lead qualification accuracy using Account Type governance from [Configuration Reference](/docs/core-reference/configuration-reference.md)
 - Enables better territory and quota planning
 
 ### Data Governance
 
-- Establishes Account Type as single source of truth for customer classification (per [Configuration Reference](./configuration-reference.md))
+- Establishes Account Type as single source of truth for customer classification (per [Configuration Reference](/docs/core-reference/configuration-reference.md))
 - Simplifies customer identification process
 - Removes dependency on financial metrics for customer status
 - Creates clear, auditable classification rules
@@ -294,7 +294,7 @@ ORDER BY lead_count DESC
 
 1. **Validate Results**: Use validation queries to confirm logic correctness
 
-1. **Update Lead Status**: Change identified leads from active status to `'Existing Customer'` (using status value from [Configuration Reference](./configuration-reference.md))
+1. **Update Lead Status**: Change identified leads from active status to `'Existing Customer'` (using status value from [Configuration Reference](/docs/core-reference/configuration-reference.md))
 
 1. **Document Process**: Record classification rules and validation steps
 
@@ -304,13 +304,13 @@ ORDER BY lead_count DESC
 
 1. **Process Integration**: Build checks into lead import and qualification workflows
 
-1. **Training Updates**: Educate sales teams on proper customer identification using values from [Configuration Reference](./configuration-reference.md)
+1. **Training Updates**: Educate sales teams on proper customer identification using values from [Configuration Reference](/docs/core-reference/configuration-reference.md)
 
 1. **Metric Adjustment**: Update funnel reports to reflect corrected classifications
 
 ## Configuration Adaptation
 
-For organizations with different Salesforce implementations, update the [Configuration Reference](./configuration-reference.md) document with your specific values:
+For organizations with different Salesforce implementations, update the [Configuration Reference](/docs/core-reference/configuration-reference.md) document with your specific values:
 
 ### Lead Status Audit Configuration Updates
 
@@ -321,7 +321,7 @@ For organizations with different Salesforce implementations, update the [Configu
 
 ### Validation Process
 
-1. **Update Configuration**: Modify values in [Configuration Reference](./configuration-reference.md)
+1. **Update Configuration**: Modify values in [Configuration Reference](/docs/core-reference/configuration-reference.md)
 1. **Test Analysis**: Execute the core analysis query with your configuration
 1. **Validate Logic**: Ensure classification results make sense for your business context
 1. **Document Changes**: Record customizations for audit trail purposes

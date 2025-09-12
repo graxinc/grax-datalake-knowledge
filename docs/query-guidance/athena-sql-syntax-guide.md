@@ -4,7 +4,7 @@
 
 Amazon Athena requires specific SQL syntax patterns that differ from standard SQL databases. This guide provides the correct syntax for common operations and helps prevent common errors.
 
-**Configuration Dependencies**: Example queries in this document use standardized values from [Configuration Reference](./configuration-reference.md). Organizations with different Salesforce configurations should reference their customized configuration values.
+**Configuration Dependencies**: Example queries in this document use standardized values from [Configuration Reference](/docs/core-reference/configuration-reference.md). Organizations with different Salesforce configurations should reference their customized configuration values.
 
 ## Critical Syntax Corrections
 
@@ -592,7 +592,7 @@ LEFT JOIN (SELECT month_period as join_month, count2 as metric2 FROM table2) t2
 
 ## Configuration Adaptation
 
-For organizations with different Salesforce implementations, remember that example queries use values from [Configuration Reference](./configuration-reference.md):
+For organizations with different Salesforce implementations, remember that example queries use values from [Configuration Reference](/docs/core-reference/configuration-reference.md):
 
 ### Configuration-Dependent Elements
 
@@ -603,7 +603,7 @@ For organizations with different Salesforce implementations, remember that examp
 
 ### Adaptation Process
 
-1. **Update Configuration**: Modify [Configuration Reference](./configuration-reference.md) with your values
+1. **Update Configuration**: Modify [Configuration Reference](/docs/core-reference/configuration-reference.md) with your values
 1. **Test Syntax Patterns**: Ensure Athena syntax rules work with your data
 1. **Validate Examples**: Run sample queries with your configuration
 1. **Document Changes**: Record any syntax adaptations needed for your environment

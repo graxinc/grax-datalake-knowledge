@@ -2,9 +2,9 @@
 
 ## Overview
 
-All query templates in this document use the standardized configuration values from [Configuration Reference](./configuration-reference.md). Organizations with different Salesforce configurations should update that document to match their specific values rather than modifying individual queries.
+All query templates in this document use the standardized configuration values from [Configuration Reference](/docs/core-reference/configuration-reference.md). Organizations with different Salesforce configurations should update that document to match their specific values rather than modifying individual queries.
 
-**Configuration Dependencies**: The templates below reference business-specific values defined in [Configuration Reference](./configuration-reference.md) including lead status values, opportunity stage names, account types, and segmentation thresholds.
+**Configuration Dependencies**: The templates below reference business-specific values defined in [Configuration Reference](/docs/core-reference/configuration-reference.md) including lead status values, opportunity stage names, account types, and segmentation thresholds.
 
 ## Core Query Patterns
 
@@ -561,7 +561,7 @@ FROM latest_check
 
 ## Configuration Adaptation
 
-For organizations with different Salesforce implementations, modify the [Configuration Reference](./configuration-reference.md) document with your specific values:
+For organizations with different Salesforce implementations, modify the [Configuration Reference](/docs/core-reference/configuration-reference.md) document with your specific values:
 
 ### Critical Updates Needed
 
@@ -573,7 +573,7 @@ For organizations with different Salesforce implementations, modify the [Configu
 
 ### Testing Process
 
-1. **Update Configuration**: Modify values in [Configuration Reference](./configuration-reference.md)
+1. **Update Configuration**: Modify values in [Configuration Reference](/docs/core-reference/configuration-reference.md)
 1. **Test Templates**: Execute sample queries from this document
 1. **Validate Results**: Ensure data makes sense for your business context
 1. **Document Changes**: Record customizations for future reference

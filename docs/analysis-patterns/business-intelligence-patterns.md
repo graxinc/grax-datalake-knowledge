@@ -4,7 +4,7 @@
 
 This guide provides advanced analytics patterns for extracting strategic insights from Salesforce data. These patterns focus on revenue intelligence, customer lifecycle analysis, and predictive indicators that drive business decisions.
 
-**Configuration Reference**: All business-specific values used in these patterns are defined in [Configuration Reference](./configuration-reference.md). Organizations with different Salesforce configurations should update that document to match their specific values.
+**Configuration Reference**: All business-specific values used in these patterns are defined in [Configuration Reference](/docs/core-reference/configuration-reference.md). Organizations with different Salesforce configurations should update that document to match their specific values.
 
 ## Revenue Intelligence Patterns
 
@@ -795,7 +795,7 @@ For organizations with different Salesforce implementations:
 
 ### Update Configuration Values
 
-Modify the [Configuration Reference](./configuration-reference.md) document to match your organization's specific values:
+Modify the [Configuration Reference](/docs/core-reference/configuration-reference.md) document to match your organization's specific values:
 
 - **Opportunity Stage Names**: Update to match your sales process stages
 - **Segmentation Thresholds**: Adjust employee count and revenue thresholds for Enterprise/SMB/Self-Service classification

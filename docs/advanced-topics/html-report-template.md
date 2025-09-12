@@ -666,7 +666,7 @@ The template includes:
 
 ## Configuration Integration
 
-This template uses values from [Configuration Reference](./configuration-reference.md) for:
+This template uses values from [Configuration Reference](/docs/core-reference/configuration-reference.md) for:
 
 - Brand colors and styling
 - Typography specifications
