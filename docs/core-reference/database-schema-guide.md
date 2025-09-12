@@ -1,416 +1,366 @@
 # Database Schema Guide
 
-Comprehensive reference for GRAX Data Lake database schema, field definitions, and data structures optimized for Amazon Athena queries.
+## Overview
 
-## Database Environment
+The data lake contains complete historical Salesforce data with comprehensive versioning and change tracking capabilities. This guide provides field-level documentation for all major business objects.
 
-- **Engine**: Amazon Athena (Version 3)
-- **Workgroup**: lakehouse
-- **Catalog**: lakehouse
-- **Database**: lakehouse
-- **Data Format**: Parquet with Snappy compression
-- **Partitioning**: By date for performance optimization
+**Configuration Dependencies**: All business-specific values documented below are defined in [Configuration Reference](./configuration-reference.md). Organizations with different Salesforce configurations should update that central document rather than modifying individual field examples.
 
-## Core Table Structure
+## Universal System Fields
 
-### Primary Objects
+Every table contains these mandatory system fields:
 
-| Object | Table Name | Primary Use | Record Volume |
-|--------|------------|-------------|---------------|
-| **Accounts** | `lakehouse.object_account` | Company and organization data | Medium |
-| **Contacts** | `lakehouse.object_contact` | Individual contact records | High |
-| **Leads** | `lakehouse.object_lead` | Lead management and qualification | High |
-| **Opportunities** | `lakehouse.object_opportunity` | Sales pipeline and revenue data | Medium |
-| **Cases** | `lakehouse.object_case` | Support and service tracking | High |
-| **Activities** | `lakehouse.object_task`, `lakehouse.object_event` | Sales and marketing activities | Very High |
-
-### Data Lake Metadata Fields
-
-**Every table includes these GRAX-specific fields**:
-
-| Field | Type | Purpose | Usage Pattern |
-|-------|------|---------|---------------|
-| `grax__idseq` | bigint | Version sequence number | Latest record identification |
-| `grax__deleted` | boolean | Soft delete flag | Active record filtering |
-| `grax__operation` | varchar | Change operation type | Data lineage tracking |
-| `grax__datecreated` | timestamp | GRAX ingestion timestamp | Data freshness validation |
-
-**Critical Pattern**: Always filter deleted records
-
-```sql
--- MANDATORY: Filter deleted records
-WHERE grax__deleted IS NULL
-```
+| Field Name      | Data Type    | Purpose                     | Usage                                                           |
+|-----------------|--------------|-----------------------------|-----------------------------------------------------------------|
+| `grax__idseq`   | varchar      | Version sequence number     | Use for chronological ordering and latest record identification |
+| `grax__deleted` | timestamp(3) | Deletion marker             | **ALWAYS** filter `IS NULL` for active records                 |
 
 ## Field Naming Conventions
 
 ### Type Suffixes
 
-| Suffix | Data Type | Athena Type | Usage Example |
-|--------|-----------|-------------|---------------|
-| `_f` | Number (Float) | `double` | `amount_f`, `annualrevenue_f` |
-| `_i` | Number (Integer) | `bigint` | `numberofemployees_i` |
-| `_b` | Boolean | `boolean` | `isconverted_b`, `isclosed_b` |
-| `_ts` | DateTime | `timestamp` | `createddate_ts`, `lastmodifieddate_ts` |
-| `_d` | Date Only | `date` | `closedate_d`, `converteddate_d` |
-| No Suffix | Text/String | `varchar` | `name`, `email`, `company` |
+| Suffix | Data Type   | Purpose                    | Examples                              |
+|--------|-------------|----------------------------|---------------------------------------|
+| `_f`   | double      | Numeric calculations       | `amount_f`, `probability_f`           |
+| `_ts`  | timestamp   | Date/time operations       | `createddate_ts`, `lastmodifieddate_ts` |
+| `_d`   | date        | Date-only fields           | `converteddate_d`, `closedate_d`      |
+| `_b`   | boolean     | True/false values          | `isconverted_b`, `isclosed_b`         |
+| `_i`   | bigint      | Integer values             | `casenumber_i`, `numberofemployees_i` |
 
-### Standard Field Patterns
+### Standard Fields
 
-**Timestamps**:
+| Field Pattern   | Purpose                    | Examples                        |
+|-----------------|----------------------------|---------------------------------|
+| `id`            | Primary key (all tables)   | Unique record identifier        |
+| `*id`           | Foreign keys               | `ownerid`, `accountid`, `contactid` |
+| `name`          | Primary name field         | Record display name             |
+| `status`        | Status fields              | Current record status           |
+| `created*`      | Creation timestamps        | `createddate_ts`, `createdbyid` |
+| `lastmodified*` | Modification tracking      | `lastmodifieddate_ts`, `lastmodifiedbyid` |
 
-- `createddate_ts`: Record creation timestamp
-- `lastmodifieddate_ts`: Last update timestamp
-- `systemmodstamp_ts`: System modification timestamp
+## Core Business Objects
 
-**Identifiers**:
+### object_lead
 
-- `id`: Salesforce record ID (18-character)
-- `accountid`: Foreign key to Account
-- `contactid`: Foreign key to Contact
-- `ownerid`: User assignment
+**Primary Purpose**: Lead qualification and conversion tracking
 
-**Lookups and Relationships**:
+#### Lead Identification Fields
 
-- `parentid`: Hierarchical parent relationship
-- `masterrecordid`: Merge relationship
-- Custom relationship fields follow `relationshipname__c` pattern
+- `id` (varchar) - Unique lead identifier
+- `email` (varchar) - Lead email address
+- `name` (varchar) - Lead full name
 
-## Account Object Schema
+#### Qualification Fields
 
-### Account Core Fields
+- `status` (varchar) - Lead status values (defined in [Lead Status Configuration](./configuration-reference.md#lead-status-configuration)):
+  - `'Open'` - New leads (MCL criteria)
+  - `'Working'` - Active leads (MQL criteria)
+  - `'Converted'` - Successfully converted
+  - `'Disqualified'` - Not viable leads
 
-| Field | Type | Description | Analysis Use |
-|-------|------|-------------|-------------|
-| `id` | varchar | Unique Salesforce Account ID | Primary key, relationships |
-| `name` | varchar | Account name | Reporting, search |
-| `type` | varchar | Account classification | Segmentation analysis |
-| `industry` | varchar | Industry classification | Vertical analysis |
-| `annualrevenue_f` | double | Annual revenue amount | Company sizing, segmentation |
-| `numberofemployees_f` | double | Employee count | Company sizing |
-| `billingcountry` | varchar | Primary country | Geographic analysis |
-| `website` | varchar | Company website | Data enrichment |
+#### Lead Date Fields
 
-### Hierarchy Fields
+- `createddate_ts` (timestamp) - Lead creation date - **USE FOR MCL DATE**
+- `converteddate_d` (date) - Conversion date
+- `lastmodifieddate_ts` (timestamp) - Last modification date
 
-| Field | Type | Description | Corporate Analysis Use |
-|-------|------|-------------|------------------------|
-| `parentid` | varchar | Immediate parent account ID | Direct hierarchy |
-| `ultimate_parent_account__c` | varchar | Top-level parent ID | Corporate family analysis |
-| `hierarchy_depth__c` | double | Levels from ultimate parent | Org structure analysis |
-| `is_ultimate_parent__c` | boolean | Top of hierarchy flag | Parent identification |
+#### Conversion Fields
 
-**Corporate Hierarchy Query Pattern**:
+- `isconverted_b` (boolean) - Conversion status
+- `convertedopportunityid` (varchar) - Related opportunity after conversion
+- `convertedaccountid` (varchar) - Related account after conversion
+- `convertedcontactid` (varchar) - Related contact after conversion
 
-```sql
--- Find all subsidiaries of a corporate parent
-WITH corporate_family AS (
-    SELECT 
-        id,
-        name,
-        ultimate_parent_account__c,
-        hierarchy_depth__c
-    FROM lakehouse.object_account
-    WHERE grax__deleted IS NULL
-        AND ultimate_parent_account__c IS NOT NULL
-)
-SELECT 
-    parent.name as parent_company,
-    child.name as subsidiary,
-    child.hierarchy_depth__c as depth_level
-FROM corporate_family child
-JOIN lakehouse.object_account parent 
-    ON child.ultimate_parent_account__c = parent.id
-WHERE parent.grax__deleted IS NULL
-ORDER BY parent.name, child.hierarchy_depth__c
-```
+#### Company Information
 
-## Lead Object Schema
+- `company` (varchar) - Company name
+- `industry` (varchar) - Industry classification
+- `numberofemployees_f` (double) - Company size (used in [Segmentation Configuration](./configuration-reference.md#segmentation-configuration))
+- `annualrevenue_f` (double) - Company revenue (used in [Segmentation Configuration](./configuration-reference.md#segmentation-configuration))
 
-### Lead Core Fields
+### object_opportunity
 
-| Field | Type | Description | Qualification Use |
-|-------|------|-------------|-------------------|
-| `id` | varchar | Unique Salesforce Lead ID | Primary key |
-| `email` | varchar | Contact email address | Deduplication, communication |
-| `company` | varchar | Company name | Account matching |
-| `status` | varchar | Lead qualification status | Funnel analysis |
-| `leadsource` | varchar | Lead acquisition channel | Attribution analysis |
-| `rating` | varchar | Lead quality rating | Prioritization |
-| `isconverted_b` | boolean | Conversion flag | Conversion analysis |
-| `converteddate_d` | date | Conversion date | Conversion timing |
-| `convertedaccountid` | varchar | Account created from lead | Post-conversion tracking |
-| `convertedcontactid` | varchar | Contact created from lead | Post-conversion tracking |
-| `convertedopportunityid` | varchar | Opportunity created from lead | Revenue attribution |
+**Primary Purpose**: Sales pipeline and opportunity management
 
-### Segmentation Fields
+#### Opportunity Identification Fields
 
-| Field | Type | Description | Segmentation Use |
-|-------|------|-------------|------------------|
-| `numberofemployees_f` | double | Company size | Company segmentation |
-| `annualrevenue_f` | double | Company revenue | Revenue segmentation |
-| `industry` | varchar | Industry classification | Vertical analysis |
-| `country` | varchar | Geographic location | Territory analysis |
+- `id` (varchar) - Unique opportunity identifier
+- `name` (varchar) - Opportunity name
+- `accountid` (varchar) - Related account ID
 
-**Lead Qualification Analysis Pattern**:
+#### Stage Management
 
-```sql
--- Lead funnel analysis with stage progression
-WITH lead_funnel AS (
-    SELECT 
-        status,
-        COUNT(*) as lead_count,
-        COUNT(CASE WHEN isconverted_b = true THEN 1 END) as converted_count,
-        ROUND(COUNT(CASE WHEN isconverted_b = true THEN 1 END) * 100.0 / COUNT(*), 2) as conversion_rate
-    FROM lakehouse.object_lead
-    WHERE grax__deleted IS NULL
-        AND createddate_ts >= DATE_ADD('month', -12, CURRENT_DATE)
-    GROUP BY status
-)
-SELECT 
-    status,
-    lead_count,
-    converted_count,
-    conversion_rate || '%' as conversion_rate_pct
-FROM lead_funnel
-ORDER BY lead_count DESC
-```
+- `stagename` (varchar) - Current stage values (defined in [Opportunity Stage Configuration](./configuration-reference.md#opportunity-stage-configuration)):
+  - `'SQL'` - Sales Qualified Lead
+  - `'Proof of Value (SQO)'` - Sales Qualified Opportunity
+  - `'Proposal'` - Formal proposal delivered
+  - `'Contracts'` - Contract negotiation
+  - `'Closed Won'` - Successfully closed
+  - `'Closed Lost'` - Lost opportunity
+- `laststagechangedate_ts` (timestamp) - Most recent stage change date
 
-## Opportunity Object Schema
+#### Financial Fields
 
-### Opportunity Core Fields
+- `amount_f` (double) - Opportunity value
+- `probability_f` (double) - Win probability percentage
+- `expectedrevenue_f` (double) - Weighted pipeline value
 
-| Field | Type | Description | Sales Analysis Use |
-|-------|------|-------------|------------------|
-| `id` | varchar | Unique Salesforce Opportunity ID | Primary key |
-| `name` | varchar | Opportunity name | Reporting |
-| `accountid` | varchar | Associated account | Account relationship |
-| `amount_f` | double | Opportunity value | Revenue analysis |
-| `stagename` | varchar | Sales stage | Pipeline analysis |
-| `probability_f` | double | Win probability (0-100) | Forecasting |
-| `isclosed_b` | boolean | Closed status | Pipeline vs. closed analysis |
-| `iswon_b` | boolean | Won status | Win/loss analysis |
-| `closedate_d` | date | Expected/actual close date | Timing analysis |
-| `leadsource` | varchar | Opportunity source | Attribution analysis |
+#### Opportunity Date Management
 
-### Timing Fields
+- `createddate_ts` (timestamp) - Opportunity creation date
+- `closedate_d` (date) - Expected/actual close date
+- `lastactivitydate_ts` (timestamp) - Last activity date
 
-| Field | Type | Description | Velocity Analysis Use |
-|-------|------|-------------|---------------------|
-| `createddate_ts` | timestamp | Opportunity creation | Age calculation |
-| `lastmodifieddate_ts` | timestamp | Last update | Activity tracking |
-| `laststagechangedate_ts` | timestamp | Stage change timing | Stage velocity |
+#### Ownership
 
-**Sales Velocity Calculation Pattern**:
+- `ownerid` (varchar) - Opportunity owner (links to object_user)
 
-```sql
--- Calculate average days in each stage
-WITH stage_durations AS (
-    SELECT 
-        stagename,
-        AVG(DATE_DIFF('day', 
-            createddate_ts, 
-            COALESCE(closedate_d, CURRENT_DATE)
-        )) as avg_days_in_stage,
-        COUNT(*) as opportunity_count
-    FROM lakehouse.object_opportunity
-    WHERE grax__deleted IS NULL
-        AND createddate_ts >= DATE_ADD('month', -12, CURRENT_DATE)
-    GROUP BY stagename
-)
-SELECT 
-    stagename,
-    ROUND(avg_days_in_stage, 1) as avg_days,
-    opportunity_count
-FROM stage_durations
-ORDER BY avg_days DESC
-```
+### object_account
+
+**Primary Purpose**: Customer account management and segmentation
+
+#### Account Identification Fields
+
+- `id` (varchar) - Unique account identifier
+- `name` (varchar) - Account name
+
+#### Segmentation Fields
+
+- `type` (varchar) - Account type (values defined in [Account Classification Configuration](./configuration-reference.md#account-classification-configuration))
+- `industry` (varchar) - Industry classification
+- `numberofemployees_f` (double) - Company size (used in [Segmentation Thresholds](./configuration-reference.md#segmentation-configuration))
+- `annualrevenue_f` (double) - Company revenue (used in [Segmentation Thresholds](./configuration-reference.md#segmentation-configuration))
+
+#### Contact Information
+
+- `phone` (varchar) - Primary phone number
+- `website` (varchar) - Company website
+
+#### Address Fields
+
+- `billingcountry` (varchar) - Billing country
+- `billingstate` (varchar) - Billing state/province
+- `billingcity` (varchar) - Billing city
+
+#### Account Date Fields
+
+- `createddate_ts` (timestamp) - Account creation date
+- `lastmodifieddate_ts` (timestamp) - Last modification date
+
+### object_contact
+
+**Primary Purpose**: Contact relationship management
+
+#### Contact Identification Fields
+
+- `id` (varchar) - Unique contact identifier
+- `accountid` (varchar) - Related account ID
+
+#### Personal Information
+
+- `firstname` (varchar) - First name
+- `lastname` (varchar) - Last name
+- `email` (varchar) - Email address
+- `phone` (varchar) - Phone number
+- `title` (varchar) - Job title
+
+#### Mailing Address Fields
+
+- `mailingcountry` (varchar) - Mailing country
+- `mailingstate` (varchar) - Mailing state/province
+- `mailingcity` (varchar) - Mailing city
+
+#### Contact Date Fields
+
+- `createddate_ts` (timestamp) - Contact creation date
+- `lastmodifieddate_ts` (timestamp) - Last modification date
+
+### object_user
+
+**Primary Purpose**: User management and activity tracking
+
+#### User Profile Fields
+
+- `id` (varchar) - User ID
+- `name` (varchar) - User full name
+- `firstname` (varchar) - First name
+- `lastname` (varchar) - Last name
+- `email` (varchar) - User email
+- `username` (varchar) - Username
+- `isactive_b` (boolean) - Active status
+- `profileid` (varchar) - User profile
+- `userroleid` (varchar) - User role
+- `managerid` (varchar) - Manager user
+- `createddate_ts` (timestamp) - User creation date
+
+### object_case
+
+**Primary Purpose**: Customer support and service tracking
+
+#### Case Management Fields
+
+- `id` (varchar) - Unique case identifier
+- `subject` (varchar) - Case subject
+- `status` (varchar) - Case status
+- `priority` (varchar) - Case priority
+- `type` (varchar) - Case type
+- `accountid` (varchar) - Related account
+- `contactid` (varchar) - Related contact
+- `ownerid` (varchar) - Case owner
+- `createddate_ts` (timestamp) - Case creation date
+- `isclosed_b` (boolean) - Closed flag
 
 ## Latest Records Pattern
 
-**Critical**: GRAX stores complete change history. Always use latest records for current state analysis.
-
-### Latest Record Query Pattern
+**CRITICAL**: Always use this pattern for current state analysis:
 
 ```sql
--- Get latest version of each record
-WITH latest_records AS (
-    SELECT 
-        id,
-        MAX(grax__idseq) as latest_seq
-    FROM lakehouse.object_account
-    WHERE grax__deleted IS NULL
-    GROUP BY id
+WITH latest_[objectname] AS (
+    SELECT A.* 
+    FROM lakehouse.object_[objectname] A 
+    INNER JOIN (
+        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
+        FROM lakehouse.object_[objectname] B 
+        GROUP BY B.Id
+    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
+    WHERE A.grax__deleted IS NULL
 )
-SELECT 
-    a.id,
-    a.name,
-    a.type,
-    a.industry
-FROM lakehouse.object_account a
-JOIN latest_records l ON a.id = l.id AND a.grax__idseq = l.latest_seq
-WHERE a.grax__deleted IS NULL
 ```
 
-### Window Function Alternative
+## Common Join Patterns
+
+### Lead to Opportunity (Conversion Tracking)
 
 ```sql
--- Using ROW_NUMBER() window function
-WITH current_accounts AS (
-    SELECT 
-        *,
-        ROW_NUMBER() OVER (
-            PARTITION BY id 
-            ORDER BY grax__idseq DESC
-        ) as rn
-    FROM lakehouse.object_account
-    WHERE grax__deleted IS NULL
-)
-SELECT 
-    id,
-    name,
-    type,
-    industry
-FROM current_accounts
-WHERE rn = 1
+FROM latest_leads l
+LEFT JOIN latest_opportunities o ON l.convertedopportunityid = o.id
 ```
 
-## Performance Optimization
-
-### Partition Strategy
-
-**Date-based partitioning** for query performance:
+### Opportunity to Account (Account Details)
 
 ```sql
--- Leverage partitioning with date filters
-WHERE createddate_ts >= DATE_ADD('month', -24, CURRENT_DATE)
-    AND grax__deleted IS NULL
+FROM latest_opportunities opp
+LEFT JOIN latest_accounts acc ON opp.accountid = acc.id
 ```
 
-### Index-Friendly Queries
-
-**Recommended filter order**:
-
-1. Date range filters (leverages partitioning)
-1. `grax__deleted IS NULL` (excludes soft-deleted records)
-1. Status/category filters (reduces scan volume)
-1. Latest record patterns (ensures current state)
-
-### Common Performance Anti-Patterns
-
-**Avoid**:
+### User Ownership (Owner Details)
 
 ```sql
--- DON'T: Query without date bounds
-SELECT * FROM lakehouse.object_opportunity
-
--- DON'T: Ignore deleted record filtering  
-SELECT * FROM lakehouse.object_account WHERE name = 'ACME Corp'
-
--- DON'T: Forget latest record patterns
-SELECT COUNT(*) FROM lakehouse.object_lead
+FROM latest_opportunities opp  
+LEFT JOIN latest_users u ON opp.ownerid = u.id
 ```
 
-**Do**:
+## Segmentation Criteria
+
+### Customer Segmentation
 
 ```sql
--- DO: Include date bounds and proper filtering
-WITH latest_opportunities AS (
-    SELECT 
-        *,
-        ROW_NUMBER() OVER (PARTITION BY id ORDER BY grax__idseq DESC) as rn
-    FROM lakehouse.object_opportunity
-    WHERE grax__deleted IS NULL
-        AND createddate_ts >= DATE_ADD('month', -12, CURRENT_DATE)
-)
-SELECT 
-    stagename,
-    COUNT(*) as opportunity_count,
-    SUM(amount_f) as total_pipeline
-FROM latest_opportunities
-WHERE rn = 1
-GROUP BY stagename
-ORDER BY total_pipeline DESC
+-- Using thresholds from docs/configuration-reference.md
+CASE 
+    WHEN numberofemployees_f > 250 OR annualrevenue_f > 100000000 THEN 'Enterprise'
+    WHEN numberofemployees_f > 50 OR annualrevenue_f > 10000000 THEN 'SMB'  
+    ELSE 'Self Service'
+END AS segment
 ```
 
-## Data Quality Considerations
-
-### Required Field Validation
+### Company Size Categories
 
 ```sql
--- Validate data completeness
-SELECT 
-    'Accounts' as object_type,
-    COUNT(*) as total_records,
-    COUNT(name) as records_with_name,
-    COUNT(type) as records_with_type,
-    COUNT(industry) as records_with_industry
-FROM lakehouse.object_account
-WHERE grax__deleted IS NULL
-    AND createddate_ts >= DATE_ADD('month', -12, CURRENT_DATE)
+-- Using categorization from docs/configuration-reference.md
+CASE 
+    WHEN numberofemployees_f IS NULL THEN 'Unknown'
+    WHEN numberofemployees_f <= 50 THEN 'Small (1-50)'
+    WHEN numberofemployees_f <= 250 THEN 'Medium (51-250)'
+    ELSE 'Large (250+)'
+END AS company_size_category
 ```
 
-### Common Data Quality Issues
+## Data Type Handling
 
-| Issue | Detection | Resolution |
-|-------|-----------|------------|
-| **Duplicate Records** | Multiple `grax__idseq` for same `id` | Use latest records pattern |
-| **Missing Required Fields** | NULL values in critical fields | Apply validation filters |
-| **Invalid Picklist Values** | Non-standard status/stage names | Reference [Configuration Reference](configuration-reference.md) |
-| **Date Inconsistencies** | `closedate_d` before `createddate_ts` | Add date validation logic |
-
-## Integration Patterns
-
-### Cross-Object Relationships
+### Date Conversions
 
 ```sql
--- Account to Opportunity relationship with latest records
-WITH latest_accounts AS (
-    SELECT 
-        *,
-        ROW_NUMBER() OVER (PARTITION BY id ORDER BY grax__idseq DESC) as rn
-    FROM lakehouse.object_account
-    WHERE grax__deleted IS NULL
-),
-latest_opportunities AS (
-    SELECT 
-        *,
-        ROW_NUMBER() OVER (PARTITION BY id ORDER BY grax__idseq DESC) as rn
-    FROM lakehouse.object_opportunity
-    WHERE grax__deleted IS NULL
-        AND createddate_ts >= DATE_ADD('month', -12, CURRENT_DATE)
-)
-SELECT 
-    a.name as account_name,
-    a.industry,
-    COUNT(o.id) as opportunity_count,
-    SUM(o.amount_f) as total_pipeline
-FROM latest_accounts a
-LEFT JOIN latest_opportunities o ON a.id = o.accountid AND o.rn = 1
-WHERE a.rn = 1
-GROUP BY a.name, a.industry
-HAVING COUNT(o.id) > 0
-ORDER BY total_pipeline DESC
+-- Convert date to timestamp for calculations
+CAST(converteddate_d AS timestamp) AS conversion_timestamp
+
+-- Extract date parts  
+DATE_TRUNC('month', createddate_ts) AS creation_month
+
+-- Date arithmetic
+DATE_ADD('month', -6, CURRENT_DATE) AS six_months_ago
 ```
 
-## Custom Fields
+### Null Handling
 
-### Custom Field Patterns
+```sql
+-- Safe aggregations
+COALESCE(amount_f, 0) AS amount_safe
 
-**Salesforce custom fields** end with `__c` and follow the same type suffix patterns:
+-- Safe string operations  
+COALESCE(industry, 'Unknown') AS industry_category
+```
 
-- `custom_field__c` (text)
-- `custom_number__f` (numeric)
-- `custom_date__ts` (datetime)
-- `custom_checkbox__b` (boolean)
+## Performance Guidelines
 
-### Common Custom Fields
+### Optimization Tips
 
-| Field Pattern | Purpose | Analysis Use |
-|---------------|---------|-------------|
-| `*_source__c` | Lead/opportunity attribution | Channel analysis |
-| `*_score__f` | Scoring and ranking | Prioritization |
-| `*_status__c` | Custom workflow stages | Process analysis |
-| `ultimate_parent_account__c` | Corporate hierarchy | Family analysis |
+1. **Filter early**: Apply WHERE conditions in CTEs
 
-See [Configuration Reference](configuration-reference.md) for organization-specific custom field values and business logic.
+1. **Use EXISTS**: More efficient than IN for subqueries
+
+1. **Limit date ranges**: Use specific date filters to reduce scan scope
+
+1. **Prefer typed fields**: Use `_f` and `_ts` fields for calculations
+
+1. **Test with LIMIT**: Always test large queries with row limits first
+
+### Common Anti-Patterns
+
+**Avoid These Patterns:**
+
+```sql
+-- Missing grax__deleted filter
+SELECT * FROM lakehouse.object_lead  
+
+-- Using wrong field types
+WHERE amount = 1000  -- Should use amount_f
+
+-- String comparison on dates
+WHERE createddate = '2024-01-01'  -- Should use createddate_ts
+```
+
+**Use These Patterns:**
+
+```sql
+-- Always filter deleted records
+SELECT * FROM lakehouse.object_lead WHERE grax__deleted IS NULL
+
+-- Use proper field types
+WHERE amount_f = 1000
+
+-- Use timestamp fields for dates
+WHERE createddate_ts >= DATE('2024-01-01')
+```
+
+## Configuration Adaptation
+
+For organizations with different Salesforce implementations:
+
+### Update Configuration Values
+
+Modify the [Configuration Reference](./configuration-reference.md) document to match your organization's specific values:
+
+- **Lead Status Values**: Update lead qualification stage names
+- **Opportunity Stage Names**: Modify sales process stage values  
+- **Account Types**: Update customer classification values
+- **Segmentation Thresholds**: Adjust employee count and revenue thresholds
+- **Field Naming**: Update if using custom field names or structures
+
+### Testing Process
+
+1. **Update Configuration**: Modify values in [Configuration Reference](./configuration-reference.md)
+1. **Test Schema Patterns**: Execute sample queries with your configuration
+1. **Validate Results**: Ensure field mappings work correctly for your data
+1. **Document Changes**: Record customizations for future reference
+
+This schema guide provides the foundation for understanding your Salesforce data structure while maintaining adaptability across different organizational implementations through centralized configuration management.
