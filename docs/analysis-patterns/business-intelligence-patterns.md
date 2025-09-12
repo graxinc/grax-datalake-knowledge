@@ -1,473 +1,813 @@
 # Business Intelligence Patterns
 
-Advanced analytics and reporting templates that transform GRAX Data Lake information into strategic business intelligence for executive decision-making.
+## Overview
 
-**Configuration Integration**: All patterns reference standardized values from [Configuration Reference](../core-reference/configuration-reference.md). Organizations should update that centralized document rather than modifying individual queries.
+This guide provides advanced analytics patterns for extracting strategic insights from Salesforce data. These patterns focus on revenue intelligence, customer lifecycle analysis, and predictive indicators that drive business decisions.
 
-## Executive Dashboard Patterns
+**Configuration Reference**: All business-specific values used in these patterns are defined in [Configuration Reference](./configuration-reference.md). Organizations with different Salesforce configurations should update that document to match their specific values.
 
-### Key Performance Indicators (KPI) Overview
+## Revenue Intelligence Patterns
+
+### Pipeline Velocity Analysis
 
 ```sql
-WITH latest_lead AS (
-    SELECT 
-        *,
-        ROW_NUMBER() OVER (PARTITION BY id ORDER BY grax__idseq DESC) as rn
-    FROM lakehouse.object_lead
-    WHERE grax__deleted IS NULL
-        AND createddate_ts >= DATE_ADD('month', -12, CURRENT_DATE)
-),
-latest_opportunity AS (
-    SELECT 
-        *,
-        ROW_NUMBER() OVER (PARTITION BY id ORDER BY grax__idseq DESC) as rn
-    FROM lakehouse.object_opportunity
-    WHERE grax__deleted IS NULL
-        AND createddate_ts >= DATE_ADD('month', -12, CURRENT_DATE)
+WITH latest_opportunity AS (
+    SELECT A.* 
+    FROM lakehouse.object_opportunity A 
+    INNER JOIN (
+        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
+        FROM lakehouse.object_opportunity B 
+        GROUP BY B.Id
+    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
+    WHERE A.grax__deleted IS NULL
 ),
 latest_account AS (
-    SELECT 
-        *,
-        ROW_NUMBER() OVER (PARTITION BY id ORDER BY grax__idseq DESC) as rn
-    FROM lakehouse.object_account
-    WHERE grax__deleted IS NULL
-)
-SELECT 
-    -- Lead Generation Metrics
-    COUNT(l.id) as total_leads_12m,
-    COUNT(CASE WHEN l.status = 'MQL' THEN 1 END) as mql_count,
-    ROUND(COUNT(CASE WHEN l.status = 'MQL' THEN 1 END) * 100.0 / NULLIF(COUNT(l.id), 0), 2) as lead_to_mql_rate,
-    
-    -- Pipeline Metrics
-    COUNT(o.id) as total_opportunities_12m,
-    SUM(CASE WHEN o.stagename NOT IN ('Closed Won', 'Closed Lost') THEN o.amount_f ELSE 0 END) as active_pipeline_value,
-    SUM(CASE WHEN o.stagename = 'Closed Won' THEN o.amount_f ELSE 0 END) as closed_won_revenue,
-    
-    -- Conversion Metrics
-    COUNT(CASE WHEN l.isconverted_b = true THEN 1 END) as lead_conversions,
-    COUNT(CASE WHEN o.stagename = 'Closed Won' THEN 1 END) as won_opportunities,
-    ROUND(COUNT(CASE WHEN o.stagename = 'Closed Won' THEN 1 END) * 100.0 / 
-          NULLIF(COUNT(CASE WHEN o.stagename != 'Closed Lost' THEN 1 END), 0), 2) as win_rate,
-    
-    -- Account Growth
-    COUNT(DISTINCT a.id) as total_active_accounts
-FROM latest_lead l
-FULL OUTER JOIN latest_opportunity o ON l.convertedopportunityid = o.id AND o.rn = 1
-FULL OUTER JOIN latest_account a ON COALESCE(l.convertedaccountid, o.accountid) = a.id AND a.rn = 1
-WHERE l.rn = 1
-```
-
-### Monthly Trend Analysis
-
-```sql
-WITH month_series AS (
-    SELECT 
-        DATE_TRUNC('month', DATE_ADD('month', -month_offset, CURRENT_DATE)) as report_month,
-        month_offset
-    FROM (VALUES (0),(1),(2),(3),(4),(5),(6),(7),(8),(9),(10),(11)) AS months(month_offset)
+    SELECT A.* 
+    FROM lakehouse.object_account A 
+    INNER JOIN (
+        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
+        FROM lakehouse.object_account B 
+        GROUP BY B.Id
+    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
+    WHERE A.grax__deleted IS NULL
 ),
-latest_lead AS (
+opportunity_with_segment AS (
     SELECT 
-        *,
-        ROW_NUMBER() OVER (PARTITION BY id ORDER BY grax__idseq DESC) as rn
-    FROM lakehouse.object_lead
-    WHERE grax__deleted IS NULL
-),
-latest_opportunity AS (
-    SELECT 
-        *,
-        ROW_NUMBER() OVER (PARTITION BY id ORDER BY grax__idseq DESC) as rn
-    FROM lakehouse.object_opportunity
-    WHERE grax__deleted IS NULL
-),
-lead_metrics AS (
-    SELECT 
-        DATE_TRUNC('month', createddate_ts) as metric_month,
-        COUNT(*) as leads_created,
-        COUNT(CASE WHEN status = 'MQL' THEN 1 END) as mqls_created,
-        COUNT(CASE WHEN isconverted_b = true THEN 1 END) as leads_converted
-    FROM latest_lead
-    WHERE rn = 1
-        AND createddate_ts >= DATE_ADD('month', -12, CURRENT_DATE)
-    GROUP BY DATE_TRUNC('month', createddate_ts)
-),
-opportunity_metrics AS (
-    SELECT 
-        DATE_TRUNC('month', createddate_ts) as metric_month,
-        COUNT(*) as opportunities_created,
-        SUM(amount_f) as pipeline_created,
-        COUNT(CASE WHEN stagename = 'Closed Won' THEN 1 END) as deals_won,
-        SUM(CASE WHEN stagename = 'Closed Won' THEN amount_f ELSE 0 END) as revenue_won
-    FROM latest_opportunity
-    WHERE rn = 1
-        AND createddate_ts >= DATE_ADD('month', -12, CURRENT_DATE)
-    GROUP BY DATE_TRUNC('month', createddate_ts)
-)
-SELECT 
-    ms.report_month,
-    COALESCE(lm.leads_created, 0) as leads_created,
-    COALESCE(lm.mqls_created, 0) as mqls_created,
-    COALESCE(lm.leads_converted, 0) as leads_converted,
-    COALESCE(om.opportunities_created, 0) as opportunities_created,
-    COALESCE(om.pipeline_created, 0) as pipeline_created,
-    COALESCE(om.deals_won, 0) as deals_won,
-    COALESCE(om.revenue_won, 0) as revenue_won,
-    -- Calculate month-over-month growth
-    ROUND((COALESCE(lm.leads_created, 0) - 
-           LAG(COALESCE(lm.leads_created, 0), 1) OVER (ORDER BY ms.report_month)) * 100.0 / 
-          NULLIF(LAG(COALESCE(lm.leads_created, 0), 1) OVER (ORDER BY ms.report_month), 0), 2) as lead_growth_mom
-FROM month_series ms
-LEFT JOIN lead_metrics lm ON ms.report_month = lm.metric_month
-LEFT JOIN opportunity_metrics om ON ms.report_month = om.metric_month
-ORDER BY ms.report_month DESC
-```
-
-## Segmentation Analysis Patterns
-
-### Customer Segment Performance
-
-```sql
-WITH latest_account AS (
-    SELECT 
-        *,
-        ROW_NUMBER() OVER (PARTITION BY id ORDER BY grax__idseq DESC) as rn,
-        -- Using segmentation thresholds from Configuration Reference
+        o.*,
+        -- Using segmentation thresholds from docs/configuration-reference.md
         CASE 
-            WHEN numberofemployees_f >= 1000 OR annualrevenue_f > 100000000 THEN 'Enterprise'
-            WHEN numberofemployees_f BETWEEN 200 AND 999 OR annualrevenue_f BETWEEN 10000000 AND 100000000 THEN 'Mid-Market'
-            ELSE 'SMB'
-        END as customer_segment
-    FROM lakehouse.object_account
-    WHERE grax__deleted IS NULL
+            WHEN a.numberofemployees_f > 250 OR a.annualrevenue_f > 100000000 THEN 'Enterprise'
+            WHEN a.numberofemployees_f > 50 OR a.annualrevenue_f > 10000000 THEN 'SMB'
+            ELSE 'Self Service'
+        END as customer_segment,
+        -- Calculate opportunity age
+        DATE_DIFF('day', o.createddate_ts, CURRENT_TIMESTAMP) as opportunity_age_days,
+        -- Calculate days in current stage
+        DATE_DIFF('day', o.laststagechangedate_ts, CURRENT_TIMESTAMP) as days_in_current_stage
+    FROM latest_opportunity o
+    LEFT JOIN latest_account a ON o.accountid = a.id
+    -- Using stage exclusion logic from docs/configuration-reference.md
+    WHERE o.stagename NOT IN ('Closed Won', 'Closed Lost')
+      AND o.createddate_ts >= DATE_ADD('month', -24, CURRENT_DATE)
 ),
-latest_opportunity AS (
+velocity_analysis AS (
     SELECT 
-        *,
-        ROW_NUMBER() OVER (PARTITION BY id ORDER BY grax__idseq DESC) as rn
-    FROM lakehouse.object_opportunity
-    WHERE grax__deleted IS NULL
-        AND createddate_ts >= DATE_ADD('month', -12, CURRENT_DATE)
-),
-segment_performance AS (
-    SELECT 
-        a.customer_segment,
-        COUNT(DISTINCT a.id) as account_count,
-        COUNT(o.id) as opportunity_count,
-        SUM(CASE WHEN o.stagename NOT IN ('Closed Won', 'Closed Lost') THEN o.amount_f ELSE 0 END) as active_pipeline,
-        SUM(CASE WHEN o.stagename = 'Closed Won' THEN o.amount_f ELSE 0 END) as won_revenue,
-        COUNT(CASE WHEN o.stagename = 'Closed Won' THEN 1 END) as deals_won,
-        COUNT(CASE WHEN o.stagename = 'Closed Lost' THEN 1 END) as deals_lost,
-        AVG(o.amount_f) as avg_deal_size,
-        AVG(DATE_DIFF('day', o.createddate_ts, 
-            CASE WHEN o.stagename IN ('Closed Won', 'Closed Lost') 
-                 THEN CAST(o.closedate_d AS timestamp) 
-                 ELSE CURRENT_TIMESTAMP END)) as avg_sales_cycle_days
-    FROM latest_account a
-    LEFT JOIN latest_opportunity o ON a.id = o.accountid AND o.rn = 1
-    WHERE a.rn = 1
-    GROUP BY a.customer_segment
+        customer_segment,
+        stagename,
+        COUNT(*) as opportunity_count,
+        SUM(amount_f) as pipeline_value,
+        AVG(amount_f) as avg_deal_size,
+        AVG(opportunity_age_days) as avg_opportunity_age,
+        AVG(days_in_current_stage) as avg_days_in_stage,
+        AVG(probability_f) as avg_probability,
+        -- Risk indicators
+        COUNT(CASE WHEN days_in_current_stage > 90 THEN 1 END) as stalled_opportunities,
+        COUNT(CASE WHEN opportunity_age_days > 365 THEN 1 END) as aged_opportunities
+    FROM opportunity_with_segment
+    WHERE amount_f IS NOT NULL
+    GROUP BY customer_segment, stagename
 )
 SELECT 
     customer_segment,
-    account_count,
-    opportunity_count,
-    active_pipeline,
-    won_revenue,
-    deals_won,
-    deals_lost,
-    ROUND(deals_won * 100.0 / NULLIF(deals_won + deals_lost, 0), 2) as win_rate_pct,
-    ROUND(avg_deal_size, 0) as avg_deal_size,
-    ROUND(avg_sales_cycle_days, 0) as avg_sales_cycle_days,
-    ROUND(won_revenue / NULLIF(account_count, 0), 0) as revenue_per_account
-FROM segment_performance
-ORDER BY won_revenue DESC
-```
-
-## Sales Velocity Analysis
-
-### Stage Velocity and Bottleneck Identification
-
-```sql
-WITH latest_opportunity AS (
-    SELECT 
-        *,
-        ROW_NUMBER() OVER (PARTITION BY id ORDER BY grax__idseq DESC) as rn,
-        -- Calculate time in current stage
-        DATE_DIFF('day', 
-            COALESCE(laststagechangedate_ts, createddate_ts), 
-            CASE WHEN stagename IN ('Closed Won', 'Closed Lost') 
-                 THEN CAST(closedate_d AS timestamp)
-                 ELSE CURRENT_TIMESTAMP END) as days_in_current_stage
-    FROM lakehouse.object_opportunity
-    WHERE grax__deleted IS NULL
-        AND createddate_ts >= DATE_ADD('month', -12, CURRENT_DATE)
-),
-stage_analysis AS (
-    SELECT 
-        stagename,
-        COUNT(*) as opportunity_count,
-        AVG(days_in_current_stage) as avg_days_in_stage,
-        APPROX_PERCENTILE(days_in_current_stage, 0.5) as median_days_in_stage,
-        APPROX_PERCENTILE(days_in_current_stage, 0.9) as p90_days_in_stage,
-        COUNT(CASE WHEN days_in_current_stage > 90 THEN 1 END) as stale_opportunities,
-        AVG(amount_f) as avg_opportunity_value,
-        -- Stage progression calculation
-        COUNT(CASE WHEN stagename = 'Closed Won' THEN 1 END) as progressed_to_won,
-        COUNT(CASE WHEN stagename = 'Closed Lost' THEN 1 END) as progressed_to_lost
-    FROM latest_opportunity
-    WHERE rn = 1
-    GROUP BY stagename
-)
-SELECT 
-    stagename,
-    opportunity_count,
-    ROUND(avg_days_in_stage, 1) as avg_days_in_stage,
-    median_days_in_stage,
-    p90_days_in_stage,
-    stale_opportunities,
-    ROUND(stale_opportunities * 100.0 / opportunity_count, 2) as stale_opportunity_pct,
-    ROUND(avg_opportunity_value, 0) as avg_opportunity_value,
-    progressed_to_won,
-    progressed_to_lost,
-    ROUND(progressed_to_won * 100.0 / NULLIF(progressed_to_won + progressed_to_lost, 0), 2) as stage_conversion_rate,
-    -- Bottleneck indicator
-    CASE 
-        WHEN avg_days_in_stage > 60 AND stale_opportunities * 100.0 / opportunity_count > 25 
-        THEN 'HIGH PRIORITY - Bottleneck Detected'
-        WHEN avg_days_in_stage > 45 OR stale_opportunities * 100.0 / opportunity_count > 15
-        THEN 'MEDIUM PRIORITY - Monitor Closely'
-        ELSE 'Normal Flow'
-    END as bottleneck_status
-FROM stage_analysis
-ORDER BY 
-    CASE stagename
-        WHEN 'Prospecting' THEN 1
-        WHEN 'Qualification' THEN 2
-        WHEN 'Needs Analysis' THEN 3  
-        WHEN 'Value Proposition' THEN 4
-        WHEN 'Id. Decision Makers' THEN 5
-        WHEN 'Perception Analysis' THEN 6
-        WHEN 'Proposal/Price Quote' THEN 7
-        WHEN 'Negotiation/Review' THEN 8
-        WHEN 'Closed Won' THEN 9
-        WHEN 'Closed Lost' THEN 10
-        ELSE 11
-    END
-```
-
-## Attribution Analysis Patterns
-
-### Lead Source Performance Through Revenue
-
-```sql
-WITH latest_lead AS (
-    SELECT 
-        *,
-        ROW_NUMBER() OVER (PARTITION BY id ORDER BY grax__idseq DESC) as rn
-    FROM lakehouse.object_lead
-    WHERE grax__deleted IS NULL
-        AND createddate_ts >= DATE_ADD('month', -12, CURRENT_DATE)
-),
-latest_opportunity AS (
-    SELECT 
-        *,
-        ROW_NUMBER() OVER (PARTITION BY id ORDER BY grax__idseq DESC) as rn
-    FROM lakehouse.object_opportunity
-    WHERE grax__deleted IS NULL
-),
-source_attribution AS (
-    SELECT 
-        COALESCE(l.leadsource, o.leadsource, 'Unknown') as lead_source,
-        COUNT(DISTINCT l.id) as total_leads,
-        COUNT(DISTINCT CASE WHEN l.isconverted_b = true THEN l.id END) as converted_leads,
-        COUNT(DISTINCT o.id) as total_opportunities,
-        COUNT(DISTINCT CASE WHEN o.stagename = 'Closed Won' THEN o.id END) as won_opportunities,
-        SUM(CASE WHEN o.stagename NOT IN ('Closed Won', 'Closed Lost') THEN o.amount_f ELSE 0 END) as active_pipeline,
-        SUM(CASE WHEN o.stagename = 'Closed Won' THEN o.amount_f ELSE 0 END) as won_revenue,
-        AVG(CASE WHEN o.stagename = 'Closed Won' THEN o.amount_f END) as avg_won_deal_size,
-        AVG(CASE WHEN l.isconverted_b = true THEN DATE_DIFF('day', l.createddate_ts, CAST(l.converteddate_d AS timestamp)) END) as avg_lead_conversion_days,
-        AVG(CASE WHEN o.stagename = 'Closed Won' THEN DATE_DIFF('day', o.createddate_ts, CAST(o.closedate_d AS timestamp)) END) as avg_sales_cycle_days
-    FROM latest_lead l
-    FULL OUTER JOIN latest_opportunity o ON l.convertedopportunityid = o.id AND o.rn = 1
-    WHERE l.rn = 1
-    GROUP BY COALESCE(l.leadsource, o.leadsource, 'Unknown')
-)
-SELECT 
-    lead_source,
-    total_leads,
-    converted_leads,
-    total_opportunities,
-    won_opportunities,
-    active_pipeline,
-    won_revenue,
-    -- Conversion and efficiency metrics
-    ROUND(converted_leads * 100.0 / NULLIF(total_leads, 0), 2) as lead_conversion_rate,
-    ROUND(won_opportunities * 100.0 / NULLIF(total_opportunities, 0), 2) as opportunity_win_rate,
-    ROUND(won_revenue / NULLIF(total_leads, 0), 0) as revenue_per_lead,
-    ROUND(avg_won_deal_size, 0) as avg_won_deal_size,
-    ROUND(avg_lead_conversion_days, 0) as avg_lead_conversion_days,
-    ROUND(avg_sales_cycle_days, 0) as avg_sales_cycle_days,
-    -- ROI indicators (assuming cost data available)
-    ROUND(won_revenue / NULLIF(converted_leads, 0), 0) as revenue_per_conversion,
-    -- Performance ranking
-    RANK() OVER (ORDER BY won_revenue DESC) as revenue_rank,
-    RANK() OVER (ORDER BY converted_leads * 100.0 / NULLIF(total_leads, 0) DESC) as conversion_rank
-FROM source_attribution
-WHERE total_leads > 0
-ORDER BY won_revenue DESC
-```
-
-## Forecasting Patterns
-
-### Pipeline Forecasting with Historical Conversion
-
-```sql
-WITH latest_opportunity AS (
-    SELECT 
-        *,
-        ROW_NUMBER() OVER (PARTITION BY id ORDER BY grax__idseq DESC) as rn,
-        DATE_TRUNC('month', closedate_d) as forecast_month
-    FROM lakehouse.object_opportunity
-    WHERE grax__deleted IS NULL
-        AND stagename NOT IN ('Closed Won', 'Closed Lost')
-        AND closedate_d >= CURRENT_DATE
-        AND closedate_d <= DATE_ADD('month', 6, CURRENT_DATE)
-),
-historical_conversion AS (
-    SELECT 
-        stagename,
-        COUNT(*) as historical_total,
-        COUNT(CASE WHEN stagename_final = 'Closed Won' THEN 1 END) as historical_won,
-        ROUND(COUNT(CASE WHEN stagename_final = 'Closed Won' THEN 1 END) * 100.0 / COUNT(*), 2) as historical_conversion_rate
-    FROM (
-        SELECT 
-            o1.id,
-            o1.stagename,
-            o2.stagename as stagename_final
-        FROM lakehouse.object_opportunity o1
-        JOIN (
-            SELECT 
-                id,
-                stagename,
-                ROW_NUMBER() OVER (PARTITION BY id ORDER BY grax__idseq DESC) as rn
-            FROM lakehouse.object_opportunity
-            WHERE grax__deleted IS NULL
-                AND stagename IN ('Closed Won', 'Closed Lost')
-                AND createddate_ts >= DATE_ADD('month', -24, CURRENT_DATE)
-        ) o2 ON o1.id = o2.id AND o2.rn = 1
-        WHERE o1.grax__deleted IS NULL
-            AND o1.stagename NOT IN ('Closed Won', 'Closed Lost')
-            AND o1.createddate_ts >= DATE_ADD('month', -24, CURRENT_DATE)
-    )
-    GROUP BY stagename
-),
-pipeline_forecast AS (
-    SELECT 
-        o.forecast_month,
-        o.stagename,
-        COUNT(*) as opportunity_count,
-        SUM(o.amount_f) as pipeline_value,
-        AVG(o.probability_f) as avg_probability,
-        h.historical_conversion_rate,
-        -- Forecast calculations
-        SUM(o.amount_f * o.probability_f / 100) as probability_weighted_value,
-        SUM(o.amount_f * h.historical_conversion_rate / 100) as history_weighted_value,
-        SUM(o.amount_f * ((o.probability_f + h.historical_conversion_rate) / 2) / 100) as blended_forecast_value
-    FROM latest_opportunity o
-    LEFT JOIN historical_conversion h ON o.stagename = h.stagename
-    WHERE o.rn = 1
-    GROUP BY o.forecast_month, o.stagename, h.historical_conversion_rate
-)
-SELECT 
-    forecast_month,
     stagename,
     opportunity_count,
     ROUND(pipeline_value, 0) as pipeline_value,
+    ROUND(avg_deal_size, 0) as avg_deal_size,
+    ROUND(avg_opportunity_age, 0) as avg_opportunity_age_days,
+    ROUND(avg_days_in_stage, 0) as avg_days_in_current_stage,
     ROUND(avg_probability, 1) as avg_probability_pct,
-    ROUND(historical_conversion_rate, 1) as historical_conversion_rate_pct,
-    ROUND(probability_weighted_value, 0) as probability_weighted_forecast,
-    ROUND(history_weighted_value, 0) as history_weighted_forecast,
-    ROUND(blended_forecast_value, 0) as blended_forecast,
-    -- Confidence indicators
-    CASE 
-        WHEN ABS(probability_weighted_value - history_weighted_value) / NULLIF(pipeline_value, 0) < 0.1 
-        THEN 'High Confidence'
-        WHEN ABS(probability_weighted_value - history_weighted_value) / NULLIF(pipeline_value, 0) < 0.25
-        THEN 'Medium Confidence'
-        ELSE 'Low Confidence - Large Variance'
-    END as forecast_confidence
-FROM pipeline_forecast
-ORDER BY forecast_month, pipeline_value DESC
+    stalled_opportunities,
+    ROUND(stalled_opportunities * 100.0 / opportunity_count, 1) as stall_rate_pct,
+    aged_opportunities,
+    ROUND(aged_opportunities * 100.0 / opportunity_count, 1) as aging_rate_pct
+FROM velocity_analysis
+-- Using stage ordering from docs/configuration-reference.md
+ORDER BY customer_segment, 
+    CASE stagename
+        WHEN 'SQL' THEN 1
+        WHEN 'Proof of Value (SQO)' THEN 2
+        WHEN 'Proposal' THEN 3
+        WHEN 'Contracts' THEN 4
+        ELSE 5
+    END
 ```
 
-## Competitive Analysis Patterns
-
-### Win/Loss Analysis by Competitor
+### Win/Loss Analysis
 
 ```sql
 WITH latest_opportunity AS (
-    SELECT 
-        *,
-        ROW_NUMBER() OVER (PARTITION BY id ORDER BY grax__idseq DESC) as rn
-    FROM lakehouse.object_opportunity
-    WHERE grax__deleted IS NULL
-        AND stagename IN ('Closed Won', 'Closed Lost')
-        AND createddate_ts >= DATE_ADD('month', -12, CURRENT_DATE)
+    SELECT A.* 
+    FROM lakehouse.object_opportunity A 
+    INNER JOIN (
+        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
+        FROM lakehouse.object_opportunity B 
+        GROUP BY B.Id
+    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
+    WHERE A.grax__deleted IS NULL
 ),
-competitor_analysis AS (
+latest_account AS (
+    SELECT A.* 
+    FROM lakehouse.object_account A 
+    INNER JOIN (
+        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
+        FROM lakehouse.object_account B 
+        GROUP BY B.Id
+    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
+    WHERE A.grax__deleted IS NULL
+),
+closed_opportunities AS (
     SELECT 
-        COALESCE(competitor__c, 'Unknown/No Competition') as competitor,
-        stagename as outcome,
-        COUNT(*) as deal_count,
-        SUM(amount_f) as total_value,
-        AVG(amount_f) as avg_deal_size,
-        AVG(DATE_DIFF('day', createddate_ts, CAST(closedate_d AS timestamp))) as avg_sales_cycle_days
-    FROM latest_opportunity
-    WHERE rn = 1
-    GROUP BY COALESCE(competitor__c, 'Unknown/No Competition'), stagename
+        o.id,
+        o.name,
+        o.stagename,
+        o.amount_f,
+        o.probability_f,
+        o.createddate_ts,
+        CAST(o.closedate_d AS timestamp) as closedate_ts,
+        DATE_DIFF('day', o.createddate_ts, CAST(o.closedate_d AS timestamp)) as sales_cycle_days,
+        -- Using segmentation thresholds from docs/configuration-reference.md
+        CASE 
+            WHEN a.numberofemployees_f > 250 OR a.annualrevenue_f > 100000000 THEN 'Enterprise'
+            WHEN a.numberofemployees_f > 50 OR a.annualrevenue_f > 10000000 THEN 'SMB'
+            ELSE 'Self Service'
+        END as customer_segment,
+        a.industry,
+        DATE_TRUNC('quarter', CAST(o.closedate_d AS timestamp)) as close_quarter
+    FROM latest_opportunity o
+    LEFT JOIN latest_account a ON o.accountid = a.id
+    -- Using closed stage names from docs/configuration-reference.md
+    WHERE o.stagename IN ('Closed Won', 'Closed Lost')
+      AND o.closedate_d >= DATE_ADD('month', -24, CURRENT_DATE)
+      AND o.amount_f IS NOT NULL
 )
 SELECT 
-    competitor,
-    SUM(deal_count) as total_deals,
-    SUM(CASE WHEN outcome = 'Closed Won' THEN deal_count ELSE 0 END) as deals_won,
-    SUM(CASE WHEN outcome = 'Closed Lost' THEN deal_count ELSE 0 END) as deals_lost,
-    ROUND(SUM(CASE WHEN outcome = 'Closed Won' THEN deal_count ELSE 0 END) * 100.0 / 
-          SUM(deal_count), 2) as win_rate_pct,
-    ROUND(SUM(CASE WHEN outcome = 'Closed Won' THEN total_value ELSE 0 END), 0) as won_revenue,
-    ROUND(SUM(CASE WHEN outcome = 'Closed Lost' THEN total_value ELSE 0 END), 0) as lost_revenue,
-    ROUND(AVG(CASE WHEN outcome = 'Closed Won' THEN avg_deal_size END), 0) as avg_won_deal_size,
-    ROUND(AVG(CASE WHEN outcome = 'Closed Lost' THEN avg_deal_size END), 0) as avg_lost_deal_size,
-    ROUND(AVG(avg_sales_cycle_days), 0) as avg_sales_cycle_days,
-    -- Competitive threat assessment
+    close_quarter,
+    customer_segment,
+    industry,
+    
+    -- Volume metrics
+    COUNT(*) as total_closed,
+    -- Using stage names from docs/configuration-reference.md
+    COUNT(CASE WHEN stagename = 'Closed Won' THEN 1 END) as won_count,
+    COUNT(CASE WHEN stagename = 'Closed Lost' THEN 1 END) as lost_count,
+    
+    -- Win rate analysis
+    ROUND(COUNT(CASE WHEN stagename = 'Closed Won' THEN 1 END) * 100.0 / COUNT(*), 1) as win_rate_pct,
+    
+    -- Revenue metrics
+    SUM(CASE WHEN stagename = 'Closed Won' THEN amount_f ELSE 0 END) as won_revenue,
+    SUM(CASE WHEN stagename = 'Closed Lost' THEN amount_f ELSE 0 END) as lost_revenue,
+    ROUND(AVG(CASE WHEN stagename = 'Closed Won' THEN amount_f END), 0) as avg_won_deal_size,
+    ROUND(AVG(CASE WHEN stagename = 'Closed Lost' THEN amount_f END), 0) as avg_lost_deal_size,
+    
+    -- Sales cycle analysis
+    ROUND(AVG(CASE WHEN stagename = 'Closed Won' THEN sales_cycle_days END), 0) as avg_won_cycle_days,
+    ROUND(AVG(CASE WHEN stagename = 'Closed Lost' THEN sales_cycle_days END), 0) as avg_lost_cycle_days,
+    
+    -- Probability analysis
+    ROUND(AVG(CASE WHEN stagename = 'Closed Won' THEN probability_f END), 1) as avg_won_probability,
+    ROUND(AVG(CASE WHEN stagename = 'Closed Lost' THEN probability_f END), 1) as avg_lost_probability
+    
+FROM closed_opportunities
+GROUP BY close_quarter, customer_segment, industry
+HAVING COUNT(*) >= 5  -- Only include segments with meaningful sample size
+ORDER BY close_quarter DESC, customer_segment, industry
+```
+
+### Revenue Forecasting Analysis
+
+```sql
+WITH latest_opportunity AS (
+    SELECT A.* 
+    FROM lakehouse.object_opportunity A 
+    INNER JOIN (
+        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
+        FROM lakehouse.object_opportunity B 
+        GROUP BY B.Id
+    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
+    WHERE A.grax__deleted IS NULL
+),
+latest_user AS (
+    SELECT A.* 
+    FROM lakehouse.object_user A 
+    INNER JOIN (
+        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
+        FROM lakehouse.object_user B 
+        GROUP BY B.Id
+    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
+    WHERE A.grax__deleted IS NULL
+),
+forecast_data AS (
+    SELECT 
+        o.id,
+        o.stagename,
+        o.amount_f,
+        o.probability_f,
+        CAST(o.closedate_d AS timestamp) as closedate_ts,
+        DATE_TRUNC('quarter', CAST(o.closedate_d AS timestamp)) as close_quarter,
+        DATE_TRUNC('month', CAST(o.closedate_d AS timestamp)) as close_month,
+        u.name as owner_name,
+        -- Weighted pipeline calculation
+        (o.amount_f * o.probability_f / 100) as weighted_amount,
+        -- Risk scoring
+        CASE 
+            WHEN o.probability_f >= 75 THEN 'High Confidence'
+            WHEN o.probability_f >= 50 THEN 'Medium Confidence'
+            WHEN o.probability_f >= 25 THEN 'Low Confidence'
+            ELSE 'Very Low Confidence'
+        END as confidence_level,
+        -- Timeline categorization
+        CASE 
+            WHEN CAST(o.closedate_d AS timestamp) <= DATE_ADD('month', 1, CURRENT_DATE) THEN 'Current Month'
+            WHEN CAST(o.closedate_d AS timestamp) <= DATE_ADD('month', 3, CURRENT_DATE) THEN 'Next 3 Months'
+            WHEN CAST(o.closedate_d AS timestamp) <= DATE_ADD('month', 6, CURRENT_DATE) THEN 'Next 6 Months'
+            ELSE 'Beyond 6 Months'
+        END as timeline_category
+    FROM latest_opportunity o
+    LEFT JOIN latest_user u ON o.ownerid = u.id
+    -- Using active pipeline exclusion logic from docs/configuration-reference.md
+    WHERE o.stagename NOT IN ('Closed Won', 'Closed Lost')
+      AND o.closedate_d IS NOT NULL
+      AND o.amount_f IS NOT NULL
+      AND o.probability_f IS NOT NULL
+)
+SELECT 
+    close_quarter,
+    timeline_category,
+    confidence_level,
+    COUNT(*) as opportunity_count,
+    ROUND(SUM(amount_f), 0) as total_pipeline_value,
+    ROUND(SUM(weighted_amount), 0) as weighted_pipeline_value,
+    ROUND(AVG(amount_f), 0) as avg_deal_size,
+    ROUND(AVG(probability_f), 1) as avg_probability_pct,
+    -- Forecast confidence indicators
+    ROUND(SUM(weighted_amount) / NULLIF(SUM(amount_f), 0) * 100, 1) as pipeline_confidence_pct,
+    COUNT(DISTINCT owner_name) as unique_owners
+FROM forecast_data
+GROUP BY close_quarter, timeline_category, confidence_level
+ORDER BY close_quarter, 
+    CASE timeline_category
+        WHEN 'Current Month' THEN 1
+        WHEN 'Next 3 Months' THEN 2
+        WHEN 'Next 6 Months' THEN 3
+        WHEN 'Beyond 6 Months' THEN 4
+    END,
+    CASE confidence_level
+        WHEN 'High Confidence' THEN 1
+        WHEN 'Medium Confidence' THEN 2
+        WHEN 'Low Confidence' THEN 3
+        WHEN 'Very Low Confidence' THEN 4
+    END
+```
+
+## Customer Lifecycle Analysis
+
+### Lead-to-Customer Journey
+
+```sql
+WITH latest_lead AS (
+    SELECT A.* 
+    FROM lakehouse.object_lead A 
+    INNER JOIN (
+        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
+        FROM lakehouse.object_lead B 
+        GROUP BY B.Id
+    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
+    WHERE A.grax__deleted IS NULL
+),
+latest_opportunity AS (
+    SELECT A.* 
+    FROM lakehouse.object_opportunity A 
+    INNER JOIN (
+        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
+        FROM lakehouse.object_opportunity B 
+        GROUP BY B.Id
+    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
+    WHERE A.grax__deleted IS NULL
+),
+latest_account AS (
+    SELECT A.* 
+    FROM lakehouse.object_account A 
+    INNER JOIN (
+        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
+        FROM lakehouse.object_account B 
+        GROUP BY B.Id
+    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
+    WHERE A.grax__deleted IS NULL
+),
+customer_journey AS (
+    SELECT 
+        l.id as lead_id,
+        l.createddate_ts as lead_created,
+        l.converteddate_d as lead_converted,
+        l.company as lead_company,
+        l.leadsource,
+        
+        o.id as opportunity_id,
+        o.createddate_ts as opportunity_created,
+        o.stagename as current_stage,
+        CAST(o.closedate_d AS timestamp) as opportunity_closedate,
+        o.amount_f as opportunity_amount,
+        
+        a.id as account_id,
+        a.name as account_name,
+        a.type as account_type,
+        
+        -- Journey timing calculations
+        DATE_DIFF('day', l.createddate_ts, CAST(l.converteddate_d AS timestamp)) as lead_to_conversion_days,
+        DATE_DIFF('day', CAST(l.converteddate_d AS timestamp), o.createddate_ts) as conversion_to_opportunity_days,
+        DATE_DIFF('day', o.createddate_ts, CAST(o.closedate_d AS timestamp)) as opportunity_lifecycle_days,
+        DATE_DIFF('day', l.createddate_ts, CAST(o.closedate_d AS timestamp)) as total_journey_days,
+        
+        -- Using segmentation thresholds from docs/configuration-reference.md
+        CASE 
+            WHEN a.numberofemployees_f > 250 OR a.annualrevenue_f > 100000000 THEN 'Enterprise'
+            WHEN a.numberofemployees_f > 50 OR a.annualrevenue_f > 10000000 THEN 'SMB'
+            ELSE 'Self Service'
+        END as customer_segment
+        
+    FROM latest_lead l
+    INNER JOIN latest_opportunity o ON l.convertedopportunityid = o.id
+    LEFT JOIN latest_account a ON l.convertedaccountid = a.id
+    WHERE l.isconverted_b = true
+      AND l.converteddate_d IS NOT NULL
+      AND l.createddate_ts >= DATE_ADD('month', -24, CURRENT_DATE)
+)
+SELECT 
+    customer_segment,
+    leadsource,
+    current_stage,
+    COUNT(*) as journey_count,
+    
+    -- Journey timing analysis
+    ROUND(AVG(lead_to_conversion_days), 0) as avg_lead_to_conversion_days,
+    ROUND(AVG(conversion_to_opportunity_days), 0) as avg_conversion_to_opp_days,
+    ROUND(AVG(opportunity_lifecycle_days), 0) as avg_opportunity_lifecycle_days,
+    ROUND(AVG(total_journey_days), 0) as avg_total_journey_days,
+    
+    -- Revenue analysis using stage names from docs/configuration-reference.md
+    COUNT(CASE WHEN current_stage = 'Closed Won' THEN 1 END) as won_count,
+    ROUND(AVG(CASE WHEN current_stage = 'Closed Won' THEN opportunity_amount END), 0) as avg_won_deal_size,
+    SUM(CASE WHEN current_stage = 'Closed Won' THEN opportunity_amount ELSE 0 END) as total_won_revenue,
+    
+    -- Conversion efficiency
+    ROUND(COUNT(CASE WHEN current_stage = 'Closed Won' THEN 1 END) * 100.0 / COUNT(*), 1) as lead_to_customer_rate
+    
+FROM customer_journey
+WHERE lead_to_conversion_days IS NOT NULL
+  AND opportunity_amount IS NOT NULL
+GROUP BY customer_segment, leadsource, current_stage
+HAVING COUNT(*) >= 3  -- Only include meaningful sample sizes
+ORDER BY customer_segment, leadsource, 
+    CASE current_stage
+        WHEN 'Closed Won' THEN 1
+        WHEN 'Closed Lost' THEN 2
+        ELSE 3
+    END
+```
+
+### Account Growth Analysis
+
+```sql
+WITH latest_opportunity AS (
+    SELECT A.* 
+    FROM lakehouse.object_opportunity A 
+    INNER JOIN (
+        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
+        FROM lakehouse.object_opportunity B 
+        GROUP BY B.Id
+    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
+    WHERE A.grax__deleted IS NULL
+),
+latest_account AS (
+    SELECT A.* 
+    FROM lakehouse.object_account A 
+    INNER JOIN (
+        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
+        FROM lakehouse.object_account B 
+        GROUP BY B.Id
+    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
+    WHERE A.grax__deleted IS NULL
+),
+account_revenue_history AS (
+    SELECT 
+        a.id as account_id,
+        a.name as account_name,
+        a.type as account_type,
+        a.industry,
+        -- Using segmentation thresholds from docs/configuration-reference.md
+        CASE 
+            WHEN a.numberofemployees_f > 250 OR a.annualrevenue_f > 100000000 THEN 'Enterprise'
+            WHEN a.numberofemployees_f > 50 OR a.annualrevenue_f > 10000000 THEN 'SMB'
+            ELSE 'Self Service'
+        END as customer_segment,
+        
+        -- First deal metrics using stage names from docs/configuration-reference.md
+        MIN(CASE WHEN o.stagename = 'Closed Won' THEN CAST(o.closedate_d AS timestamp) END) as first_purchase_date,
+        MIN(CASE WHEN o.stagename = 'Closed Won' THEN o.amount_f END) as first_deal_amount,
+        
+        -- Latest deal metrics
+        MAX(CASE WHEN o.stagename = 'Closed Won' THEN CAST(o.closedate_d AS timestamp) END) as latest_purchase_date,
+        MAX(CASE WHEN o.stagename = 'Closed Won' THEN o.amount_f END) as latest_deal_amount,
+        
+        -- Aggregate metrics
+        COUNT(CASE WHEN o.stagename = 'Closed Won' THEN 1 END) as total_deals,
+        SUM(CASE WHEN o.stagename = 'Closed Won' THEN o.amount_f ELSE 0 END) as total_revenue,
+        AVG(CASE WHEN o.stagename = 'Closed Won' THEN o.amount_f END) as avg_deal_size,
+        
+        -- Recent activity (last 12 months)
+        COUNT(CASE WHEN o.stagename = 'Closed Won' 
+                   AND CAST(o.closedate_d AS timestamp) >= DATE_ADD('month', -12, CURRENT_DATE) 
+                   THEN 1 END) as recent_deals,
+        SUM(CASE WHEN o.stagename = 'Closed Won' 
+                 AND CAST(o.closedate_d AS timestamp) >= DATE_ADD('month', -12, CURRENT_DATE) 
+                 THEN o.amount_f ELSE 0 END) as recent_revenue,
+        
+        -- Active pipeline using exclusion logic from docs/configuration-reference.md
+        COUNT(CASE WHEN o.stagename NOT IN ('Closed Won', 'Closed Lost') THEN 1 END) as active_opportunities,
+        SUM(CASE WHEN o.stagename NOT IN ('Closed Won', 'Closed Lost') THEN o.amount_f ELSE 0 END) as pipeline_value
+        
+    FROM latest_account a
+    LEFT JOIN latest_opportunity o ON a.id = o.accountid
+    -- Using account types from docs/configuration-reference.md
+    WHERE a.type IN ('Customer', 'Customer - Subsidiary', 'Prospect')
+    GROUP BY a.id, a.name, a.type, a.industry, a.numberofemployees_f, a.annualrevenue_f
+),
+account_growth_analysis AS (
+    SELECT 
+        *,
+        -- Customer lifecycle stage
+        CASE 
+            WHEN total_deals = 0 THEN 'Prospect'
+            WHEN total_deals = 1 AND recent_deals = 0 THEN 'One-Time Customer'
+            WHEN total_deals = 1 AND recent_deals = 1 THEN 'New Customer'
+            WHEN total_deals > 1 AND recent_deals > 0 THEN 'Repeat Customer'
+            WHEN total_deals > 1 AND recent_deals = 0 THEN 'Dormant Customer'
+            ELSE 'Unknown'
+        END as lifecycle_stage,
+        
+        -- Customer tenure
+        CASE 
+            WHEN first_purchase_date IS NOT NULL 
+            THEN DATE_DIFF('month', first_purchase_date, CURRENT_DATE)
+            ELSE NULL
+        END as customer_tenure_months,
+        
+        -- Growth indicators
+        CASE 
+            WHEN latest_deal_amount > first_deal_amount THEN 'Expanding'
+            WHEN latest_deal_amount = first_deal_amount THEN 'Stable'
+            WHEN latest_deal_amount < first_deal_amount THEN 'Contracting'
+            ELSE 'Unknown'
+        END as growth_trend,
+        
+        -- Revenue velocity (annualized)
+        CASE 
+            WHEN first_purchase_date IS NOT NULL AND customer_tenure_months > 0
+            THEN (total_revenue * 12.0 / customer_tenure_months)
+            ELSE NULL
+        END as annualized_revenue_velocity
+        
+    FROM (
+        SELECT 
+            *,
+            DATE_DIFF('month', first_purchase_date, CURRENT_DATE) as customer_tenure_months
+        FROM account_revenue_history
+    ) base
+)
+SELECT 
+    customer_segment,
+    lifecycle_stage,
+    growth_trend,
+    COUNT(*) as account_count,
+    
+    -- Revenue metrics
+    ROUND(SUM(total_revenue), 0) as segment_total_revenue,
+    ROUND(AVG(total_revenue), 0) as avg_account_revenue,
+    ROUND(SUM(recent_revenue), 0) as segment_recent_revenue,
+    ROUND(AVG(recent_revenue), 0) as avg_account_recent_revenue,
+    
+    -- Deal metrics
+    ROUND(AVG(total_deals), 1) as avg_deals_per_account,
+    ROUND(AVG(avg_deal_size), 0) as avg_deal_size,
+    
+    -- Growth metrics
+    ROUND(AVG(customer_tenure_months), 0) as avg_tenure_months,
+    ROUND(AVG(annualized_revenue_velocity), 0) as avg_revenue_velocity,
+    
+    -- Pipeline metrics
+    ROUND(SUM(pipeline_value), 0) as segment_pipeline_value,
+    ROUND(AVG(pipeline_value), 0) as avg_account_pipeline_value
+    
+FROM account_growth_analysis
+WHERE total_deals > 0  -- Focus on actual customers
+GROUP BY customer_segment, lifecycle_stage, growth_trend
+ORDER BY customer_segment, 
+    CASE lifecycle_stage
+        WHEN 'New Customer' THEN 1
+        WHEN 'Repeat Customer' THEN 2
+        WHEN 'One-Time Customer' THEN 3
+        WHEN 'Dormant Customer' THEN 4
+        ELSE 5
+    END,
+    growth_trend
+```
+
+## Predictive Analytics Patterns
+
+### Churn Risk Analysis
+
+```sql
+WITH latest_account AS (
+    SELECT A.* 
+    FROM lakehouse.object_account A 
+    INNER JOIN (
+        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
+        FROM lakehouse.object_account B 
+        GROUP BY B.Id
+    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
+    WHERE A.grax__deleted IS NULL
+),
+latest_opportunity AS (
+    SELECT A.* 
+    FROM lakehouse.object_opportunity A 
+    INNER JOIN (
+        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
+        FROM lakehouse.object_opportunity B 
+        GROUP BY B.Id
+    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
+    WHERE A.grax__deleted IS NULL
+),
+latest_case AS (
+    SELECT A.* 
+    FROM lakehouse.object_case A 
+    INNER JOIN (
+        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
+        FROM lakehouse.object_case B 
+        GROUP BY B.Id
+    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
+    WHERE A.grax__deleted IS NULL
+),
+customer_health_metrics AS (
+    SELECT 
+        a.id as account_id,
+        a.name as account_name,
+        a.type as account_type,
+        -- Using segmentation thresholds from docs/configuration-reference.md
+        CASE 
+            WHEN a.numberofemployees_f > 250 OR a.annualrevenue_f > 100000000 THEN 'Enterprise'
+            WHEN a.numberofemployees_f > 50 OR a.annualrevenue_f > 10000000 THEN 'SMB'
+            ELSE 'Self Service'
+        END as customer_segment,
+        
+        -- Revenue trends using stage names from docs/configuration-reference.md
+        SUM(CASE WHEN o.stagename = 'Closed Won' 
+                 AND CAST(o.closedate_d AS timestamp) >= DATE_ADD('month', -12, CURRENT_DATE) 
+                 THEN o.amount_f ELSE 0 END) as revenue_last_12m,
+        SUM(CASE WHEN o.stagename = 'Closed Won' 
+                 AND CAST(o.closedate_d AS timestamp) >= DATE_ADD('month', -24, CURRENT_DATE)
+                 AND CAST(o.closedate_d AS timestamp) < DATE_ADD('month', -12, CURRENT_DATE)
+                 THEN o.amount_f ELSE 0 END) as revenue_prev_12m,
+        
+        -- Activity metrics
+        MAX(CASE WHEN o.stagename = 'Closed Won' THEN CAST(o.closedate_d AS timestamp) END) as last_purchase_date,
+        COUNT(CASE WHEN o.stagename NOT IN ('Closed Won', 'Closed Lost') THEN 1 END) as active_opportunities,
+        SUM(CASE WHEN o.stagename NOT IN ('Closed Won', 'Closed Lost') THEN o.amount_f ELSE 0 END) as pipeline_value,
+        
+        -- Support metrics
+        COUNT(CASE WHEN c.createddate_ts >= DATE_ADD('month', -6, CURRENT_DATE) THEN 1 END) as recent_cases,
+        COUNT(CASE WHEN c.priority IN ('High', 'Critical') 
+                   AND c.createddate_ts >= DATE_ADD('month', -6, CURRENT_DATE) 
+                   THEN 1 END) as high_priority_cases,
+        AVG(CASE WHEN c.isclosed_b = true 
+                 AND c.createddate_ts >= DATE_ADD('month', -6, CURRENT_DATE)
+                 THEN DATE_DIFF('day', c.createddate_ts, c.lastmodifieddate_ts)
+                 END) as avg_case_resolution_days
+        
+    FROM latest_account a
+    LEFT JOIN latest_opportunity o ON a.id = o.accountid
+    LEFT JOIN latest_case c ON a.id = c.accountid
+    -- Using customer account types from docs/configuration-reference.md
+    WHERE a.type IN ('Customer', 'Customer - Subsidiary')
+    GROUP BY a.id, a.name, a.type, a.numberofemployees_f, a.annualrevenue_f
+),
+churn_risk_scoring AS (
+    SELECT 
+        *,
+        -- Revenue trend scoring
+        CASE 
+            WHEN revenue_prev_12m > 0 AND revenue_last_12m / revenue_prev_12m < 0.5 THEN 3  -- Severe decline
+            WHEN revenue_prev_12m > 0 AND revenue_last_12m / revenue_prev_12m < 0.8 THEN 2  -- Moderate decline
+            WHEN revenue_last_12m = 0 AND revenue_prev_12m > 0 THEN 4                       -- No recent revenue
+            WHEN revenue_last_12m = 0 AND revenue_prev_12m = 0 THEN 3                       -- No revenue history
+            ELSE 1  -- Stable or growing
+        END as revenue_risk_score,
+        
+        -- Activity risk scoring
+        CASE 
+            WHEN last_purchase_date < DATE_ADD('month', -18, CURRENT_DATE) THEN 3  -- Very stale
+            WHEN last_purchase_date < DATE_ADD('month', -12, CURRENT_DATE) THEN 2  -- Stale
+            WHEN active_opportunities = 0 THEN 2                                    -- No pipeline
+            ELSE 1  -- Recent activity
+        END as activity_risk_score,
+        
+        -- Support risk scoring
+        CASE 
+            WHEN high_priority_cases >= 3 THEN 3                    -- Many critical issues
+            WHEN recent_cases >= 10 THEN 2                          -- High support volume
+            WHEN avg_case_resolution_days > 14 THEN 2               -- Slow resolution
+            WHEN recent_cases = 0 THEN 1                            -- No recent issues
+            ELSE 1  -- Normal support levels
+        END as support_risk_score,
+        
+        -- Days since last purchase
+        DATE_DIFF('day', last_purchase_date, CURRENT_DATE) as days_since_last_purchase
+        
+    FROM customer_health_metrics
+),
+final_risk_analysis AS (
+    SELECT 
+        *,
+        (revenue_risk_score + activity_risk_score + support_risk_score) as total_risk_score,
+        
+        CASE 
+            WHEN (revenue_risk_score + activity_risk_score + support_risk_score) >= 8 THEN 'Critical Risk'
+            WHEN (revenue_risk_score + activity_risk_score + support_risk_score) >= 6 THEN 'High Risk'
+            WHEN (revenue_risk_score + activity_risk_score + support_risk_score) >= 4 THEN 'Medium Risk'
+            ELSE 'Low Risk'
+        END as risk_category
+        
+    FROM churn_risk_scoring
+)
+SELECT 
+    risk_category,
+    customer_segment,
+    COUNT(*) as account_count,
+    ROUND(AVG(total_risk_score), 1) as avg_risk_score,
+    
+    -- Revenue at risk
+    ROUND(SUM(revenue_last_12m), 0) as revenue_at_risk_12m,
+    ROUND(AVG(revenue_last_12m), 0) as avg_revenue_per_account,
+    
+    -- Pipeline at risk
+    ROUND(SUM(pipeline_value), 0) as pipeline_at_risk,
+    ROUND(AVG(pipeline_value), 0) as avg_pipeline_per_account,
+    
+    -- Activity indicators
+    ROUND(AVG(days_since_last_purchase), 0) as avg_days_since_purchase,
+    ROUND(AVG(active_opportunities), 1) as avg_active_opportunities,
+    
+    -- Support indicators
+    ROUND(AVG(recent_cases), 1) as avg_recent_cases,
+    ROUND(AVG(high_priority_cases), 1) as avg_high_priority_cases
+    
+FROM final_risk_analysis
+GROUP BY risk_category, customer_segment
+ORDER BY 
+    CASE risk_category
+        WHEN 'Critical Risk' THEN 1
+        WHEN 'High Risk' THEN 2
+        WHEN 'Medium Risk' THEN 3
+        WHEN 'Low Risk' THEN 4
+    END,
+    customer_segment
+```
+
+## Territory and Performance Analysis
+
+### Sales Performance by Owner
+
+```sql
+WITH latest_opportunity AS (
+    SELECT A.* 
+    FROM lakehouse.object_opportunity A 
+    INNER JOIN (
+        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
+        FROM lakehouse.object_opportunity B 
+        GROUP BY B.Id
+    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
+    WHERE A.grax__deleted IS NULL
+),
+latest_user AS (
+    SELECT A.* 
+    FROM lakehouse.object_user A 
+    INNER JOIN (
+        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
+        FROM lakehouse.object_user B 
+        GROUP BY B.Id
+    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
+    WHERE A.grax__deleted IS NULL
+      AND A.isactive_b = true
+),
+sales_performance AS (
+    SELECT 
+        u.id as user_id,
+        u.name as sales_rep_name,
+        u.email as sales_rep_email,
+        
+        -- Current quarter performance using stage names from docs/configuration-reference.md
+        COUNT(CASE WHEN o.stagename = 'Closed Won' 
+                   AND DATE_TRUNC('quarter', CAST(o.closedate_d AS timestamp)) = DATE_TRUNC('quarter', CURRENT_DATE)
+                   THEN 1 END) as q_won_deals,
+        SUM(CASE WHEN o.stagename = 'Closed Won' 
+                 AND DATE_TRUNC('quarter', CAST(o.closedate_d AS timestamp)) = DATE_TRUNC('quarter', CURRENT_DATE)
+                 THEN o.amount_f ELSE 0 END) as q_won_revenue,
+        
+        -- Year-to-date performance
+        COUNT(CASE WHEN o.stagename = 'Closed Won' 
+                   AND EXTRACT(year FROM CAST(o.closedate_d AS timestamp)) = EXTRACT(year FROM CURRENT_DATE)
+                   THEN 1 END) as ytd_won_deals,
+        SUM(CASE WHEN o.stagename = 'Closed Won' 
+                 AND EXTRACT(year FROM CAST(o.closedate_d AS timestamp)) = EXTRACT(year FROM CURRENT_DATE)
+                 THEN o.amount_f ELSE 0 END) as ytd_won_revenue,
+        
+        -- Pipeline metrics using exclusion logic from docs/configuration-reference.md
+        COUNT(CASE WHEN o.stagename NOT IN ('Closed Won', 'Closed Lost') THEN 1 END) as active_pipeline_count,
+        SUM(CASE WHEN o.stagename NOT IN ('Closed Won', 'Closed Lost') THEN o.amount_f ELSE 0 END) as active_pipeline_value,
+        SUM(CASE WHEN o.stagename NOT IN ('Closed Won', 'Closed Lost') 
+                 THEN (o.amount_f * o.probability_f / 100) ELSE 0 END) as weighted_pipeline_value,
+        
+        -- Activity and efficiency metrics
+        AVG(CASE WHEN o.stagename = 'Closed Won' 
+                 THEN DATE_DIFF('day', o.createddate_ts, CAST(o.closedate_d AS timestamp))
+                 END) as avg_sales_cycle_days,
+        ROUND(COUNT(CASE WHEN o.stagename = 'Closed Won' THEN 1 END) * 100.0 / 
+              NULLIF(COUNT(CASE WHEN o.stagename IN ('Closed Won', 'Closed Lost') THEN 1 END), 0), 1) as win_rate_pct,
+        
+        -- Deal size analysis
+        AVG(CASE WHEN o.stagename = 'Closed Won' THEN o.amount_f END) as avg_won_deal_size,
+        MAX(CASE WHEN o.stagename = 'Closed Won' THEN o.amount_f END) as largest_won_deal,
+        
+        -- Quarter-over-quarter growth
+        SUM(CASE WHEN o.stagename = 'Closed Won' 
+                 AND DATE_TRUNC('quarter', CAST(o.closedate_d AS timestamp)) = DATE_ADD('quarter', -1, DATE_TRUNC('quarter', CURRENT_DATE))
+                 THEN o.amount_f ELSE 0 END) as prev_q_won_revenue
+        
+    FROM latest_user u
+    LEFT JOIN latest_opportunity o ON u.id = o.ownerid
+    WHERE o.createddate_ts >= DATE_ADD('year', -2, CURRENT_DATE)  -- Focus on recent performance
+    GROUP BY u.id, u.name, u.email
+)
+SELECT 
+    sales_rep_name,
+    
+    -- Current performance
+    q_won_deals,
+    ROUND(q_won_revenue, 0) as q_won_revenue,
+    ytd_won_deals,
+    ROUND(ytd_won_revenue, 0) as ytd_won_revenue,
+    
+    -- Pipeline health
+    active_pipeline_count,
+    ROUND(active_pipeline_value, 0) as active_pipeline_value,
+    ROUND(weighted_pipeline_value, 0) as weighted_pipeline_value,
+    ROUND(weighted_pipeline_value / NULLIF(active_pipeline_value, 0) * 100, 1) as pipeline_confidence_pct,
+    
+    -- Efficiency metrics
+    ROUND(avg_sales_cycle_days, 0) as avg_sales_cycle_days,
+    win_rate_pct,
+    ROUND(avg_won_deal_size, 0) as avg_won_deal_size,
+    ROUND(largest_won_deal, 0) as largest_won_deal,
+    
+    -- Growth analysis
     CASE 
-        WHEN SUM(CASE WHEN outcome = 'Closed Won' THEN deal_count ELSE 0 END) * 100.0 / SUM(deal_count) < 30
-        THEN 'High Threat - Low Win Rate'
-        WHEN SUM(deal_count) > 10 AND SUM(CASE WHEN outcome = 'Closed Won' THEN deal_count ELSE 0 END) * 100.0 / SUM(deal_count) < 50
-        THEN 'Medium Threat - Frequent Competitor'
-        ELSE 'Low Threat'
-    END as threat_level
-FROM competitor_analysis
-GROUP BY competitor
-ORDER BY total_deals DESC, won_revenue DESC
+        WHEN prev_q_won_revenue > 0 
+        THEN ROUND((q_won_revenue - prev_q_won_revenue) / prev_q_won_revenue * 100, 1)
+        ELSE NULL
+    END as qoq_revenue_growth_pct,
+    
+    -- Performance tier
+    CASE 
+        WHEN q_won_revenue >= 1000000 THEN 'Top Performer'
+        WHEN q_won_revenue >= 500000 THEN 'High Performer'
+        WHEN q_won_revenue >= 100000 THEN 'Standard Performer'
+        ELSE 'Developing Performer'
+    END as performance_tier
+    
+FROM sales_performance
+WHERE ytd_won_deals > 0 OR active_pipeline_count > 0  -- Focus on active sellers
+ORDER BY ytd_won_revenue DESC
 ```
 
 ## Configuration Adaptation
 
-These business intelligence patterns integrate with [Configuration Reference](../core-reference/configuration-reference.md) for:
+For organizations with different Salesforce implementations:
 
-### Customizable Elements
+### Update Configuration Values
 
-- **Lead Status Values**: MQL qualification criteria and progression stages
-- **Opportunity Stages**: Sales process stages and win/loss definitions
-- **Segmentation Thresholds**: Company size and revenue classifications
-- **Time Periods**: Analysis windows and historical comparison ranges
-- **Custom Fields**: Organization-specific fields like competitor tracking
+Modify the [Configuration Reference](./configuration-reference.md) document to match your organization's specific values:
 
-### Adaptation Process
+- **Opportunity Stage Names**: Update to match your sales process stages
+- **Segmentation Thresholds**: Adjust employee count and revenue thresholds for Enterprise/SMB/Self-Service classification
+- **Account Types**: Update customer classification values  
+- **Lead Status Values**: Modify lead qualification stage names
+- **Field Names**: Update if using custom field names
 
-1. **Review Default Values**: Examine all referenced configuration values
-1. **Update Configuration**: Modify [Configuration Reference](../core-reference/configuration-reference.md) with your values
-1. **Test Patterns**: Validate that business logic aligns with your processes
-1. **Customize Calculations**: Adjust formulas for organization-specific metrics
+### Validation Process
 
-This ensures all business intelligence patterns remain consistent while adapting to different Salesforce implementations and business processes.
+1. **Test Queries**: Execute sample queries with your configuration values
+1. **Validate Results**: Ensure data makes sense for your business context
+1. **Document Changes**: Record customizations for future reference
+1. **Share Updates**: Consider contributing common variations back to the knowledge base
+
+These business intelligence patterns provide comprehensive insights into revenue trends, customer behavior, predictive indicators, and sales performance, enabling data-driven decision making and strategic business optimization across different Salesforce implementations.
