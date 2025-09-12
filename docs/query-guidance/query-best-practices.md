@@ -4,7 +4,7 @@
 
 This guide provides essential patterns for reliable query formation and error prevention in the GRAX Data Lake environment. Following these practices ensures consistent results and optimal performance.
 
-**Configuration Dependencies**: All business-specific values referenced in examples use standardized configuration from [Configuration Reference](./configuration-reference.md). Organizations should update that document to match their specific values rather than modifying individual queries.
+**Configuration Dependencies**: All business-specific values referenced in examples use standardized configuration from [Configuration Reference](/docs/core-reference/configuration-reference.md). Organizations should update that document to match their specific values rather than modifying individual queries.
 
 ## Critical Query Formation Rules
 
@@ -423,7 +423,7 @@ AND EXISTS (
 - Reference columns that don't exist in the current table/CTE
 - Assume historical stage dates exist in latest records
 - Forget `WHERE grax__deleted IS NULL`
-- Include `'Closed Lost'` in progressive stage counts (per [Configuration Reference](./configuration-reference.md))
+- Include `'Closed Lost'` in progressive stage counts (per [Configuration Reference](/docs/core-reference/configuration-reference.md))
 - Use ambiguous column names in JOINs
 - **Reference columns in ORDER BY/WHERE that aren't in your SELECT clause after GROUP BY**
 
@@ -434,7 +434,7 @@ AND EXISTS (
 - Use unique column names in subqueries to prevent ambiguous errors
 - Test with LIMIT 10 before running full queries
 - Validate that all referenced columns actually exist in the schema
-- Reference business values from [Configuration Reference](./configuration-reference.md)
+- Reference business values from [Configuration Reference](/docs/core-reference/configuration-reference.md)
 - **Include ALL columns you'll need to reference in your final GROUP BY clause**
 
 ## Enhanced Debug Checklist
@@ -550,7 +550,7 @@ For organizations with different Salesforce implementations:
 
 ### Update Process
 
-1. **Modify Configuration**: Update [Configuration Reference](./configuration-reference.md) with your specific values
+1. **Modify Configuration**: Update [Configuration Reference](/docs/core-reference/configuration-reference.md) with your specific values
 1. **Test Query Patterns**: Ensure all patterns work with your configuration
 1. **Validate Results**: Confirm business logic produces expected outcomes
 1. **Document Changes**: Record any pattern modifications needed
