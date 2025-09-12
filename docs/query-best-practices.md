@@ -114,6 +114,152 @@ mql_analysis AS (
 -- Continue with final SELECT and JOINs
 ```
 
+## GROUP BY Column Resolution Error Prevention
+
+### 4. Critical GROUP BY Rules
+
+**The Problem**: After GROUP BY operations, only grouped columns and aggregated functions are available in subsequent operations.
+
+❌ **COMMON ERROR PATTERN:**
+
+```sql
+-- This FAILS because customer_segment is referenced in ORDER BY but not in final SELECT GROUP BY
+WITH quarterly_data AS (
+    SELECT 
+        DATE_TRUNC('quarter', CAST(o.closedate_d AS timestamp)) as close_quarter,
+        CASE 
+            WHEN a.numberofemployees_f > 250 THEN 'Enterprise'
+            ELSE 'SMB'
+        END as customer_segment,
+        o.stagename,
+        o.amount_f
+    FROM latest_opportunity o
+    LEFT JOIN latest_account a ON o.accountid = a.id
+),
+quarterly_performance AS (
+    SELECT 
+        close_quarter,
+        customer_segment,  -- Grouped column
+        COUNT(*) as total_opportunities,
+        SUM(amount_f) as won_revenue
+    FROM quarterly_data
+    GROUP BY close_quarter, customer_segment
+)
+SELECT 
+    CAST(close_quarter AS date) as quarter,
+    total_opportunities,
+    won_revenue
+FROM quarterly_performance
+ORDER BY close_quarter DESC, customer_segment  -- ERROR: customer_segment not in SELECT
+```
+
+✅ **CORRECT APPROACH:**
+
+```sql
+-- Include ALL columns you need to reference in the final SELECT
+WITH quarterly_data AS (
+    SELECT 
+        DATE_TRUNC('quarter', CAST(o.closedate_d AS timestamp)) as close_quarter,
+        CASE 
+            WHEN a.numberofemployees_f > 250 THEN 'Enterprise'
+            ELSE 'SMB'
+        END as customer_segment,
+        o.stagename,
+        o.amount_f
+    FROM latest_opportunity o
+    LEFT JOIN latest_account a ON o.accountid = a.id
+),
+quarterly_performance AS (
+    SELECT 
+        close_quarter,
+        customer_segment,  -- Include in GROUP BY
+        COUNT(*) as total_opportunities,
+        SUM(amount_f) as won_revenue
+    FROM quarterly_data
+    GROUP BY close_quarter, customer_segment
+)
+SELECT 
+    CAST(close_quarter AS date) as quarter,
+    customer_segment,  -- Include in SELECT if you want to reference it
+    total_opportunities,
+    won_revenue
+FROM quarterly_performance
+ORDER BY close_quarter DESC, customer_segment  -- Now this works
+```
+
+### 5. Quarterly Trend Analysis Template
+
+**Safe pattern for quarterly performance analysis:**
+
+```sql
+WITH latest_opportunity AS (
+    SELECT A.* 
+    FROM lakehouse.object_opportunity A 
+    INNER JOIN (
+        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
+        FROM lakehouse.object_opportunity B 
+        GROUP BY B.Id
+    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
+    WHERE A.grax__deleted IS NULL
+),
+latest_account AS (
+    SELECT A.* 
+    FROM lakehouse.object_account A 
+    INNER JOIN (
+        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
+        FROM lakehouse.object_account B 
+        GROUP BY B.Id
+    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
+    WHERE A.grax__deleted IS NULL
+),
+enriched_opportunities AS (
+    -- Step 1: Create ALL derived columns BEFORE any aggregation
+    SELECT 
+        o.id,
+        o.stagename,
+        o.amount_f,
+        o.createddate_ts,
+        o.closedate_d,
+        DATE_TRUNC('quarter', CAST(o.closedate_d AS timestamp)) as close_quarter,
+        -- Using segmentation thresholds from docs/configuration-reference.md
+        CASE 
+            WHEN a.numberofemployees_f > 250 OR a.annualrevenue_f > 100000000 THEN 'Enterprise'
+            WHEN a.numberofemployees_f > 50 OR a.annualrevenue_f > 10000000 THEN 'SMB'
+            ELSE 'Self Service'
+        END as customer_segment,
+        DATE_DIFF('day', o.createddate_ts, CAST(o.closedate_d AS timestamp)) as sales_cycle_days
+    FROM latest_opportunity o
+    LEFT JOIN latest_account a ON o.accountid = a.id
+    WHERE o.stagename IN ('Closed Won', 'Closed Lost')
+      AND o.closedate_d IS NOT NULL
+      AND CAST(o.closedate_d AS timestamp) >= DATE_ADD('month', -24, CURRENT_DATE)
+      AND o.amount_f IS NOT NULL
+),
+quarterly_aggregation AS (
+    -- Step 2: Perform aggregation with ALL needed grouping columns
+    SELECT 
+        close_quarter,
+        customer_segment,  -- MUST include in GROUP BY if you want to reference later
+        COUNT(*) as total_opportunities,
+        COUNT(CASE WHEN stagename = 'Closed Won' THEN 1 END) as won_opportunities,
+        SUM(CASE WHEN stagename = 'Closed Won' THEN amount_f ELSE 0 END) as won_revenue,
+        AVG(CASE WHEN stagename = 'Closed Won' THEN sales_cycle_days END) as avg_won_cycle_days
+    FROM enriched_opportunities
+    GROUP BY close_quarter, customer_segment  -- Include ALL columns you'll reference
+)
+-- Step 3: Final SELECT with all columns available
+SELECT 
+    CAST(close_quarter AS date) as quarter,
+    customer_segment,  -- Available because it was in GROUP BY
+    total_opportunities,
+    won_opportunities,
+    ROUND(won_opportunities * 100.0 / total_opportunities, 1) as win_rate_pct,
+    ROUND(won_revenue, 0) as won_revenue,
+    ROUND(avg_won_cycle_days, 0) as avg_won_cycle_days
+FROM quarterly_aggregation
+ORDER BY close_quarter DESC, customer_segment  -- Both columns are available
+```
+
 ## Universal Query Requirements
 
 ### 1. Latest Records Pattern (MANDATORY)
@@ -279,6 +425,7 @@ AND EXISTS (
 - Forget `WHERE grax__deleted IS NULL`
 - Include `'Closed Lost'` in progressive stage counts (per [Configuration Reference](./configuration-reference.md))
 - Use ambiguous column names in JOINs
+- **Reference columns in ORDER BY/WHERE that aren't in your SELECT clause after GROUP BY**
 
 ### ALWAYS
 
@@ -288,20 +435,59 @@ AND EXISTS (
 - Test with LIMIT 10 before running full queries
 - Validate that all referenced columns actually exist in the schema
 - Reference business values from [Configuration Reference](./configuration-reference.md)
+- **Include ALL columns you'll need to reference in your final GROUP BY clause**
 
-## Quick Debug Checklist
+## Enhanced Debug Checklist
 
 **If you get column resolution errors:**
 
-1. Check if the column exists in the table schema
+1. **Check Column Scope**: Verify the column exists in the current CTE/table context
 
-1. Verify you're using the correct CTE that contains the column
+2. **Validate GROUP BY Logic**: After GROUP BY, only grouped columns and aggregates are available
 
-1. Confirm field naming follows `_f`, `_ts`, `_d`, `_b` pattern
+3. **Trace Column Lifecycle**: Follow where columns are created, modified, and referenced
 
-1. Ensure you're not referencing derived columns before they're created
+4. **Test Incrementally**: Build complex queries step by step with SELECT * to verify scope
 
-1. Use `SELECT *` temporarily to see what columns are actually available
+5. **Confirm Field Naming**: Ensure field naming follows `_f`, `_ts`, `_d`, `_b` pattern
+
+6. **Map Dependencies**: Ensure derived columns are created before being referenced
+
+## Quarterly Analysis Error Recovery
+
+**When you encounter "Column cannot be resolved" in quarterly/trend analysis:**
+
+1. **Identify the Missing Column**: Note which column is causing the error
+
+2. **Check Aggregation Context**: Determine if it's after a GROUP BY operation
+
+3. **Restructure Query**: Move column calculations to earlier CTE
+
+4. **Include in GROUP BY**: Add the column to GROUP BY if you need to reference it later
+
+5. **Test Fix**: Use SELECT * to verify column availability before final query
+
+**Example Recovery Process:**
+
+```sql
+-- Step 1: If this fails
+ORDER BY close_quarter DESC, customer_segment  -- ERROR: customer_segment not resolved
+
+-- Step 2: Check if customer_segment is in the final SELECT
+SELECT 
+    CAST(close_quarter AS date) as quarter,
+    -- customer_segment missing here
+    total_opportunities
+
+-- Step 3: Add missing column to SELECT
+SELECT 
+    CAST(close_quarter AS date) as quarter,
+    customer_segment,  -- Add this
+    total_opportunities
+
+-- Step 4: Ensure it's in the GROUP BY of the source CTE
+GROUP BY close_quarter, customer_segment  -- Must include both
+```
 
 ## Performance Optimization
 
@@ -310,6 +496,7 @@ AND EXISTS (
 - **Filter early**: Apply WHERE conditions in CTEs
 - **Use specific date ranges**: Avoid full table scans
 - **Test incrementally**: Build complex queries step by step
+- **Structure CTEs logically**: Calculations → Filtering → Aggregation → Final SELECT
 
 ### 2. Data Type Usage
 
