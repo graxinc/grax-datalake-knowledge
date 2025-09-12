@@ -281,7 +281,7 @@ For organizations requiring customized branding:
 
 ### Customizable Elements
 
-Update the [Configuration Reference](./configuration-reference.md) document with:
+Update the [Configuration Reference](/docs/core-reference/configuration-reference.md) document with:
 
 1. **Color Palette**: Modify hex codes to match organizational brand
 1. **Typography**: Adjust typeface selections for brand consistency
@@ -410,7 +410,7 @@ Update the [Configuration Reference](./configuration-reference.md) document with
 When creating HTML reports, LLMs must:
 
 1. **Execute Data Analysis First**
-   - Run appropriate queries using [Query Templates](./query-templates.md)
+   - Run appropriate queries using [Query Templates](/docs/query-guidance/query-templates.md)
    - Analyze results for business insights
    - Identify key metrics and trends
 
