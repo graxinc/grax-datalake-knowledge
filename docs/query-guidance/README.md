@@ -153,7 +153,7 @@ LIMIT 20
 - **Forgetting latest record patterns**: Historical data requires version control
 - **Hardcoding configuration values**: Reference the Configuration Reference document
 - **Missing date bounds**: Performance issues with large scans
-- **Incorrect field types**: Use proper suffix patterns (_f, _ts, _d, etc.)
+- **Incorrect field types**: Use proper suffix patterns (`_f`, `_ts`, `_d`, etc.)
 
 ### Debugging Approach
 
