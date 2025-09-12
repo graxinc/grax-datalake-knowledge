@@ -1,194 +1,214 @@
 # Claude Execution Guidelines
 
-**CRITICAL FOR LLM MODELS**: This document defines when Claude should execute queries versus providing code templates when working with GRAX Data Lake analytics.
+## Overview
 
-## Executive Decision Framework
+This document provides clear guidance on when Claude should execute queries against Athena versus providing query templates or code. Following these guidelines ensures customers receive the appropriate response type for their requests.
 
-### Execute Queries When
+**Configuration Dependencies**: When executing queries, always use business-specific values from [Configuration Reference](./configuration-reference.md). This ensures consistency across different customer implementations.
 
-**Customer asks for reports, insights, or analysis** - Execute immediately to provide value:
+**CRITICAL REPORTING REQUIREMENT**: ALL reports, analysis, and data presentations MUST be delivered as professional HTML artifacts with complete GRAX branding unless the customer explicitly specifies otherwise (e.g., "give me just the raw data" or "provide as plain text"). See [Reporting and Brand Standards](./reporting-brand-standards.md) for complete implementation requirements.
 
-- "Generate a sales pipeline report"
-- "Show me lead conversion rates"
-- "What are our top performing industries?"
-- "Create a quarterly business review"
-- "Analyze our sales velocity trends"
+## Execution vs Code Decision Tree
 
-### Provide Code When
+### ALWAYS Execute Queries When
 
-**Customer asks for templates, examples, or wants to modify queries** - Provide reusable code:
+1. **Report Requests**
 
-- "Show me how to query opportunity data"
-- "Give me a template for lead analysis"
-- "I want to customize this query"
-- "Help me understand the schema"
-- "Provide a starting point for..."
+   - "Build me a [type] report"
+   - "Show me [metric/analysis]"
+   - "What are our [business metric] numbers"
+   - "Generate a report on [topic]"
+   - "Analyze [business area]"
 
-## Execution Priority Matrix
+1. **Analysis Requests**
 
-| Request Type | Action | Rationale |
-|-------------|--------|----------|
-| **"Generate/Create/Show me [analysis]"** | EXECUTE | Customer wants insights |
-| **"Analyze/Report on [topic]"** | EXECUTE | Customer needs business intelligence |
-| **"What are our [metrics]?"** | EXECUTE | Direct question requiring data |
-| **"How to query/Template for [analysis]"** | CODE | Customer wants reusable patterns |
-| **"Help me build/customize [query]"** | CODE | Customer wants to modify |
-| **"Example of [pattern]"** | CODE | Educational/reference purpose |
+   - "How is [metric] performing"
+   - "What's the trend for [business area]"
+   - "Compare [metric A] to [metric B]"
+   - "Analyze the performance of [business area]"
 
-## Execution Best Practices
+1. **Data Investigation**
 
-### When Executing Queries
+   - "Why is [metric] changing"
+   - "What's causing [business issue]"
+   - "Investigate [data quality issue]"
+   - "Find records where [condition]"
 
-1. **Always start with execution** - Provide immediate value
-1. **Use latest records patterns** - Ensure current state analysis
-1. **Apply proper filtering** - Include `grax__deleted IS NULL`
-1. **Reference configuration** - Use [Configuration Reference](configuration-reference.md) values
-1. **Add date bounds** - Include reasonable time ranges for performance
-1. **Provide context** - Explain what the results mean
+1. **Current State Questions**
 
-### Query Execution Template
+   - "What's our current [metric]"
+   - "How many [records] do we have"
+   - "Show me today's [business metric]"
+
+### ONLY Provide Code When
+
+1. **Template Requests**
+
+   - "Give me a template for [analysis type]"
+   - "How do I query [specific pattern]"
+   - "What's the syntax for [operation]"
+   - "Show me the query pattern for [use case]"
+
+1. **Learning/Educational**
+
+   - "How do I calculate [metric]"
+   - "What's the correct way to [query pattern]"
+   - "Teach me to query [data structure]"
+
+1. **Code Review/Debugging**
+
+   - "Fix this query: [broken query]"
+   - "Optimize this SQL: [existing query]"
+   - "What's wrong with [query]"
+
+## Mandatory Execution and Reporting Process
+
+When executing queries, ALWAYS follow this process:
+
+### 1. Execute First
 
 ```sql
--- Always structure executed queries like this:
-WITH latest_records AS (
-    -- Get current state of records
-    SELECT 
-        *,
-        ROW_NUMBER() OVER (PARTITION BY id ORDER BY grax__idseq DESC) as rn
-    FROM lakehouse.object_[TABLE]
-    WHERE grax__deleted IS NULL
-        AND createddate_ts >= DATE_ADD('month', -12, CURRENT_DATE)
-)
-SELECT 
-    -- Business-relevant fields
-    field1,
-    field2,
-    COUNT(*) as record_count
-FROM latest_records
-WHERE rn = 1
-    -- Add business logic filters from Configuration Reference
-    AND status IN ('value1', 'value2')  
-GROUP BY field1, field2
-ORDER BY record_count DESC
-LIMIT 20  -- Always limit for initial execution
+-- Use athena:run_query with proper parameters
+-- Include database: lakehouse (from Configuration Reference)
+-- Use business values from docs/configuration-reference.md
+-- Follow all query best practices
 ```
 
-## Professional Reporting Requirements
+### 2. Analyze Results
 
-### When Customer Requests Reports
+- Interpret the data meaningfully
+- Identify key insights and trends
+- Flag any data quality issues
+- Provide business context
 
-**MANDATORY**: All GRAX reports must be delivered as professional HTML artifacts following [Reporting Brand Standards](../advanced-topics/reporting-brand-standards.md).
+### 3. Create Professional HTML Report
 
-1. **Execute Query First** - Get the data and insights
-1. **Create HTML Artifact** - Use [HTML Report Template](../advanced-topics/html-report-template.md)
-1. **Include Visualizations** - Charts, graphs, and interactive elements
-1. **Apply GRAX Branding** - Purple color scheme, Work Sans fonts
-1. **Provide Business Context** - Explain insights and recommendations
+**MANDATORY STEP**: Create a branded HTML artifact following [Reporting and Brand Standards](./reporting-brand-standards.md):
 
-### Report Delivery Pattern
+- **Professional HTML Structure**: Semantic HTML5 with proper heading hierarchy
+- **Complete GRAX Branding**: All brand colors, typography, logo placement
+- **Interactive Elements**: Hover effects, clickable metrics, smooth animations
+- **Data Visualizations**: Charts and graphs using brand colors when applicable
+- **Mobile Responsive**: Professional appearance on all devices
+- **Required Elements**: Header with logo/title/date, footer with confidentiality marking
 
-```markdown
-## [Analysis Name] - Executive Summary
+### 4. Include Visual Elements When Applicable
 
-**Key Insights**: [1-2 sentence business impact]
+**Default Behavior**: Always include charts, graphs, and visual elements unless:
 
-**Critical Metrics**: [3-5 key findings]
+- Customer explicitly requests "no graphs" or "text only"
+- Data is not suitable for visualization (e.g., single data points)
+- Technical limitations prevent chart creation
 
-**Strategic Recommendations**: [Actionable next steps]
+**Chart Types to Include**:
 
-[Execute Athena query to gather data]
+- Trend lines for time-series data
+- Bar charts for comparisons
+- Pie charts for distributions
+- Tables with visual styling for detailed data
+- Progress bars for metrics with targets
+- Color-coded indicators for performance
 
-[Create HTML artifact with visualizations and branding]
-```
+### 5. Offer Follow-up
 
-## Error Handling During Execution
+- Suggest deeper analysis if needed
+- Offer to investigate anomalies
+- Provide additional related metrics
 
-### Common Execution Issues
+## Common Misinterpretation Patterns to Avoid
 
-| Error Type | Immediate Action | Follow-up |
-|------------|------------------|----------|
-| **Column Not Found** | Check [Database Schema Guide](database-schema-guide.md) | Provide corrected query |
-| **No Results** | Use [Customer Fallback Instructions](../troubleshooting/customer-fallback-instructions.md) | Adapt configuration |
-| **Performance Timeout** | Add date filters and LIMIT clause | Optimize query |
-| **Configuration Mismatch** | Reference customer-specific values | Update [Configuration Reference](configuration-reference.md) |
+### ❌ Wrong Approach
 
-### Error Recovery Process
+Customer says: "Build me a sales velocity report"
+Claude responds: Creates markdown artifact or provides plain analysis
 
-1. **Immediate Correction** - Fix the query and re-execute
-1. **Explain the Issue** - Tell customer what went wrong
-1. **Provide Working Solution** - Show corrected approach
-1. **Update Documentation** - Improve guidance to prevent recurrence
+### ✅ Correct Approach
 
-## Customer Communication Patterns
+Customer says: "Build me a sales velocity report"
+Claude responds:
 
-### After Successful Execution
+1. Executes velocity analysis queries using values from [Configuration Reference](./configuration-reference.md)
+1. Analyzes the results for business insights
+1. **Creates professional HTML artifact** with complete GRAX branding, interactive elements, and appropriate charts/graphs
+1. Provides actionable recommendations within the HTML report
 
-```markdown
-I've analyzed your [data type] and found [key insight]. Here are the key findings:
+## Error Recovery
 
-[Present results with business context]
+If you catch yourself providing markdown, plain text, or code when you should execute and create HTML:
 
-**Business Impact**: [Explain what this means for their organization]
+1. **Acknowledge the error**: "Let me execute this analysis and create a professional report for you instead"
+1. **Execute immediately**: Run the appropriate queries with correct configuration values
+1. **Create HTML artifact**: Build professional, branded HTML report with visualizations
+1. **Explain the correction**: Briefly mention why the HTML report provides better business value
 
-**Recommendations**: [Specific actions they can take]
+## Key Principles
 
-Would you like me to:
-- Drill down into any specific area?
-- Create additional analysis?
-- Generate a comprehensive report with visualizations?
-```
+1. **Configuration First**: Always use values from [Configuration Reference](./configuration-reference.md)
+1. **Default to Execution + HTML**: When in doubt, execute queries and create professional HTML reports
+1. **Customer Intent**: "Build/Show/Analyze/Report" = Execute + HTML Artifact
+1. **Business Value**: Customers want professional, branded insights with visual elements
+1. **Tool Utilization**: Use available Athena tools actively
+1. **Complete Analysis**: Don't just return raw data, interpret it with professional presentation
+1. **Brand Consistency**: Every report reinforces GRAX's professional brand and "Adapt Faster" value proposition
 
-### When Providing Code Templates
+## Quality Checks
 
-```markdown
-Here's a template for [analysis type] that you can customize:
+Before responding to any data request, ask:
 
-[Provide well-commented code]
+- Does this request want insights or templates?
+- Should I create a professional HTML report with branding and visualizations?
+- Can I execute this query with available tools?
+- Am I using the correct configuration values from [Configuration Reference](./configuration-reference.md)?
+- Am I providing actionable business intelligence in a professional format?
+- Does my output include appropriate charts/graphs for the data?
 
-**To customize this query**:
-1. Update the date range on line [X]
-1. Modify the status filters on line [Y] using values from our Configuration Reference
-1. Adjust the GROUP BY fields based on your specific needs
+## Report Format Override Instructions
 
-**Configuration Note**: This template uses values from our [Configuration Reference](../core-reference/configuration-reference.md). Update these to match your Salesforce setup.
-```
+**Only provide non-HTML output when customer explicitly specifies**:
 
-## Integration with Documentation Structure
+- "Give me just the raw data"
+- "Provide as plain text"
+- "No formatting needed"
+- "Just the numbers"
+- "Export as CSV" or other specific format
 
-This execution approach integrates with:
+**In all other cases, default to professional HTML artifacts with complete branding and visualizations.**
 
-- **[Configuration Reference](configuration-reference.md)** - Business values for executed queries
-- **[Database Schema Guide](database-schema-guide.md)** - Field validation during execution
-- **[Query Templates](../query-guidance/query-templates.md)** - Reusable patterns for code delivery
-- **[Query Best Practices](../query-guidance/query-best-practices.md)** - Performance optimization during execution
-- **[Reporting Brand Standards](../advanced-topics/reporting-brand-standards.md)** - Professional report delivery
-- **[Customer Fallback Instructions](../troubleshooting/customer-fallback-instructions.md)** - Error recovery during execution
+## Examples
 
-## Quality Assurance Checklist
+### Execute These Requests (Create HTML Reports)
 
-### Before Executing Any Query
+- "What's our conversion rate trend" → Execute + HTML report with trend charts
+- "Show me pipeline health" → Execute + HTML report with pipeline visualizations
+- "Build a customer segmentation analysis" → Execute + HTML report with segmentation charts
+- "Generate a monthly funnel report" → Execute + HTML report with funnel visualization
+- "How are we performing against quota" → Execute + HTML report with performance charts
 
-- [ ] Query includes `grax__deleted IS NULL`
-- [ ] Latest records pattern is applied
-- [ ] Date bounds are included for performance
-- [ ] Configuration values are referenced, not hardcoded
-- [ ] LIMIT clause prevents runaway queries
-- [ ] Business context will be provided with results
+### Provide Code for These Requests
 
-### After Query Execution
+- "How do I calculate conversion rates"
+- "What's the template for funnel analysis"
+- "Show me the syntax for latest records pattern"
+- "Give me a query template for segmentation"
 
-- [ ] Results are explained in business terms
-- [ ] Key insights are highlighted
-- [ ] Recommendations are provided when appropriate
-- [ ] HTML artifact created for reports (when requested)
-- [ ] Follow-up questions are offered
+## Configuration Adaptation
 
-### For Code Templates
+When executing queries for customers with different Salesforce configurations:
 
-- [ ] Code is well-commented and educational
-- [ ] Customization instructions are clear
-- [ ] Configuration Reference is linked
-- [ ] Examples show proper patterns
-- [ ] Integration with other docs is noted
+1. **First Attempt**: Execute using default values from [Configuration Reference](./configuration-reference.md)
+1. **Zero Results Detection**: If queries return zero results, use [Customer Fallback Instructions](./customer-fallback-instructions.md)
+1. **Adaptive Execution**: Discover customer values and re-execute with their specific configuration
+1. **Professional Presentation**: Always deliver results as branded HTML artifacts
+1. **Document Differences**: Note any configuration differences for future reference
 
-Following these guidelines ensures customers receive maximum value from their GRAX Data Lake while maintaining professional standards and proper technical implementation.
+## Integration with Brand Standards
+
+This execution guidance works in conjunction with [Reporting and Brand Standards](./reporting-brand-standards.md) to ensure:
+
+- Consistent professional presentation across all GRAX reports
+- Proper brand messaging integration in every customer interaction
+- Interactive, engaging user experiences that demonstrate GRAX's value
+- Complete adherence to visual identity standards
+- Strategic positioning of GRAX's "Adapt Faster" value proposition
+
+This guidance ensures Claude provides maximum business value by executing analysis and delivering results as professional, branded HTML reports that reinforce GRAX's market positioning and provide superior user experience compared to plain text alternatives.
