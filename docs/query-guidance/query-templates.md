@@ -2,9 +2,9 @@
 
 ## Overview
 
-All query templates in this document use the standardized configuration values from [Configuration Reference](../core-reference/configuration-reference.md). Organizations with different Salesforce configurations should update that document to match their specific values rather than modifying individual queries.
+All query templates in this document use the standardized configuration values from [Configuration Reference](./configuration-reference.md). Organizations with different Salesforce configurations should update that document to match their specific values rather than modifying individual queries.
 
-**Configuration Dependencies**: The templates below reference business-specific values defined in [Configuration Reference](../core-reference/configuration-reference.md) including lead status values, opportunity stage names, account types, and segmentation thresholds.
+**Configuration Dependencies**: The templates below reference business-specific values defined in [Configuration Reference](./configuration-reference.md) including lead status values, opportunity stage names, account types, and segmentation thresholds.
 
 ## Core Query Patterns
 
@@ -125,19 +125,19 @@ WITH latest_lead AS (
 lead_with_qualification AS (
     SELECT 
         *,
-        -- Using lead status values from Configuration Reference
-        CASE WHEN status = 'Open - Not Contacted' THEN createddate_ts ELSE NULL END as mcl_date,
+        -- Using lead status values from docs/configuration-reference.md
+        CASE WHEN status = 'Open' THEN createddate_ts ELSE NULL END as mcl_date,
         -- MQL qualification using configuration values
         CASE 
-            WHEN status = 'MQL' THEN createddate_ts
+            WHEN status = 'Working' THEN createddate_ts
             WHEN isconverted_b = true THEN CAST(converteddate_d AS timestamp)
             ELSE NULL
         END as mql_date,
-        -- Using segmentation thresholds from Configuration Reference
+        -- Using segmentation thresholds from docs/configuration-reference.md
         CASE 
-            WHEN numberofemployees_f >= 1000 OR annualrevenue_f > 100000000 THEN 'Enterprise'
-            WHEN numberofemployees_f BETWEEN 200 AND 999 OR annualrevenue_f BETWEEN 10000000 AND 100000000 THEN 'Mid-Market'
-            ELSE 'SMB'
+            WHEN numberofemployees_f > 250 OR annualrevenue_f > 100000000 THEN 'Enterprise'
+            WHEN numberofemployees_f > 50 OR annualrevenue_f > 10000000 THEN 'SMB'
+            ELSE 'Self Service'
         END as segment
     FROM latest_lead
 )
@@ -172,12 +172,12 @@ WITH latest_lead AS (
 SELECT 
     DATE_TRUNC('month', createddate_ts) as month,
     COUNT(*) as total_leads,
-    -- Using lead status values from Configuration Reference
-    COUNT(CASE WHEN status = 'Open - Not Contacted' THEN 1 END) as mcl_count,
-    COUNT(CASE WHEN status = 'MQL' THEN 1 END) as mql_count,
+    -- Using lead status values from docs/configuration-reference.md
+    COUNT(CASE WHEN status = 'Open' THEN 1 END) as mcl_count,
+    COUNT(CASE WHEN status = 'Working' THEN 1 END) as mql_count,
     COUNT(CASE WHEN isconverted_b = true THEN 1 END) as converted_count,
-    ROUND(COUNT(CASE WHEN status = 'MQL' THEN 1 END) * 100.0 / NULLIF(COUNT(CASE WHEN status = 'Open - Not Contacted' THEN 1 END), 0), 2) as mcl_to_mql_rate,
-    ROUND(COUNT(CASE WHEN isconverted_b = true THEN 1 END) * 100.0 / NULLIF(COUNT(CASE WHEN status = 'MQL' THEN 1 END), 0), 2) as mql_to_conversion_rate
+    ROUND(COUNT(CASE WHEN status = 'Working' THEN 1 END) * 100.0 / NULLIF(COUNT(CASE WHEN status = 'Open' THEN 1 END), 0), 2) as mcl_to_mql_rate,
+    ROUND(COUNT(CASE WHEN isconverted_b = true THEN 1 END) * 100.0 / NULLIF(COUNT(CASE WHEN status = 'Working' THEN 1 END), 0), 2) as mql_to_conversion_rate
 FROM latest_lead
 GROUP BY DATE_TRUNC('month', createddate_ts)
 ORDER BY month DESC
@@ -200,22 +200,22 @@ WITH latest_opportunity AS (
       AND createddate_ts >= DATE_ADD('month', -12, CURRENT_DATE)
 )
 SELECT 
-    -- Using stage progression logic from Configuration Reference
+    -- Using stage progression logic from docs/configuration-reference.md
     -- SQL: All opportunities except Closed Lost
     COUNT(CASE WHEN stagename != 'Closed Lost' THEN 1 END) as sql_count,
-    -- Development: Reached development stages or beyond
-    COUNT(CASE WHEN stagename IN ('Needs Analysis', 'Value Proposition', 'Id. Decision Makers', 'Perception Analysis', 'Proposal/Price Quote', 'Negotiation/Review', 'Closed Won') THEN 1 END) as development_count,
-    -- Advanced: Reached advanced stages or beyond
-    COUNT(CASE WHEN stagename IN ('Id. Decision Makers', 'Perception Analysis', 'Proposal/Price Quote', 'Negotiation/Review', 'Closed Won') THEN 1 END) as advanced_count,
+    -- SQO: Reached SQO or beyond
+    COUNT(CASE WHEN stagename IN ('Proof of Value (SQO)', 'Proposal', 'Contracts', 'Closed Won') THEN 1 END) as sqo_count,
     -- Proposal: Reached Proposal or beyond
-    COUNT(CASE WHEN stagename IN ('Proposal/Price Quote', 'Negotiation/Review', 'Closed Won') THEN 1 END) as proposal_count,
+    COUNT(CASE WHEN stagename IN ('Proposal', 'Contracts', 'Closed Won') THEN 1 END) as proposal_count,
+    -- Contracts: Reached Contracts or beyond
+    COUNT(CASE WHEN stagename IN ('Contracts', 'Closed Won') THEN 1 END) as contracts_count,
     -- Closed Won: Successfully completed
     COUNT(CASE WHEN stagename = 'Closed Won' THEN 1 END) as closed_won_count,
     -- Closed Lost: Failed progression (tracked separately)
     COUNT(CASE WHEN stagename = 'Closed Lost' THEN 1 END) as closed_lost_count,
     -- Calculate conversion rates
-    ROUND(COUNT(CASE WHEN stagename IN ('Needs Analysis', 'Value Proposition', 'Id. Decision Makers', 'Perception Analysis', 'Proposal/Price Quote', 'Negotiation/Review', 'Closed Won') THEN 1 END) * 100.0 / 
-          NULLIF(COUNT(CASE WHEN stagename != 'Closed Lost' THEN 1 END), 0), 2) as sql_to_development_rate,
+    ROUND(COUNT(CASE WHEN stagename IN ('Proof of Value (SQO)', 'Proposal', 'Contracts', 'Closed Won') THEN 1 END) * 100.0 / 
+          NULLIF(COUNT(CASE WHEN stagename != 'Closed Lost' THEN 1 END), 0), 2) as sql_to_sqo_rate,
     ROUND(COUNT(CASE WHEN stagename = 'Closed Won' THEN 1 END) * 100.0 / 
           NULLIF(COUNT(CASE WHEN stagename != 'Closed Lost' THEN 1 END), 0), 2) as sql_to_won_rate
 FROM latest_opportunity
@@ -233,7 +233,7 @@ WITH latest_opportunity AS (
         GROUP BY B.Id
     ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
     WHERE A.grax__deleted IS NULL
-      -- Using active pipeline exclusion logic from Configuration Reference
+      -- Using active pipeline exclusion logic from docs/configuration-reference.md
       AND stagename NOT IN ('Closed Won', 'Closed Lost')
 )
 SELECT 
@@ -248,17 +248,13 @@ FROM latest_opportunity
 WHERE amount_f IS NOT NULL
 GROUP BY stagename
 ORDER BY 
-    -- Using stage ordering from Configuration Reference
+    -- Using stage ordering from docs/configuration-reference.md
     CASE stagename
-        WHEN 'Prospecting' THEN 1
-        WHEN 'Qualification' THEN 2
-        WHEN 'Needs Analysis' THEN 3  
-        WHEN 'Value Proposition' THEN 4
-        WHEN 'Id. Decision Makers' THEN 5
-        WHEN 'Perception Analysis' THEN 6
-        WHEN 'Proposal/Price Quote' THEN 7
-        WHEN 'Negotiation/Review' THEN 8
-        ELSE 9
+        WHEN 'SQL' THEN 1
+        WHEN 'Proof of Value (SQO)' THEN 2  
+        WHEN 'Proposal' THEN 3
+        WHEN 'Contracts' THEN 4
+        ELSE 5
     END
 ```
 
@@ -280,11 +276,11 @@ WITH latest_account AS (
 account_with_segmentation AS (
     SELECT 
         *,
-        -- Using segmentation thresholds from Configuration Reference
+        -- Using segmentation thresholds from docs/configuration-reference.md
         CASE 
-            WHEN numberofemployees_f >= 1000 OR annualrevenue_f > 100000000 THEN 'Enterprise'
-            WHEN numberofemployees_f BETWEEN 200 AND 999 OR annualrevenue_f BETWEEN 10000000 AND 100000000 THEN 'Mid-Market'
-            ELSE 'SMB'
+            WHEN numberofemployees_f > 250 OR annualrevenue_f > 100000000 THEN 'Enterprise'
+            WHEN numberofemployees_f > 50 OR annualrevenue_f > 10000000 THEN 'SMB'
+            ELSE 'Self Service'
         END as segment,
         CASE 
             WHEN numberofemployees_f IS NULL AND annualrevenue_f IS NULL THEN 'Unsegmentable'
@@ -396,8 +392,8 @@ mcl_monthly AS (
         DATE_TRUNC('month', createddate_ts) as mcl_month,
         COUNT(*) as mcl_count
     FROM latest_lead
-    -- Using lead status values from Configuration Reference
-    WHERE status = 'Open - Not Contacted'
+    -- Using lead status values from docs/configuration-reference.md
+    WHERE status = 'Open'
     GROUP BY DATE_TRUNC('month', createddate_ts)
 ),
 mql_monthly AS (
@@ -405,8 +401,8 @@ mql_monthly AS (
         DATE_TRUNC('month', createddate_ts) as mql_month,
         COUNT(*) as mql_count
     FROM latest_lead
-    -- Using lead status values from Configuration Reference
-    WHERE status = 'MQL'
+    -- Using lead status values from docs/configuration-reference.md
+    WHERE status = 'Working'
     GROUP BY DATE_TRUNC('month', createddate_ts)
 ),
 sql_monthly AS (
@@ -414,17 +410,17 @@ sql_monthly AS (
         DATE_TRUNC('month', createddate_ts) as sql_month,
         COUNT(*) as sql_count
     FROM latest_opportunity
-    -- Using stage exclusion logic from Configuration Reference
+    -- Using stage exclusion logic from docs/configuration-reference.md
     WHERE stagename != 'Closed Lost'
     GROUP BY DATE_TRUNC('month', createddate_ts)
 ),
-development_monthly AS (
+sqo_monthly AS (
     SELECT 
-        DATE_TRUNC('month', createddate_ts) as development_month,
-        COUNT(*) as development_count
+        DATE_TRUNC('month', createddate_ts) as sqo_month,
+        COUNT(*) as sqo_count
     FROM latest_opportunity
-    -- Using stage progression logic from Configuration Reference
-    WHERE stagename IN ('Needs Analysis', 'Value Proposition', 'Id. Decision Makers', 'Perception Analysis', 'Proposal/Price Quote', 'Negotiation/Review', 'Closed Won')
+    -- Using stage progression logic from docs/configuration-reference.md
+    WHERE stagename IN ('Proof of Value (SQO)', 'Proposal', 'Contracts', 'Closed Won')
     GROUP BY DATE_TRUNC('month', createddate_ts)
 )
 SELECT 
@@ -432,12 +428,12 @@ SELECT
     COALESCE(mcl.mcl_count, 0) as mcl_count,
     COALESCE(mql.mql_count, 0) as mql_count,
     COALESCE(sql.sql_count, 0) as sql_count,
-    COALESCE(dev.development_count, 0) as development_count
+    COALESCE(sqo.sqo_count, 0) as sqo_count
 FROM month_series ms
 LEFT JOIN mcl_monthly mcl ON ms.report_month = mcl.mcl_month
 LEFT JOIN mql_monthly mql ON ms.report_month = mql.mql_month
 LEFT JOIN sql_monthly sql ON ms.report_month = sql.sql_month
-LEFT JOIN development_monthly dev ON ms.report_month = dev.development_month
+LEFT JOIN sqo_monthly sqo ON ms.report_month = sqo.sqo_month
 ORDER BY ms.report_month DESC
 ```
 
@@ -565,19 +561,19 @@ FROM latest_check
 
 ## Configuration Adaptation
 
-For organizations with different Salesforce implementations, modify the [Configuration Reference](../core-reference/configuration-reference.md) document with your specific values:
+For organizations with different Salesforce implementations, modify the [Configuration Reference](./configuration-reference.md) document with your specific values:
 
 ### Critical Updates Needed
 
-1. **Lead Status Values**: Update `'Open - Not Contacted'`, `'MQL'`, etc. to match your lead qualification stages
-1. **Opportunity Stage Names**: Replace `'Prospecting'`, `'Needs Analysis'`, etc. with your sales process stages  
-1. **Account Types**: Update `'Customer - Direct'`, `'Prospect'`, etc. with your account classification values
-1. **Segmentation Thresholds**: Modify the 1000 employee and $100M revenue thresholds for Enterprise classification
-1. **Mid-Market Thresholds**: Adjust the 200-999 employee and $10M-$100M revenue thresholds for Mid-Market classification
+1. **Lead Status Values**: Update `'Open'`, `'Working'`, etc. to match your lead qualification stages
+1. **Opportunity Stage Names**: Replace `'Proof of Value (SQO)'`, `'Proposal'`, etc. with your sales process stages  
+1. **Account Types**: Update `'Customer'`, `'Customer - Subsidiary'`, `'Prospect'` with your account classification values
+1. **Segmentation Thresholds**: Modify the 250 employee and $100M revenue thresholds for Enterprise classification
+1. **SMB Thresholds**: Adjust the 50 employee and $10M revenue thresholds for SMB classification
 
 ### Testing Process
 
-1. **Update Configuration**: Modify values in [Configuration Reference](../core-reference/configuration-reference.md)
+1. **Update Configuration**: Modify values in [Configuration Reference](./configuration-reference.md)
 1. **Test Templates**: Execute sample queries from this document
 1. **Validate Results**: Ensure data makes sense for your business context
 1. **Document Changes**: Record customizations for future reference
