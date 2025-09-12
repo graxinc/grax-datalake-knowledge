@@ -4,7 +4,7 @@
 
 Data quality directly impacts sales funnel accuracy, customer segmentation precision, and business intelligence reliability. This guide provides comprehensive strategies for identifying, analyzing, and remedying data quality issues across Salesforce objects.
 
-**Configuration Dependencies**: All validation patterns and data quality checks in this document use standardized values from [Configuration Reference](../core-reference/configuration-reference.md). Organizations with different Salesforce configurations should update that document to match their specific validation rules and field values.
+**Configuration Dependencies**: All validation patterns and data quality checks in this document use standardized values from [Configuration Reference](./configuration-reference.md). Organizations with different Salesforce configurations should update that document to match their specific validation rules and field values.
 
 ## Data Quality Dimensions
 
@@ -42,7 +42,7 @@ Data quality directly impacts sales funnel accuracy, customer segmentation preci
 
 **Definition**: Data conforming to defined formats and business rules
 
-**Validation Rules** (from [Configuration Reference](../core-reference/configuration-reference.md)):
+**Validation Rules** (from [Configuration Reference](./configuration-reference.md)):
 
 - Email format validation patterns
 - Phone number structure requirements
@@ -77,7 +77,7 @@ completeness_analysis AS (
     SELECT 
         COUNT(*) as total_leads,
         
-        -- Critical Contact Fields (from Configuration Reference)
+        -- Critical Contact Fields (from docs/configuration-reference.md)
         COUNT(email) as email_populated,
         COUNT(firstname) as firstname_populated,
         COUNT(lastname) as lastname_populated,
@@ -145,7 +145,7 @@ validity_issues AS (
         annualrevenue_f,
         numberofemployees_f,
         
-        -- Email Validity Checks using patterns from Configuration Reference
+        -- Email Validity Checks using patterns from docs/configuration-reference.md
         CASE 
             WHEN email IS NOT NULL AND email NOT LIKE '%@%.%' THEN 'Invalid Email Format'
             WHEN email LIKE '%@example.com' OR email LIKE '%@test.%' THEN 'Test Email Address'
@@ -163,23 +163,23 @@ validity_issues AS (
             ELSE NULL
         END as company_issue,
         
-        -- Revenue Validity using thresholds from Configuration Reference
+        -- Revenue Validity using thresholds from docs/configuration-reference.md
         CASE 
             WHEN annualrevenue_f IS NOT NULL AND annualrevenue_f <= 0 THEN 'Invalid Revenue Amount'
             WHEN annualrevenue_f IS NOT NULL AND annualrevenue_f > 1000000000000 THEN 'Unrealistic Revenue Amount'
             ELSE NULL
         END as revenue_issue,
         
-        -- Employee Count Validity using thresholds from Configuration Reference
+        -- Employee Count Validity using thresholds from docs/configuration-reference.md
         CASE 
             WHEN numberofemployees_f IS NOT NULL AND numberofemployees_f <= 0 THEN 'Invalid Employee Count'
             WHEN numberofemployees_f IS NOT NULL AND numberofemployees_f > 10000000 THEN 'Unrealistic Employee Count'
             ELSE NULL
         END as employee_issue,
         
-        -- Status/Conversion Consistency using status values from Configuration Reference
+        -- Status/Conversion Consistency using status values from docs/configuration-reference.md
         CASE 
-            WHEN status = 'Closed - Converted' AND isconverted_b != true THEN 'Status/Conversion Flag Mismatch'
+            WHEN status = 'Converted' AND isconverted_b != true THEN 'Status/Conversion Flag Mismatch'
             WHEN isconverted_b = true AND converteddate_d IS NULL THEN 'Missing Conversion Date'
             ELSE NULL
         END as status_issue
@@ -319,20 +319,20 @@ daily_metrics AS (
     SELECT 
         CURRENT_DATE as report_date,
         
-        -- Lead Quality Metrics using field requirements from Configuration Reference
+        -- Lead Quality Metrics using field requirements from docs/configuration-reference.md
         (SELECT COUNT(*) FROM latest_lead WHERE email IS NULL) as leads_missing_email,
         (SELECT COUNT(*) FROM latest_lead WHERE company IS NULL) as leads_missing_company,
         (SELECT COUNT(*) FROM latest_lead WHERE firstname IS NULL OR lastname IS NULL) as leads_missing_names,
         
-        -- Account Segmentation Metrics using thresholds from Configuration Reference
+        -- Account Segmentation Metrics using thresholds from docs/configuration-reference.md
         (SELECT COUNT(*) FROM latest_account 
          WHERE annualrevenue_f IS NULL AND numberofemployees_f IS NULL) as unsegmentable_accounts,
         
-        -- Opportunity Pipeline Integrity using stage names from Configuration Reference
+        -- Opportunity Pipeline Integrity using stage names from docs/configuration-reference.md
         (SELECT COUNT(*) FROM latest_opportunity 
          WHERE amount_f IS NULL AND stagename NOT IN ('Closed Lost')) as opps_missing_amount,
          
-        -- Data Validity Issues using validation patterns from Configuration Reference
+        -- Data Validity Issues using validation patterns from docs/configuration-reference.md
         (SELECT COUNT(*) FROM latest_lead 
          WHERE email IS NOT NULL AND email NOT LIKE '%@%.%') as invalid_email_formats
 )
@@ -361,11 +361,11 @@ FROM daily_metrics
 
 1. **Missing Email Addresses**: Prevents lead nurturing and outreach
 
-1. **Invalid Email Formats**: Causes bounce rates and delivery issues (using validation patterns from [Configuration Reference](../core-reference/configuration-reference.md))
+1. **Invalid Email Formats**: Causes bounce rates and delivery issues (using validation patterns from [Configuration Reference](./configuration-reference.md))
 
 1. **Missing Company Names**: Blocks account matching and segmentation
 
-1. **Incomplete Segmentation Data**: Impacts territory assignment and targeting based on thresholds in [Configuration Reference](../core-reference/configuration-reference.md)
+1. **Incomplete Segmentation Data**: Impacts territory assignment and targeting based on thresholds in [Configuration Reference](./configuration-reference.md)
 
 1. **Broken Conversion Relationships**: Corrupts funnel analysis
 
@@ -391,21 +391,21 @@ FROM daily_metrics
 
 ### Primary KPIs
 
-- **Lead Qualification Accuracy**: % of MCL/MQL with complete segmentation data (using status values from [Configuration Reference](../core-reference/configuration-reference.md))
+- **Lead Qualification Accuracy**: % of MCL/MQL with complete segmentation data (using status values from [Configuration Reference](./configuration-reference.md))
 - **Conversion Data Integrity**: % of conversions with valid relationships
-- **Segmentation Accuracy**: % of accounts properly classified using thresholds from [Configuration Reference](../core-reference/configuration-reference.md)
+- **Segmentation Accuracy**: % of accounts properly classified using thresholds from [Configuration Reference](./configuration-reference.md)
 - **Duplicate Reduction**: Month-over-month reduction in duplicate records
 
 ### Secondary KPIs
 
 - **Field Completion Rates**: Trending completion percentages for critical fields
-- **Data Validation Compliance**: % of records passing validation rules from [Configuration Reference](../core-reference/configuration-reference.md)
+- **Data Validation Compliance**: % of records passing validation rules from [Configuration Reference](./configuration-reference.md)
 - **Email Deliverability**: Improvement in valid email percentages
 - **Contact Reachability**: % of leads with valid phone/email combinations
 
 ## Configuration Adaptation
 
-For organizations with different Salesforce implementations, update the [Configuration Reference](../core-reference/configuration-reference.md) document with your specific values:
+For organizations with different Salesforce implementations, update the [Configuration Reference](./configuration-reference.md) document with your specific values:
 
 ### Data Quality Configuration Updates
 
@@ -417,7 +417,7 @@ For organizations with different Salesforce implementations, update the [Configu
 
 ### Testing Process
 
-1. **Update Validation Rules**: Modify patterns in [Configuration Reference](../core-reference/configuration-reference.md)
+1. **Update Validation Rules**: Modify patterns in [Configuration Reference](./configuration-reference.md)
 1. **Test Quality Checks**: Execute validation queries with your configuration
 1. **Validate Results**: Ensure quality metrics make sense for your data
 1. **Document Standards**: Record your organization's data quality standards
