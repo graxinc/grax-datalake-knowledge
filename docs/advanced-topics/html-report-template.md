@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides a complete, production-ready HTML template that Claude and other LLMs must use when creating GRAX reports. This template implements all brand standards from [Reporting and Brand Standards](reporting-brand-standards.md) and ensures consistent, professional output.
+This document provides a complete, production-ready HTML template that Claude and other LLMs must use when creating GRAX reports. This template implements all brand standards from [Reporting and Brand Standards](./reporting-brand-standards.md) and ensures consistent, professional output.
 
 **MANDATORY USAGE**: This template MUST be used for ALL GRAX reports unless customer explicitly requests a different format.
 
@@ -666,7 +666,7 @@ The template includes:
 
 ## Configuration Integration
 
-This template uses values from [Configuration Reference](../core-reference/configuration-reference.md) for:
+This template uses values from [Configuration Reference](./configuration-reference.md) for:
 
 - Brand colors and styling
 - Typography specifications
