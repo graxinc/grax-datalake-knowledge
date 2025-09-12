@@ -466,8 +466,8 @@ These business intelligence patterns integrate with [Configuration Reference](..
 ### Adaptation Process
 
 1. **Review Default Values**: Examine all referenced configuration values
-2. **Update Configuration**: Modify [Configuration Reference](../core-reference/configuration-reference.md) with your values
-3. **Test Patterns**: Validate that business logic aligns with your processes
-4. **Customize Calculations**: Adjust formulas for organization-specific metrics
+1. **Update Configuration**: Modify [Configuration Reference](../core-reference/configuration-reference.md) with your values
+1. **Test Patterns**: Validate that business logic aligns with your processes
+1. **Customize Calculations**: Adjust formulas for organization-specific metrics
 
 This ensures all business intelligence patterns remain consistent while adapting to different Salesforce implementations and business processes.
