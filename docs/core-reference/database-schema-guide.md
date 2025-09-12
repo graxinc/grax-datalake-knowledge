@@ -181,7 +181,7 @@ ORDER BY lead_count DESC
 ### Core Fields
 
 | Field | Type | Description | Sales Analysis Use |
-|-------|------|-------------|--------------------|
+|-------|------|-------------|-------------------|
 | `id` | varchar | Unique Salesforce Opportunity ID | Primary key |
 | `name` | varchar | Opportunity name | Reporting |
 | `accountid` | varchar | Associated account | Account relationship |
