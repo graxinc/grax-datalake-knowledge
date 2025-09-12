@@ -4,7 +4,7 @@
 
 This guide provides a framework for identifying leads that should be classified as "Existing Customer" but are currently marked as active prospects. This analysis prevents unnecessary sales outreach to existing customers and ensures accurate lead qualification metrics.
 
-**Configuration Dependencies**: All lead status values, account types, and classification logic in this document use standardized values from [Configuration Reference](../core-reference/configuration-reference.md). Organizations with different Salesforce configurations should update that document to match their specific values.
+**Configuration Dependencies**: All lead status values, account types, and classification logic in this document use standardized values from [Configuration Reference](./configuration-reference.md). Organizations with different Salesforce configurations should update that document to match their specific values.
 
 ## Business Problem
 
@@ -19,29 +19,29 @@ This guide provides a framework for identifying leads that should be classified 
 
 ## Customer Account Definition
 
-An account is considered an "Existing Customer" based on **Account Type** field values defined in [Configuration Reference](../core-reference/configuration-reference.md):
+An account is considered an "Existing Customer" based on **Account Type** field values defined in [Configuration Reference](./configuration-reference.md):
 
-**Customer Types** (from Account Classification Configuration):
+**Customer Types** (from [Account Classification Configuration](./configuration-reference.md#account-classification-configuration)):
 
-- `Type = 'Customer - Direct'` - Primary customer accounts
-- `Type = 'Customer - Channel'` - Customer subsidiary accounts
+- `Type = 'Customer'` - Primary customer accounts
+- `Type = 'Customer - Subsidiary'` - Customer subsidiary accounts
 
 **Exclusions**:
 
 - Accounts with `Type = 'Prospect'` are **NEVER** considered existing customers
-- Annual revenue is **NOT** used for customer identification
+- Annual revenue is **NOT** used for customer identification (following [Customer Identification Logic](./configuration-reference.md#customer-identification-logic))
 
 ## Lead Classification Logic
 
 A lead should be classified as "Existing Customer" if:
 
-1. Lead Status ≠ `'Closed - Converted'` (current misclassification)
+1. Lead Status ≠ `'Existing Customer'` (current misclassification)
 
-1. Lead is currently active (MCL or MQL status using values from [Configuration Reference](../core-reference/configuration-reference.md))
+1. Lead is currently active (MCL or MQL status using values from [Configuration Reference](./configuration-reference.md))
 
 1. Lead email domain matches an existing customer account domain
 
-1. Matching account has `Type = 'Customer - Direct'` OR `Type = 'Customer - Channel'`
+1. Matching account has `Type = 'Customer'` OR `Type = 'Customer - Subsidiary'`
 
 1. Matching account does NOT have `Type = 'Prospect'`
 
@@ -86,12 +86,12 @@ lead_domains AS (
     FROM latest_lead l
     WHERE l.email IS NOT NULL 
       AND l.email LIKE '%@%'
-      -- Using status exclusion logic from Configuration Reference
-      AND l.status NOT IN ('Closed - Converted', 'Closed - Not Converted')
-      -- Using active lead criteria from Configuration Reference
-      AND (l.status IN ('Open - Not Contacted', 'Working - Contacted', 'MQL', 'SAL', 'SQL'))
+      -- Using status exclusion logic from docs/configuration-reference.md
+      AND l.status != 'Existing Customer'
+      -- Using active lead criteria from docs/configuration-reference.md
+      AND (l.status IN ('Open', 'Working'))
 ),
--- Extract domains from customer accounts using account types from Configuration Reference
+-- Extract domains from customer accounts using account types from docs/configuration-reference.md
 account_domains AS (
     SELECT DISTINCT
         a.id as account_id,
@@ -100,9 +100,9 @@ account_domains AS (
         -- Extract domain from website field
         LOWER(TRIM(REPLACE(REPLACE(REPLACE(a.website, 'http://', ''), 'https://', ''), 'www.', ''))) as account_domain
     FROM latest_account a
-    -- Using customer types from Configuration Reference
-    WHERE a.type IN ('Customer - Direct', 'Customer - Channel')  -- Only customer types
-      AND a.type != 'Prospect'                                   -- Explicitly exclude prospects
+    -- Using customer types from docs/configuration-reference.md
+    WHERE a.type IN ('Customer', 'Customer - Subsidiary')  -- Only customer types
+      AND a.type != 'Prospect'                              -- Explicitly exclude prospects
       AND a.website IS NOT NULL
       AND LENGTH(TRIM(a.website)) > 0
 ),
@@ -117,9 +117,9 @@ contact_domains AS (
       AND c.accountid IN (
           SELECT a.id 
           FROM latest_account a 
-          -- Using customer types from Configuration Reference
-          WHERE a.type IN ('Customer - Direct', 'Customer - Channel')  -- Only customer types
-            AND a.type != 'Prospect'                                   -- Explicitly exclude prospects
+          -- Using customer types from docs/configuration-reference.md
+          WHERE a.type IN ('Customer', 'Customer - Subsidiary')  -- Only customer types
+            AND a.type != 'Prospect'                              -- Explicitly exclude prospects
       )
 ),
 -- Combine customer domains from multiple sources
@@ -137,9 +137,9 @@ all_customer_domains AS (
         cd.contact_domain as domain
     FROM latest_account a
     INNER JOIN contact_domains cd ON a.id = cd.accountid
-    -- Using customer types from Configuration Reference
-    WHERE a.type IN ('Customer - Direct', 'Customer - Channel')  -- Only customer types
-      AND a.type != 'Prospect'                                   -- Explicitly exclude prospects
+    -- Using customer types from docs/configuration-reference.md
+    WHERE a.type IN ('Customer', 'Customer - Subsidiary')  -- Only customer types
+      AND a.type != 'Prospect'                              -- Explicitly exclude prospects
 )
 -- Final results: Leads that should be marked as Existing Customer
 SELECT 
@@ -157,17 +157,17 @@ SELECT
     acd.account_type,
     acd.domain as matching_domain,
     
-    -- Validation using account types from Configuration Reference
+    -- Validation using account types from docs/configuration-reference.md
     CASE 
-        WHEN acd.account_type NOT IN ('Customer - Direct', 'Customer - Channel') THEN 'ERROR: Non-customer matched'
+        WHEN acd.account_type NOT IN ('Customer', 'Customer - Subsidiary') THEN 'ERROR: Non-customer matched'
         WHEN acd.account_type = 'Prospect' THEN 'ERROR: Prospect matched (should be impossible)'
         ELSE 'Valid Customer Match'
     END as match_validation,
     
-    -- Customer classification using types from Configuration Reference
+    -- Customer classification using types from docs/configuration-reference.md
     CASE 
-        WHEN acd.account_type = 'Customer - Direct' THEN 'Direct Customer Account'
-        WHEN acd.account_type = 'Customer - Channel' THEN 'Channel Customer Account'
+        WHEN acd.account_type = 'Customer' THEN 'Customer Account'
+        WHEN acd.account_type = 'Customer - Subsidiary' THEN 'Customer Subsidiary Account'
         ELSE 'Other Customer Type'
     END as customer_classification,
     
@@ -176,8 +176,8 @@ SELECT
     
 FROM lead_domains ld
 INNER JOIN all_customer_domains acd ON ld.email_domain = acd.domain
--- Final safety check using account types from Configuration Reference
-WHERE acd.account_type IN ('Customer - Direct', 'Customer - Channel')
+-- Final safety check using account types from docs/configuration-reference.md
+WHERE acd.account_type IN ('Customer', 'Customer - Subsidiary')
   AND acd.account_type != 'Prospect'
 ORDER BY 
     acd.account_type, 
@@ -230,9 +230,9 @@ SELECT
     account_count,
     with_website,
     with_contacts,
-    -- Flag which types are included in customer matching using configuration from Configuration Reference
+    -- Flag which types are included in customer matching using configuration from docs/configuration-reference.md
     CASE 
-        WHEN account_type IN ('Customer - Direct', 'Customer - Channel') THEN 'INCLUDED in customer matching'
+        WHEN account_type IN ('Customer', 'Customer - Subsidiary') THEN 'INCLUDED in customer matching'
         WHEN account_type = 'Prospect' THEN 'EXCLUDED from customer matching'
         ELSE 'OTHER - Review inclusion criteria'
     END as matching_inclusion
@@ -245,16 +245,16 @@ ORDER BY account_count DESC
 ### Misclassified Leads by Customer Type
 
 ```sql
+-- Summarize misclassified leads using the core analysis as a CTE
 WITH misclassified_leads AS (
-    -- Core analysis results (use complete query above)
-    SELECT 'placeholder' as customer_classification -- Replace with actual query
+    -- [Insert complete core analysis query above]
 )
 SELECT 
     customer_classification,
     COUNT(*) as lead_count,
-    -- Using lead status values from Configuration Reference
-    COUNT(CASE WHEN current_lead_status = 'Open - Not Contacted' THEN 1 END) as mcl_leads,
-    COUNT(CASE WHEN current_lead_status = 'MQL' THEN 1 END) as mql_leads,
+    -- Using lead status values from docs/configuration-reference.md
+    COUNT(CASE WHEN current_lead_status = 'Open' THEN 1 END) as mcl_leads,
+    COUNT(CASE WHEN current_lead_status = 'Working' THEN 1 END) as mql_leads,
     AVG(days_since_lead_created) as avg_days_old,
     -- Validation check
     COUNT(CASE WHEN match_validation LIKE '%ERROR%' THEN 1 END) as validation_errors
@@ -276,12 +276,12 @@ ORDER BY lead_count DESC
 
 - Eliminates wasted sales development resources on actual existing customers
 - Preserves sales opportunities with ALL prospect accounts
-- Improves lead qualification accuracy using Account Type governance from [Configuration Reference](../core-reference/configuration-reference.md)
+- Improves lead qualification accuracy using Account Type governance from [Configuration Reference](./configuration-reference.md)
 - Enables better territory and quota planning
 
 ### Data Governance
 
-- Establishes Account Type as single source of truth for customer classification (per [Configuration Reference](../core-reference/configuration-reference.md))
+- Establishes Account Type as single source of truth for customer classification (per [Configuration Reference](./configuration-reference.md))
 - Simplifies customer identification process
 - Removes dependency on financial metrics for customer status
 - Creates clear, auditable classification rules
@@ -294,7 +294,7 @@ ORDER BY lead_count DESC
 
 1. **Validate Results**: Use validation queries to confirm logic correctness
 
-1. **Update Lead Status**: Change identified leads from active status to `'Closed - Converted'` (using status value from [Configuration Reference](../core-reference/configuration-reference.md))
+1. **Update Lead Status**: Change identified leads from active status to `'Existing Customer'` (using status value from [Configuration Reference](./configuration-reference.md))
 
 1. **Document Process**: Record classification rules and validation steps
 
@@ -304,24 +304,24 @@ ORDER BY lead_count DESC
 
 1. **Process Integration**: Build checks into lead import and qualification workflows
 
-1. **Training Updates**: Educate sales teams on proper customer identification using values from [Configuration Reference](../core-reference/configuration-reference.md)
+1. **Training Updates**: Educate sales teams on proper customer identification using values from [Configuration Reference](./configuration-reference.md)
 
 1. **Metric Adjustment**: Update funnel reports to reflect corrected classifications
 
 ## Configuration Adaptation
 
-For organizations with different Salesforce implementations, update the [Configuration Reference](../core-reference/configuration-reference.md) document with your specific values:
+For organizations with different Salesforce implementations, update the [Configuration Reference](./configuration-reference.md) document with your specific values:
 
 ### Lead Status Audit Configuration Updates
 
-1. **Lead Status Values**: Update `'Open - Not Contacted'`, `'MQL'`, `'Closed - Converted'` to match your lead qualification stages
-1. **Account Types**: Modify `'Customer - Direct'`, `'Customer - Channel'`, `'Prospect'` with your account classification values
+1. **Lead Status Values**: Update `'Open'`, `'Working'`, `'Existing Customer'` to match your lead qualification stages
+1. **Account Types**: Modify `'Customer'`, `'Customer - Subsidiary'`, `'Prospect'` with your account classification values
 1. **Active Lead Criteria**: Adjust which status values indicate active leads requiring audit
 1. **Exclusion Logic**: Update which account types should be excluded from customer matching
 
 ### Validation Process
 
-1. **Update Configuration**: Modify values in [Configuration Reference](../core-reference/configuration-reference.md)
+1. **Update Configuration**: Modify values in [Configuration Reference](./configuration-reference.md)
 1. **Test Analysis**: Execute the core analysis query with your configuration
 1. **Validate Logic**: Ensure classification results make sense for your business context
 1. **Document Changes**: Record customizations for audit trail purposes
