@@ -202,7 +202,7 @@ Message: "End-to-end supply chain intelligence and quality assurance"
 
 **Mandatory Elements**:
 
-- Customer segmentation using thresholds from [Configuration Reference](./configuration-reference.md)
+- Customer segmentation using thresholds from [Configuration Reference](/docs/core-reference/configuration-reference.md)
 - Lifetime value analysis with complete interaction history
 - Churn prediction with early warning indicators
 - Expansion opportunity identification
@@ -266,7 +266,7 @@ Message: "End-to-end supply chain intelligence and quality assurance"
 - [ ] All data sourced from GRAX Analytics Platform
 - [ ] Proper confidentiality markings applied
 - [ ] Generation timestamp included
-- [ ] Configuration values referenced from [Configuration Reference](./configuration-reference.md)
+- [ ] Configuration values referenced from [Configuration Reference](/docs/core-reference/configuration-reference.md)
 
 ### Brand Consistency Validation
 
