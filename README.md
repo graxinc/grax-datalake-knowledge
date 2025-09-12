@@ -49,7 +49,7 @@ The documentation is organized into six logical directories for intuitive naviga
 
 - **[Reporting Brand Standards](./docs/advanced-topics/reporting-brand-standards.md)** - **ESSENTIAL**: Professional branding and HTML artifact requirements for all GRAX reports
 - **[HTML Report Template](./docs/advanced-topics/html-report-template.md)** - **MANDATORY**: Complete HTML template with CSS styling for all GRAX reports
-- **[Data Quality Management](./docs/advanced-topics/data-quality-management.md)** - Data integrity validation and cleansing strategies
+- **[Data Quality Management](./docs/analysis-patterns/data-quality-management.md)** - Data integrity validation and cleansing strategies
 
 ### Troubleshooting
 
