@@ -2,13 +2,13 @@
 
 ## Overview
 
-This knowledge base uses centralized configuration values defined in the [Configuration Reference](../configuration-reference.md). When used by customers with different Salesforce implementations, queries may return zero results due to customer-specific field values, stage names, and data structures that differ from the default configuration.
+This knowledge base uses centralized configuration values defined in the [Configuration Reference](./configuration-reference.md). When used by customers with different Salesforce implementations, queries may return zero results due to customer-specific field values, stage names, and data structures that differ from the default configuration.
 
 ## Universal Fallback Strategy
 
 ### Step 1: Initial Query Attempt
 
-Execute the query using values from the [Configuration Reference](../configuration-reference.md).
+Execute the query using values from the [Configuration Reference](./configuration-reference.md).
 
 ### Step 2: Zero Results Detection
 
@@ -32,7 +32,7 @@ Rebuild query using discovered values and inform customer of the adaptation.
 
 ### Lead Status Values
 
-**Default Configuration** (from [Configuration Reference](../configuration-reference.md)):
+**Default Configuration** (from [Configuration Reference](./configuration-reference.md)):
 
 - `'Open'` (MCL)
 - `'Working'` (MQL)
@@ -57,7 +57,7 @@ ORDER BY lead_count DESC
 
 ### Opportunity Stage Names
 
-**Default Configuration** (from [Configuration Reference](../configuration-reference.md)):
+**Default Configuration** (from [Configuration Reference](./configuration-reference.md)):
 
 - `'SQL'`
 - `'Proof of Value (SQO)'`
@@ -79,7 +79,7 @@ ORDER BY opp_count DESC
 
 ### Account Type Classifications
 
-**Default Configuration** (from [Configuration Reference](../configuration-reference.md)):
+**Default Configuration** (from [Configuration Reference](./configuration-reference.md)):
 
 - `'Customer'`
 - `'Customer - Subsidiary'`
@@ -195,7 +195,7 @@ Here's the adapted analysis using your available data...
 ### Education
 
 - Explain why differences occur (custom Salesforce configurations)
-- Reference the [Configuration Reference](../configuration-reference.md) for standard values
+- Reference the [Configuration Reference](./configuration-reference.md) for standard values
 - Suggest data standardization if relevant
 - Provide guidance on improving data structure
 
@@ -257,8 +257,8 @@ WHERE grax__deleted IS NULL
 ### When Customer Differences Are Identified
 
 1. **Document Discoveries**: Record what values the customer actually uses
-1. **Consider Updates**: Evaluate if discoveries should update the [Configuration Reference](../configuration-reference.md)
+1. **Consider Updates**: Evaluate if discoveries should update the [Configuration Reference](./configuration-reference.md)
 1. **Share Learnings**: Contribute common variations back to the central configuration
 1. **Maintain Flexibility**: Keep fallback patterns robust for edge cases
 
-This fallback strategy ensures the knowledge base provides value to any customer while gracefully handling organizational differences in Salesforce implementation by leveraging the centralized [Configuration Reference](../configuration-reference.md).
+This fallback strategy ensures the knowledge base provides value to any customer while gracefully handling organizational differences in Salesforce implementation by leveraging the centralized [Configuration Reference](./configuration-reference.md).
