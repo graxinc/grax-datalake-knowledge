@@ -15,10 +15,6 @@ This directory contains specialized documentation for advanced users, customizat
 - **[Reporting Brand Standards](reporting-brand-standards.md)** - **ESSENTIAL**: Professional branding and HTML artifact requirements for all GRAX reports
 - **[HTML Report Template](html-report-template.md)** - **MANDATORY**: Complete HTML template with CSS styling for all GRAX reports
 
-### Advanced Customization
-
-- **[Data Quality Management](data-quality-management.md)** - Data integrity validation and cleansing strategies for enterprise deployments
-
 ## Professional Reporting Framework
 
 ### Brand Compliance Requirements
@@ -46,7 +42,7 @@ This directory contains specialized documentation for advanced users, customizat
 
 ### Enterprise Data Quality
 
-**Complete Data Governance**: Advanced patterns for maintaining data integrity across complex enterprise Salesforce implementations with:
+**Complete Data Governance**: Advanced patterns for maintaining data integrity across complex enterprise Salesforce implementations are available in [Data Quality Management](../analysis-patterns/data-quality-management.md) with:
 
 - **Multi-Org Validation**: Cross-organization data consistency checking
 - **Historical Accuracy**: Validation of data quality over time
