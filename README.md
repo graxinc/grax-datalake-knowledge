@@ -23,7 +23,7 @@ This repository contains structured documentation that enables large language mo
 
 The documentation is organized into six logical directories for intuitive navigation and scalable expansion:
 
-### Getting Started
+### New User Onboarding
 
 - **[Getting Started Overview](./docs/getting-started/README.md)** - New user onboarding and quick start guide
 
