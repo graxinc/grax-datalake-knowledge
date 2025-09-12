@@ -17,18 +17,21 @@ This directory contains comprehensive error handling, debugging guidance, and fa
 ### Error Categories
 
 **Query Execution Errors**:
+
 - Column resolution issues
-- Syntax validation failures  
+- Syntax validation failures
 - Performance timeouts
 - Data type conflicts
 
 **Configuration Mismatches**:
+
 - Picklist value differences
 - Custom field variations
 - Business process variations
 - Data model customizations
 
 **Data Quality Issues**:
+
 - Missing expected records
 - Unexpected result patterns
 - Historical data inconsistencies
@@ -70,8 +73,9 @@ This directory contains comprehensive error handling, debugging guidance, and fa
 **Symptom**: Queries return zero results or unexpected data patterns
 
 **Root Cause**: Customer Salesforce implementation uses different:
+
 - Lead status values
-- Opportunity stage names  
+- Opportunity stage names
 - Account classification types
 - Custom field configurations
 
@@ -81,7 +85,8 @@ This directory contains comprehensive error handling, debugging guidance, and fa
 
 **Symptom**: Queries timeout or consume excessive resources
 
-**Root Cause**: 
+**Root Cause**:
+
 - Missing date boundaries
 - Inefficient filtering patterns
 - Large dataset scans without optimization
@@ -94,6 +99,7 @@ This directory contains comprehensive error handling, debugging guidance, and fa
 **Symptom**: Analysis results that don't match business expectations
 
 **Root Cause**:
+
 - Data synchronization delays
 - Soft-deleted record inclusion
 - Historical data version conflicts
@@ -135,12 +141,14 @@ This directory contains comprehensive error handling, debugging guidance, and fa
 ### Internal Escalation
 
 **When to Escalate**:
+
 - Complex data model issues requiring deep Salesforce expertise
 - Performance problems requiring infrastructure changes
 - Customer configuration variations not covered by existing patterns
 - Repeated issues indicating systemic problems
 
 **Escalation Process**:
+
 1. Document all attempted solutions and their results
 1. Provide complete error reproduction steps
 1. Include customer environment details and configuration specifics
@@ -149,12 +157,14 @@ This directory contains comprehensive error handling, debugging guidance, and fa
 ### Customer Escalation
 
 **When to Involve Customer**:
+
 - Issues requiring customer Salesforce administrator input
 - Configuration changes needed in customer's Salesforce org
 - Business process clarifications needed for accurate analysis
 - Custom field or workflow documentation required
 
 **Customer Communication**:
+
 1. Explain the technical issue in business terms
 1. Clearly specify what information or access is needed
 1. Provide timeline expectations for resolution
@@ -165,6 +175,7 @@ This directory contains comprehensive error handling, debugging guidance, and fa
 ### Resolution Effectiveness
 
 **Tracking Criteria**:
+
 - **Time to Resolution**: Average time from issue report to working solution
 - **First Contact Resolution**: Percentage of issues resolved without escalation
 - **Customer Satisfaction**: Feedback on troubleshooting experience and solution quality
@@ -173,6 +184,7 @@ This directory contains comprehensive error handling, debugging guidance, and fa
 ### Process Improvement
 
 **Continuous Enhancement**:
+
 - **Pattern Recognition**: Identify common issue types for proactive prevention
 - **Documentation Updates**: Enhance guidance based on real customer issues
 - **Tool Development**: Create utilities to automate common troubleshooting steps
