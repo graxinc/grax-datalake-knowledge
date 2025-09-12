@@ -7,6 +7,7 @@ This directory contains advanced business intelligence templates and specialized
 **Data-Driven Decision Making**: These patterns transform raw Salesforce data into strategic business intelligence that enables organizations to adapt faster than competitors through comprehensive historical analysis.
 
 **Key Capabilities**:
+
 - Advanced funnel analysis with velocity calculations
 - Corporate family relationship mapping
 - Sales performance benchmarking and forecasting
