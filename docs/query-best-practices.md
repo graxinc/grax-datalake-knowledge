@@ -443,15 +443,15 @@ AND EXISTS (
 
 1. **Check Column Scope**: Verify the column exists in the current CTE/table context
 
-2. **Validate GROUP BY Logic**: After GROUP BY, only grouped columns and aggregates are available
+1. **Validate GROUP BY Logic**: After GROUP BY, only grouped columns and aggregates are available
 
-3. **Trace Column Lifecycle**: Follow where columns are created, modified, and referenced
+1. **Trace Column Lifecycle**: Follow where columns are created, modified, and referenced
 
-4. **Test Incrementally**: Build complex queries step by step with SELECT * to verify scope
+1. **Test Incrementally**: Build complex queries step by step with SELECT * to verify scope
 
-5. **Confirm Field Naming**: Ensure field naming follows `_f`, `_ts`, `_d`, `_b` pattern
+1. **Confirm Field Naming**: Ensure field naming follows `_f`, `_ts`, `_d`, `_b` pattern
 
-6. **Map Dependencies**: Ensure derived columns are created before being referenced
+1. **Map Dependencies**: Ensure derived columns are created before being referenced
 
 ## Quarterly Analysis Error Recovery
 
@@ -459,13 +459,13 @@ AND EXISTS (
 
 1. **Identify the Missing Column**: Note which column is causing the error
 
-2. **Check Aggregation Context**: Determine if it's after a GROUP BY operation
+1. **Check Aggregation Context**: Determine if it's after a GROUP BY operation
 
-3. **Restructure Query**: Move column calculations to earlier CTE
+1. **Restructure Query**: Move column calculations to earlier CTE
 
-4. **Include in GROUP BY**: Add the column to GROUP BY if you need to reference it later
+1. **Include in GROUP BY**: Add the column to GROUP BY if you need to reference it later
 
-5. **Test Fix**: Use SELECT * to verify column availability before final query
+1. **Test Fix**: Use SELECT * to verify column availability before final query
 
 **Example Recovery Process:**
 
