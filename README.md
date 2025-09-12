@@ -21,58 +21,61 @@ This repository contains structured documentation that enables large language mo
 
 ## Documentation Structure
 
+The documentation is organized into six logical directories for intuitive navigation and scalable expansion:
+
+### Getting Started
+
+- **[Getting Started Overview](./docs/getting-started/README.md)** - New user onboarding and quick start guide
+
 ### Core Reference Materials
 
-- **[Configuration Reference](./docs/configuration-reference.md)** - **START HERE**: Centralized configuration for all business-specific values
-- **[Database Schema Guide](./docs/database-schema-guide.md)** - Complete field reference and data structure documentation
-- **[Query Best Practices](./docs/query-best-practices.md)** - Performance optimization and error prevention guidelines
-- **[Athena SQL Syntax Guide](./docs/athena-sql-syntax-guide.md)** - Athena-specific SQL patterns and corrections
+- **[Configuration Reference](./docs/core-reference/configuration-reference.md)** - **START HERE**: Centralized configuration for all business-specific values
+- **[Database Schema Guide](./docs/core-reference/database-schema-guide.md)** - Complete field reference and data structure documentation
+- **[Claude Execution Guidelines](./docs/core-reference/claude-execution-guidelines.md)** - **CRITICAL**: When to execute queries vs provide code templates
 
-### LLM Execution Guidance
+### Query Guidance
 
-- **[Claude Execution Guidelines](./docs/claude-execution-guidelines.md)** - **CRITICAL**: When to execute queries vs provide code templates
+- **[Query Templates](./docs/query-guidance/query-templates.md)** - Reusable query patterns for common analysis tasks
+- **[Query Best Practices](./docs/query-guidance/query-best-practices.md)** - Performance optimization and error prevention guidelines
+- **[Athena SQL Syntax Guide](./docs/query-guidance/athena-sql-syntax-guide.md)** - Athena-specific SQL patterns and corrections
 
-### Reporting and Brand Standards
+### Analysis Patterns
 
-- **[Reporting and Brand Standards](./docs/reporting-brand-standards.md)** - **ESSENTIAL**: Professional branding and HTML artifact requirements for all GRAX reports
-- **[HTML Report Template](./docs/html-report-template.md)** - **MANDATORY**: Complete HTML template with CSS styling for all GRAX reports
+- **[Business Intelligence Patterns](./docs/analysis-patterns/business-intelligence-patterns.md)** - Advanced analytics and reporting templates
+- **[Sales Process Analysis](./docs/analysis-patterns/sales-process-analysis.md)** - Lead qualification and opportunity progression tracking
+- **[Lead Status Audit](./docs/analysis-patterns/lead-status-audit.md)** - Customer classification and lead qualification accuracy
 
-### Multi-Customer Support
+### Advanced Topics
 
-- **[Customer Fallback Instructions](./docs/customer-fallback-instructions.md)** - Adapting queries for different Salesforce implementations
+- **[Reporting Brand Standards](./docs/advanced-topics/reporting-brand-standards.md)** - **ESSENTIAL**: Professional branding and HTML artifact requirements for all GRAX reports
+- **[HTML Report Template](./docs/advanced-topics/html-report-template.md)** - **MANDATORY**: Complete HTML template with CSS styling for all GRAX reports
+- **[Data Quality Management](./docs/advanced-topics/data-quality-management.md)** - Data integrity validation and cleansing strategies
 
-### Query Templates and Patterns
+### Troubleshooting
 
-- **[Query Templates](./docs/query-templates.md)** - Reusable query patterns for common analysis tasks
-- **[Sales Process Analysis](./docs/sales-process-analysis.md)** - Lead qualification and opportunity progression tracking
-- **[Data Quality Management](./docs/data-quality-management.md)** - Data integrity validation and cleansing strategies
+- **[Customer Fallback Instructions](./docs/troubleshooting/customer-fallback-instructions.md)** - Adapting queries for different Salesforce implementations
 
-### Specialized Analysis
-
-- **[Lead Status Audit](./docs/lead-status-audit.md)** - Customer classification and lead qualification accuracy
-- **[Business Intelligence Patterns](./docs/business-intelligence-patterns.md)** - Advanced analytics and reporting templates
-
-## Quick Start
+## Quick Start for LLM Models
 
 For LLM models working with this data lake:
 
-1. **FIRST**: Read [Configuration Reference](./docs/configuration-reference.md) to understand all business-specific values
+1. **FIRST**: Read [Configuration Reference](./docs/core-reference/configuration-reference.md) to understand all business-specific values
 
-1. **CRITICAL**: Read [Claude Execution Guidelines](./docs/claude-execution-guidelines.md) to understand when to execute vs provide code
+1. **CRITICAL**: Read [Claude Execution Guidelines](./docs/core-reference/claude-execution-guidelines.md) to understand when to execute vs provide code
 
-1. **ESSENTIAL**: Review [Reporting and Brand Standards](./docs/reporting-brand-standards.md) for professional HTML artifact requirements
+1. **ESSENTIAL**: Review [Reporting Brand Standards](./docs/advanced-topics/reporting-brand-standards.md) for professional HTML artifact requirements
 
-1. **MANDATORY**: Use [HTML Report Template](./docs/html-report-template.md) for all GRAX reports with complete branding and visualizations
+1. **MANDATORY**: Use [HTML Report Template](./docs/advanced-topics/html-report-template.md) for all GRAX reports with complete branding and visualizations
 
-1. **Understand**: Review [Database Schema Guide](./docs/database-schema-guide.md) for available data structures
+1. **Understand**: Review [Database Schema Guide](./docs/core-reference/database-schema-guide.md) for available data structures
 
-1. **Reference**: Use [Athena SQL Syntax Guide](./docs/athena-sql-syntax-guide.md) for proper query formation
+1. **Reference**: Use [Athena SQL Syntax Guide](./docs/query-guidance/athena-sql-syntax-guide.md) for proper query formation
 
-1. **Apply**: Use [Query Templates](./docs/query-templates.md) for common analysis patterns
+1. **Apply**: Use [Query Templates](./docs/query-guidance/query-templates.md) for common analysis patterns
 
-1. **Follow**: Apply [Query Best Practices](./docs/query-best-practices.md) to avoid common errors
+1. **Follow**: Apply [Query Best Practices](./docs/query-guidance/query-best-practices.md) to avoid common errors
 
-1. **Adapt**: Use [Customer Fallback Instructions](./docs/customer-fallback-instructions.md) when queries return zero results
+1. **Adapt**: Use [Customer Fallback Instructions](./docs/troubleshooting/customer-fallback-instructions.md) when queries return zero results
 
 ## Key Principles
 
@@ -107,14 +110,47 @@ For LLM models working with this data lake:
 
 The knowledge base is built with GRAX's default Salesforce configuration but can be easily adapted:
 
-1. **Review** the [Configuration Reference](./docs/configuration-reference.md) for all default values
+1. **Review** the [Configuration Reference](./docs/core-reference/configuration-reference.md) for all default values
 1. **Modify** configuration values to match your organization's Salesforce setup
 1. **Test** queries with your specific field values and stage names
-1. **Use** the [Customer Fallback Instructions](./docs/customer-fallback-instructions.md) for automatic adaptation
+1. **Use** the [Customer Fallback Instructions](./docs/troubleshooting/customer-fallback-instructions.md) for automatic adaptation
+
+## Documentation Standards Guide
+
+### For Contributors and LLM Models
+
+**Zero-Tolerance Compliance**: All documentation must pass complete markdown linting validation as defined in `.markdownlint-cli2.yaml`.
+
+**Configuration Integration**: Never hardcode business values in documentation or queries. All business-specific values must reference the centralized [Configuration Reference](./docs/core-reference/configuration-reference.md).
+
+**Professional Standards**: All customer-facing reports and analyses must follow [Reporting Brand Standards](./docs/advanced-topics/reporting-brand-standards.md) and use the [HTML Report Template](./docs/advanced-topics/html-report-template.md).
+
+### Directory Structure Guidelines
+
+**Logical Organization**:
+
+- **getting-started/**: New user onboarding and basic concepts
+- **core-reference/**: Essential configuration, database schema, and execution guidelines
+- **query-guidance/**: SQL patterns, best practices, and syntax guides
+- **analysis-patterns/**: Business intelligence templates and specialized analysis
+- **advanced-topics/**: Professional reporting standards and enterprise customization
+- **troubleshooting/**: Error handling, debugging, and fallback procedures
+
+**Cross-Reference Requirements**: All documents must include proper links to related documentation using relative paths that respect the directory structure.
+
+**Scalability Design**: The structure supports unlimited expansion within each directory while maintaining logical organization and discoverability.
 
 ## Contributing
 
 This knowledge base is designed for programmatic consumption by LLM models. All documentation follows strict markdown linting rules and is optimized for clarity and precision in automated query generation.
+
+**Contribution Workflow**:
+
+1. **Follow Standards**: Ensure all contributions meet documentation standards and linting requirements
+1. **Update Configuration**: Add any new business values to the centralized Configuration Reference
+1. **Test Integration**: Validate that new documentation integrates properly with existing patterns
+1. **Maintain Links**: Ensure all cross-references use correct relative paths
+1. **Brand Compliance**: Verify any customer-facing content meets professional presentation standards
 
 ## Support
 
