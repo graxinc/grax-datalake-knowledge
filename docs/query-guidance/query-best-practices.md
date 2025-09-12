@@ -115,314 +115,336 @@ ORDER BY total_amount DESC
 -- Remove LIMIT for full analysis
 ```
 
-## Critical GROUP BY Rules
+## GROUP BY Column Resolution Error Prevention
 
-### Common GROUP BY Column Resolution Error
+### 4. Critical GROUP BY Rules
 
-❌ **ERROR PATTERN:**
+**The Problem**: After GROUP BY operations, only grouped columns and aggregated functions are available in subsequent operations.
+
+❌ **COMMON ERROR PATTERN:**
 
 ```sql
-WITH latest_lead AS (
+-- This FAILS because customer_segment is referenced in ORDER BY but not in final SELECT GROUP BY
+WITH quarterly_data AS (
     SELECT 
-        *,
-        ROW_NUMBER() OVER (PARTITION BY id ORDER BY grax__idseq DESC) as rn
-    FROM lakehouse.object_lead
-    WHERE grax__deleted IS NULL
-),
-quarterly_trends AS (
-    SELECT 
-        DATE_TRUNC('quarter', createddate_ts) as quarter,
-        -- Segmentation using values from Configuration Reference
+        DATE_TRUNC('quarter', CAST(o.closedate_d AS timestamp)) as close_quarter,
         CASE 
-            WHEN numberofemployees_f < 200 THEN 'SMB'
-            WHEN numberofemployees_f BETWEEN 200 AND 999 THEN 'Mid-Market'
-            ELSE 'Enterprise'
+            WHEN a.numberofemployees_f > 250 THEN 'Enterprise'
+            ELSE 'SMB'
         END as customer_segment,
-        COUNT(*) as lead_count
-    FROM latest_lead
-    WHERE rn = 1
-    GROUP BY DATE_TRUNC('quarter', createddate_ts)
-    -- ERROR: customer_segment not in GROUP BY but used in SELECT
+        o.stagename,
+        o.amount_f
+    FROM latest_opportunity o
+    LEFT JOIN latest_account a ON o.accountid = a.id
+),
+quarterly_performance AS (
+    SELECT 
+        close_quarter,
+        customer_segment,  -- Grouped column
+        COUNT(*) as total_opportunities,
+        SUM(amount_f) as won_revenue
+    FROM quarterly_data
+    GROUP BY close_quarter, customer_segment
 )
 SELECT 
-    quarter,
-    customer_segment,  -- This will FAIL
-    lead_count
-FROM quarterly_trends
-ORDER BY quarter DESC, customer_segment  -- This will also FAIL
+    CAST(close_quarter AS date) as quarter,
+    total_opportunities,
+    won_revenue
+FROM quarterly_performance
+ORDER BY close_quarter DESC, customer_segment  -- ERROR: customer_segment not in SELECT
 ```
-
-**Error Message**: `COLUMN_NOT_FOUND: line XX:XX: Column 'customer_segment' cannot be resolved or requester is not authorized to access requested resources`
 
 ✅ **CORRECT APPROACH:**
 
 ```sql
-WITH latest_lead AS (
+-- Include ALL columns you need to reference in the final SELECT
+WITH quarterly_data AS (
     SELECT 
-        *,
-        ROW_NUMBER() OVER (PARTITION BY id ORDER BY grax__idseq DESC) as rn
-    FROM lakehouse.object_lead
-    WHERE grax__deleted IS NULL
-),
-enriched_lead AS (
-    SELECT 
-        *,
-        -- Calculate segmentation BEFORE aggregation
+        DATE_TRUNC('quarter', CAST(o.closedate_d AS timestamp)) as close_quarter,
         CASE 
-            WHEN numberofemployees_f < 200 THEN 'SMB'
-            WHEN numberofemployees_f BETWEEN 200 AND 999 THEN 'Mid-Market'
-            ELSE 'Enterprise'
-        END as customer_segment
-    FROM latest_lead
-    WHERE rn = 1
+            WHEN a.numberofemployees_f > 250 THEN 'Enterprise'
+            ELSE 'SMB'
+        END as customer_segment,
+        o.stagename,
+        o.amount_f
+    FROM latest_opportunity o
+    LEFT JOIN latest_account a ON o.accountid = a.id
 ),
-quarterly_trends AS (
+quarterly_performance AS (
     SELECT 
-        DATE_TRUNC('quarter', createddate_ts) as quarter,
-        customer_segment,  -- Now included in GROUP BY
-        COUNT(*) as lead_count
-    FROM enriched_lead
-    GROUP BY 
-        DATE_TRUNC('quarter', createddate_ts),
-        customer_segment  -- MUST include all SELECT columns in GROUP BY
+        close_quarter,
+        customer_segment,  -- Include in GROUP BY
+        COUNT(*) as total_opportunities,
+        SUM(amount_f) as won_revenue
+    FROM quarterly_data
+    GROUP BY close_quarter, customer_segment
 )
 SELECT 
-    quarter,
-    customer_segment,
-    lead_count
-FROM quarterly_trends
-ORDER BY quarter DESC, customer_segment
+    CAST(close_quarter AS date) as quarter,
+    customer_segment,  -- Include in SELECT if you want to reference it
+    total_opportunities,
+    won_revenue
+FROM quarterly_performance
+ORDER BY close_quarter DESC, customer_segment  -- Now this works
 ```
 
-### Quarterly Trend Analysis Template
+### 5. Quarterly Trend Analysis Template
 
-**Complete working pattern for quarterly performance analysis:**
+**Safe pattern for quarterly performance analysis:**
 
 ```sql
 WITH latest_opportunity AS (
-    SELECT 
-        *,
-        ROW_NUMBER() OVER (PARTITION BY id ORDER BY grax__idseq DESC) as rn
-    FROM lakehouse.object_opportunity
-    WHERE grax__deleted IS NULL
-        AND createddate_ts >= DATE_ADD('quarter', -8, CURRENT_DATE)
+    SELECT A.* 
+    FROM lakehouse.object_opportunity A 
+    INNER JOIN (
+        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
+        FROM lakehouse.object_opportunity B 
+        GROUP BY B.Id
+    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
+    WHERE A.grax__deleted IS NULL
 ),
-enriched_opportunity AS (
-    -- Step 1: Calculate all fields needed for later analysis
+latest_account AS (
+    SELECT A.* 
+    FROM lakehouse.object_account A 
+    INNER JOIN (
+        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
+        FROM lakehouse.object_account B 
+        GROUP BY B.Id
+    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
+    WHERE A.grax__deleted IS NULL
+),
+enriched_opportunities AS (
+    -- Step 1: Create ALL derived columns BEFORE any aggregation
     SELECT 
-        *,
-        DATE_TRUNC('quarter', createddate_ts) as created_quarter,
-        -- Segmentation using thresholds from Configuration Reference
+        o.id,
+        o.stagename,
+        o.amount_f,
+        o.createddate_ts,
+        o.closedate_d,
+        DATE_TRUNC('quarter', CAST(o.closedate_d AS timestamp)) as close_quarter,
+        -- Using segmentation thresholds from docs/configuration-reference.md
         CASE 
-            WHEN amount_f >= 100000 THEN 'Enterprise Deal'
-            WHEN amount_f >= 25000 THEN 'Mid-Market Deal'
-            ELSE 'SMB Deal'
-        END as deal_category,
-        -- Stage classification using values from Configuration Reference
-        CASE 
-            WHEN stagename IN ('Prospecting', 'Qualification') THEN 'Early Stage'
-            WHEN stagename IN ('Needs Analysis', 'Value Proposition') THEN 'Development'
-            WHEN stagename IN ('Proposal/Price Quote', 'Negotiation/Review') THEN 'Late Stage'
-            WHEN stagename = 'Closed Won' THEN 'Won'
-            WHEN stagename = 'Closed Lost' THEN 'Lost'
-            ELSE 'Other'
-        END as stage_category
-    FROM latest_opportunity
-    WHERE rn = 1
+            WHEN a.numberofemployees_f > 250 OR a.annualrevenue_f > 100000000 THEN 'Enterprise'
+            WHEN a.numberofemployees_f > 50 OR a.annualrevenue_f > 10000000 THEN 'SMB'
+            ELSE 'Self Service'
+        END as customer_segment,
+        DATE_DIFF('day', o.createddate_ts, CAST(o.closedate_d AS timestamp)) as sales_cycle_days
+    FROM latest_opportunity o
+    LEFT JOIN latest_account a ON o.accountid = a.id
+    WHERE o.stagename IN ('Closed Won', 'Closed Lost')
+      AND o.closedate_d IS NOT NULL
+      AND CAST(o.closedate_d AS timestamp) >= DATE_ADD('month', -24, CURRENT_DATE)
+      AND o.amount_f IS NOT NULL
 ),
 quarterly_aggregation AS (
-    -- Step 2: Aggregation with ALL dimensions in GROUP BY
+    -- Step 2: Perform aggregation with ALL needed grouping columns
     SELECT 
-        created_quarter,
-        deal_category,
-        stage_category,
-        COUNT(*) as opportunity_count,
-        SUM(amount_f) as total_amount,
-        AVG(amount_f) as avg_amount
-    FROM enriched_opportunity
-    GROUP BY 
-        created_quarter,
-        deal_category,
-        stage_category  -- All non-aggregate SELECT columns MUST be in GROUP BY
+        close_quarter,
+        customer_segment,  -- MUST include in GROUP BY if you want to reference later
+        COUNT(*) as total_opportunities,
+        COUNT(CASE WHEN stagename = 'Closed Won' THEN 1 END) as won_opportunities,
+        SUM(CASE WHEN stagename = 'Closed Won' THEN amount_f ELSE 0 END) as won_revenue,
+        AVG(CASE WHEN stagename = 'Closed Won' THEN sales_cycle_days END) as avg_won_cycle_days
+    FROM enriched_opportunities
+    GROUP BY close_quarter, customer_segment  -- Include ALL columns you'll reference
 )
--- Step 3: Final SELECT can reference any grouped columns
+-- Step 3: Final SELECT with all columns available
 SELECT 
-    created_quarter,
-    deal_category,
-    stage_category,
-    opportunity_count,
-    ROUND(total_amount, 0) as total_amount,
-    ROUND(avg_amount, 0) as avg_amount
+    CAST(close_quarter AS date) as quarter,
+    customer_segment,  -- Available because it was in GROUP BY
+    total_opportunities,
+    won_opportunities,
+    ROUND(won_opportunities * 100.0 / total_opportunities, 1) as win_rate_pct,
+    ROUND(won_revenue, 0) as won_revenue,
+    ROUND(avg_won_cycle_days, 0) as avg_won_cycle_days
 FROM quarterly_aggregation
-ORDER BY 
-    created_quarter DESC,
-    deal_category,
-    stage_category
+ORDER BY close_quarter DESC, customer_segment  -- Both columns are available
+```
+
+## Universal Query Requirements
+
+### 1. Latest Records Pattern (MANDATORY)
+
+```sql
+-- Standard implementation for current state
+WITH latest_[object] AS (
+    SELECT A.* 
+    FROM lakehouse.object_[object] A 
+    INNER JOIN (
+        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
+        FROM lakehouse.object_[object] B 
+        GROUP BY B.Id
+    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
+    WHERE A.grax__deleted IS NULL
+)
+SELECT * FROM latest_[object]
+```
+
+### 2. Progressive Stage Logic
+
+**For funnel analysis using stage progression from [Configuration Reference](../core-reference/configuration-reference.md):**
+
+```sql
+-- MCL Logic: Marketing Qualified Lead identification
+CASE 
+    WHEN status = 'Working' THEN createddate_ts
+    ELSE NULL
+END as mql_date,
+
+-- SQL Logic: Sales Qualified Lead progression  
+CASE 
+    WHEN status IN ('SQL', 'SAL') THEN createddate_ts
+    WHEN isconverted_b = true AND converteddate_d IS NOT NULL THEN CAST(converteddate_d AS timestamp)
+    ELSE NULL
+END as sql_date
+```
+
+### 3. Unique Column Names in JOINs
+
+**Always use unique column names to prevent ambiguous errors:**
+
+```sql
+-- Good pattern with unique names
+LEFT JOIN mcl_analysis mcl ON ms.report_month = mcl.mcl_month
+LEFT JOIN mql_analysis mql ON ms.report_month = mql.mql_month  
+LEFT JOIN sql_analysis sql ON ms.report_month = sql.sql_month
+```
+
+### 2. Early Filtering
+
+**Apply filters in CTEs to reduce data volume:**
+
+```sql
+WITH filtered_opportunities AS (
+    SELECT * 
+    FROM latest_opportunity
+    WHERE createddate_ts >= DATE_ADD('month', -12, CURRENT_DATE)
+      -- Using stage exclusion logic from docs/configuration-reference.md
+      AND stagename != 'Closed Lost'
+)
+-- Then use filtered_opportunities in subsequent analysis
+```
+
+### 3. Efficient Existence Checks
+
+**Use EXISTS instead of IN for better performance:**
+
+```sql
+AND EXISTS (
+    SELECT 1 FROM lakehouse.object_related
+    WHERE object_related.parent_id = main_table.id
+      AND object_related.grax__deleted IS NULL
+)
 ```
 
 ## Error Prevention Rules
 
-### NEVER Do These Things
+### NEVER
 
-1. **Query without deleted record filtering**:
+- Reference columns that don't exist in the current table/CTE
+- Assume historical stage dates exist in latest records
+- Forget `WHERE grax__deleted IS NULL`
+- Include `'Closed Lost'` in progressive stage counts (per [Configuration Reference](../core-reference/configuration-reference.md))
+- Use ambiguous column names in JOINs
+- **Reference columns in ORDER BY/WHERE that aren't in your SELECT clause after GROUP BY**
 
-   ```sql
-   -- WRONG: Will include deleted records
-   SELECT * FROM lakehouse.object_lead
-   ```
+### ALWAYS
 
-1. **Query without latest record patterns for current state**:
-
-   ```sql
-   -- WRONG: Will return historical versions
-   SELECT COUNT(*) FROM lakehouse.object_lead WHERE grax__deleted IS NULL
-   ```
-
-1. **Query without date boundaries**:
-
-   ```sql
-   -- WRONG: Will scan entire table
-   SELECT * FROM lakehouse.object_opportunity WHERE grax__deleted IS NULL
-   ```
-
-1. **Reference columns in ORDER BY/WHERE that aren't in your SELECT clause after GROUP BY**:
-
-   ```sql
-   -- WRONG: customer_segment not in final SELECT or GROUP BY
-   SELECT quarter, COUNT(*) FROM table GROUP BY quarter ORDER BY customer_segment
-   ```
-
-1. **Use hardcoded configuration values**:
-
-   ```sql
-   -- WRONG: Hardcoded status values
-   WHERE status IN ('Open', 'Working')
-   ```
-
-### ALWAYS Do These Things
-
-1. **Filter deleted records first**:
-
-   ```sql
-   WHERE grax__deleted IS NULL
-   ```
-
-1. **Use latest records pattern for current state**:
-
-   ```sql
-   ROW_NUMBER() OVER (PARTITION BY id ORDER BY grax__idseq DESC) as rn
-   WHERE rn = 1
-   ```
-
-1. **Include date boundaries for performance**:
-
-   ```sql
-   WHERE createddate_ts >= DATE_ADD('month', -24, CURRENT_DATE)
-   ```
-
-1. **Include ALL columns you'll need to reference in your final GROUP BY clause**:
-
-   ```sql
-   GROUP BY quarter, customer_segment, stage_category  -- All SELECT columns
-   ```
-
-1. **Reference Configuration Reference for business values**:
-
-   ```sql
-   -- Using lead status values from Configuration Reference
-   WHERE status IN ('MQL', 'SAL', 'SQL')
-   ```
-
-1. **Use LIMIT during development**:
-
-   ```sql
-   LIMIT 100  -- Remove for production
-   ```
+- Create derived columns in separate CTEs before referencing them
+- Use current status/stage with creation/change dates for date assignments
+- Use unique column names in subqueries to prevent ambiguous errors
+- Test with LIMIT 10 before running full queries
+- Validate that all referenced columns actually exist in the schema
+- Reference business values from [Configuration Reference](../core-reference/configuration-reference.md)
+- **Include ALL columns you'll need to reference in your final GROUP BY clause**
 
 ## Enhanced Debug Checklist
 
-### When Building Complex Aggregations
+**If you get column resolution errors:**
 
-1. **✅ Plan Your CTEs**:
-   - Level 1: Get latest records and basic filtering
-   - Level 2: Add all calculations and enrichments
-   - Level 3: Perform aggregation
-   - Level 4: Final formatting and selection
+1. **Check Column Scope**: Verify the column exists in the current CTE/table context
 
-1. **✅ Test Each CTE Level**:
+1. **Validate GROUP BY Logic**: After GROUP BY, only grouped columns and aggregates are available
 
-   ```sql
-   -- Test intermediate results
-   WITH enriched_data AS (
-       SELECT *, [calculations] FROM base_table
-   )
-   SELECT * FROM enriched_data LIMIT 10  -- Verify calculations
-   ```
+1. **Trace Column Lifecycle**: Follow where columns are created, modified, and referenced
 
-1. **✅ Verify Column Scope**:
+1. **Test Incrementally**: Build complex queries step by step with SELECT * to verify scope
 
-   ```sql
-   -- Before final aggregation, check available columns
-   WITH test_scope AS (
-       SELECT column1, column2, COUNT(*) FROM table GROUP BY column1, column2
-   )
-   SELECT * FROM test_scope LIMIT 5  -- See what columns exist
-   ```
+1. **Confirm Field Naming**: Ensure field naming follows `_f`, `_ts`, `_d`, `_b` pattern
 
-### Quarterly Analysis Error Recovery
+1. **Map Dependencies**: Ensure derived columns are created before being referenced
 
-**If you get "Column 'X' cannot be resolved" during quarterly analysis:**
+## Quarterly Analysis Error Recovery
 
-1. **✅ Identify the Missing Column**: Which column is causing the error?
+**When you encounter "Column cannot be resolved" in quarterly/trend analysis:**
 
-1. **✅ Check CTE Scope**: Is the column available in the current CTE context?
+1. **Identify the Missing Column**: Note which column is causing the error
 
-1. **✅ Move Calculation Earlier**: Add the calculation to an earlier CTE before aggregation:
+1. **Check Aggregation Context**: Determine if it's after a GROUP BY operation
 
-   ```sql
-   WITH enriched_data AS (
-       SELECT 
-           *,
-           CASE WHEN amount_f > 50000 THEN 'Large' ELSE 'Small' END as size_category
-       FROM base_table
-   ),
-   aggregated_data AS (
-       SELECT 
-           quarter,
-           size_category,  -- Now available for GROUP BY
-           COUNT(*) as count
-       FROM enriched_data
-       GROUP BY quarter, size_category  -- Include in GROUP BY
-   )
-   SELECT * FROM aggregated_data
-   ```
+1. **Restructure Query**: Move column calculations to earlier CTE
 
-1. **✅ Test Scope Step by Step**: Use SELECT * to verify columns at each level
+1. **Include in GROUP BY**: Add the column to GROUP BY if you need to reference it later
 
-1. **✅ Update GROUP BY**: Ensure all non-aggregate columns are grouped
+1. **Test Fix**: Use SELECT * to verify column availability before final query
 
-### Scope Boundary Testing
-
-**Before building complex queries, test scope boundaries:**
+**Example Recovery Process:**
 
 ```sql
--- Step 1: Test base data availability
-WITH base_data AS (
-    SELECT * FROM table WHERE conditions
-)
-SELECT * FROM base_data LIMIT 5;
+-- Step 1: If this fails
+ORDER BY close_quarter DESC, customer_segment  -- ERROR: customer_segment not resolved
 
--- Step 2: Test enrichment availability
-WITH enriched_data AS (
-    SELECT *, [calculated_fields] FROM base_data
-)
-SELECT * FROM enriched_data LIMIT 5;
+-- Step 2: Check if customer_segment is in the final SELECT
+SELECT 
+    CAST(close_quarter AS date) as quarter,
+    -- customer_segment missing here
+    total_opportunities
 
--- Step 3: Test aggregation availability
-WITH aggregated_data AS (
-    SELECT group_fields, COUNT(*) FROM enriched_data GROUP BY group_fields
-)
-SELECT * FROM aggregated_data LIMIT 5;
+-- Step 3: Add missing column to SELECT
+SELECT 
+    CAST(close_quarter AS date) as quarter,
+    customer_segment,  -- Add this
+    total_opportunities
+
+-- Step 4: Ensure it's in the GROUP BY of the source CTE
+GROUP BY close_quarter, customer_segment  -- Must include both
+```
+
+## Performance Optimization
+
+### 1. Query Structure
+
+- **Filter early**: Apply WHERE conditions in CTEs
+- **Use specific date ranges**: Avoid full table scans
+- **Test incrementally**: Build complex queries step by step
+- **Structure CTEs logically**: Calculations → Filtering → Aggregation → Final SELECT
+
+### 2. Data Type Usage
+
+- **Use typed fields**: Prefer `_f`, `_ts`, `_d`, `_b` suffixes
+- **Cast appropriately**: Convert dates to timestamps when needed
+- **Handle nulls**: Use COALESCE for safe operations
+
+### 3. Efficient Date Filtering
+
+```sql
+-- Use partition-friendly date filters
+WHERE createddate_ts >= DATE('2024-01-01')
+  AND createddate_ts < DATE('2025-01-01')
+```
+
+### Avoid Function Calls on Large Datasets
+
+```sql
+-- Instead of calculating age for all records, filter first
+WHERE createddate_ts >= DATE_ADD('day', -30, CURRENT_DATE)
+```
+
+### Use DATE_TRUNC for Grouping
+
+```sql
+-- More efficient than EXTRACT functions
+GROUP BY DATE_TRUNC('month', createddate_ts)
 ```
 
 ## Structured CTE Guidelines
@@ -478,7 +500,7 @@ final_aggregation AS (
     SELECT 
         created_quarter,
         age_category,
-        COUNT(*) as record_count,
+        COUNT(*) as record_count
         -- All non-aggregate fields must be in GROUP BY
     FROM filtered_data
     GROUP BY created_quarter, age_category
