@@ -78,7 +78,7 @@ WHERE grax__deleted IS NULL
 
 ## Account Object Schema
 
-### Core Fields
+### Account Core Fields
 
 | Field | Type | Description | Analysis Use |
 |-------|------|-------------|-------------|
@@ -127,7 +127,7 @@ ORDER BY parent.name, child.hierarchy_depth__c
 
 ## Lead Object Schema
 
-### Core Fields
+### Lead Core Fields
 
 | Field | Type | Description | Qualification Use |
 |-------|------|-------------|-------------------|
@@ -178,10 +178,10 @@ ORDER BY lead_count DESC
 
 ## Opportunity Object Schema
 
-### Core Fields
+### Opportunity Core Fields
 
 | Field | Type | Description | Sales Analysis Use |
-|-------|------|-------------|-------------------|
+|-------|------|-------------|------------------|
 | `id` | varchar | Unique Salesforce Opportunity ID | Primary key |
 | `name` | varchar | Opportunity name | Reporting |
 | `accountid` | varchar | Associated account | Account relationship |
@@ -196,7 +196,7 @@ ORDER BY lead_count DESC
 ### Timing Fields
 
 | Field | Type | Description | Velocity Analysis Use |
-|-------|------|-------------|----------------------|
+|-------|------|-------------|---------------------|
 | `createddate_ts` | timestamp | Opportunity creation | Age calculation |
 | `lastmodifieddate_ts` | timestamp | Last update | Activity tracking |
 | `laststagechangedate_ts` | timestamp | Stage change timing | Stage velocity |
