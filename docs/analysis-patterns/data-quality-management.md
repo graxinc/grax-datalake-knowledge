@@ -4,7 +4,7 @@
 
 Data quality directly impacts sales funnel accuracy, customer segmentation precision, and business intelligence reliability. This guide provides comprehensive strategies for identifying, analyzing, and remedying data quality issues across Salesforce objects.
 
-**Configuration Dependencies**: All validation patterns and data quality checks in this document use standardized values from [Configuration Reference](./configuration-reference.md). Organizations with different Salesforce configurations should update that document to match their specific validation rules and field values.
+**Configuration Dependencies**: All validation patterns and data quality checks in this document use standardized values from [Configuration Reference](/docs/core-reference/configuration-reference.md). Organizations with different Salesforce configurations should update that document to match their specific validation rules and field values.
 
 ## Data Quality Dimensions
 
@@ -42,7 +42,7 @@ Data quality directly impacts sales funnel accuracy, customer segmentation preci
 
 **Definition**: Data conforming to defined formats and business rules
 
-**Validation Rules** (from [Configuration Reference](./configuration-reference.md)):
+**Validation Rules** (from [Configuration Reference](/docs/core-reference/configuration-reference.md)):
 
 - Email format validation patterns
 - Phone number structure requirements
@@ -361,11 +361,11 @@ FROM daily_metrics
 
 1. **Missing Email Addresses**: Prevents lead nurturing and outreach
 
-1. **Invalid Email Formats**: Causes bounce rates and delivery issues (using validation patterns from [Configuration Reference](./configuration-reference.md))
+1. **Invalid Email Formats**: Causes bounce rates and delivery issues (using validation patterns from [Configuration Reference](/docs/core-reference/configuration-reference.md))
 
 1. **Missing Company Names**: Blocks account matching and segmentation
 
-1. **Incomplete Segmentation Data**: Impacts territory assignment and targeting based on thresholds in [Configuration Reference](./configuration-reference.md)
+1. **Incomplete Segmentation Data**: Impacts territory assignment and targeting based on thresholds in [Configuration Reference](/docs/core-reference/configuration-reference.md)
 
 1. **Broken Conversion Relationships**: Corrupts funnel analysis
 
@@ -391,21 +391,21 @@ FROM daily_metrics
 
 ### Primary KPIs
 
-- **Lead Qualification Accuracy**: % of MCL/MQL with complete segmentation data (using status values from [Configuration Reference](./configuration-reference.md))
+- **Lead Qualification Accuracy**: % of MCL/MQL with complete segmentation data (using status values from [Configuration Reference](/docs/core-reference/configuration-reference.md))
 - **Conversion Data Integrity**: % of conversions with valid relationships
-- **Segmentation Accuracy**: % of accounts properly classified using thresholds from [Configuration Reference](./configuration-reference.md)
+- **Segmentation Accuracy**: % of accounts properly classified using thresholds from [Configuration Reference](/docs/core-reference/configuration-reference.md)
 - **Duplicate Reduction**: Month-over-month reduction in duplicate records
 
 ### Secondary KPIs
 
 - **Field Completion Rates**: Trending completion percentages for critical fields
-- **Data Validation Compliance**: % of records passing validation rules from [Configuration Reference](./configuration-reference.md)
+- **Data Validation Compliance**: % of records passing validation rules from [Configuration Reference](/docs/core-reference/configuration-reference.md)
 - **Email Deliverability**: Improvement in valid email percentages
 - **Contact Reachability**: % of leads with valid phone/email combinations
 
 ## Configuration Adaptation
 
-For organizations with different Salesforce implementations, update the [Configuration Reference](./configuration-reference.md) document with your specific values:
+For organizations with different Salesforce implementations, update the [Configuration Reference](/docs/core-reference/configuration-reference.md) document with your specific values:
 
 ### Data Quality Configuration Updates
 
@@ -417,7 +417,7 @@ For organizations with different Salesforce implementations, update the [Configu
 
 ### Testing Process
 
-1. **Update Validation Rules**: Modify patterns in [Configuration Reference](./configuration-reference.md)
+1. **Update Validation Rules**: Modify patterns in [Configuration Reference](/docs/core-reference/configuration-reference.md)
 1. **Test Quality Checks**: Execute validation queries with your configuration
 1. **Validate Results**: Ensure quality metrics make sense for your data
 1. **Document Standards**: Record your organization's data quality standards

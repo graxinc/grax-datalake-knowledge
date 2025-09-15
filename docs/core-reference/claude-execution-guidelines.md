@@ -4,9 +4,9 @@
 
 This document provides clear guidance on when Claude should execute queries against Athena versus providing query templates or code. Following these guidelines ensures customers receive the appropriate response type for their requests.
 
-**Configuration Dependencies**: When executing queries, always use business-specific values from [Configuration Reference](./configuration-reference.md). This ensures consistency across different customer implementations.
+**Configuration Dependencies**: When executing queries, always use business-specific values from [Configuration Reference](/docs/core-reference/configuration-reference.md). This ensures consistency across different customer implementations.
 
-**CRITICAL REPORTING REQUIREMENT**: ALL reports, analysis, and data presentations MUST be delivered as professional HTML artifacts with complete GRAX branding unless the customer explicitly specifies otherwise (e.g., "give me just the raw data" or "provide as plain text"). See [Reporting and Brand Standards](./reporting-brand-standards.md) for complete implementation requirements.
+**CRITICAL REPORTING REQUIREMENT**: ALL reports, analysis, and data presentations MUST be delivered as professional HTML artifacts with complete GRAX branding unless the customer explicitly specifies otherwise (e.g., "give me just the raw data" or "provide as plain text"). See [Reporting and Brand Standards](/docs/advanced-topics/reporting-brand-standards.md) for complete implementation requirements.
 
 ## Execution vs Code Decision Tree
 
@@ -83,7 +83,7 @@ When executing queries, ALWAYS follow this process:
 
 ### 3. Create Professional HTML Report
 
-**MANDATORY STEP**: Create a branded HTML artifact following [Reporting and Brand Standards](./reporting-brand-standards.md):
+**MANDATORY STEP**: Create a branded HTML artifact following [Reporting and Brand Standards](/docs/advanced-topics/reporting-brand-standards.md):
 
 - **Professional HTML Structure**: Semantic HTML5 with proper heading hierarchy
 - **Complete GRAX Branding**: All brand colors, typography, logo placement
@@ -127,7 +127,7 @@ Claude responds: Creates markdown artifact or provides plain analysis
 Customer says: "Build me a sales velocity report"
 Claude responds:
 
-1. Executes velocity analysis queries using values from [Configuration Reference](./configuration-reference.md)
+1. Executes velocity analysis queries using values from [Configuration Reference](/docs/core-reference/configuration-reference.md)
 1. Analyzes the results for business insights
 1. **Creates professional HTML artifact** with complete GRAX branding, interactive elements, and appropriate charts/graphs
 1. Provides actionable recommendations within the HTML report
@@ -143,7 +143,7 @@ If you catch yourself providing markdown, plain text, or code when you should ex
 
 ## Key Principles
 
-1. **Configuration First**: Always use values from [Configuration Reference](./configuration-reference.md)
+1. **Configuration First**: Always use values from [Configuration Reference](/docs/core-reference/configuration-reference.md)
 1. **Default to Execution + HTML**: When in doubt, execute queries and create professional HTML reports
 1. **Customer Intent**: "Build/Show/Analyze/Report" = Execute + HTML Artifact
 1. **Business Value**: Customers want professional, branded insights with visual elements
@@ -158,7 +158,7 @@ Before responding to any data request, ask:
 - Does this request want insights or templates?
 - Should I create a professional HTML report with branding and visualizations?
 - Can I execute this query with available tools?
-- Am I using the correct configuration values from [Configuration Reference](./configuration-reference.md)?
+- Am I using the correct configuration values from [Configuration Reference](/docs/core-reference/configuration-reference.md)?
 - Am I providing actionable business intelligence in a professional format?
 - Does my output include appropriate charts/graphs for the data?
 
@@ -195,15 +195,15 @@ Before responding to any data request, ask:
 
 When executing queries for customers with different Salesforce configurations:
 
-1. **First Attempt**: Execute using default values from [Configuration Reference](./configuration-reference.md)
-1. **Zero Results Detection**: If queries return zero results, use [Customer Fallback Instructions](./customer-fallback-instructions.md)
+1. **First Attempt**: Execute using default values from [Configuration Reference](/docs/core-reference/configuration-reference.md)
+1. **Zero Results Detection**: If queries return zero results, use [Customer Fallback Instructions](/docs/troubleshooting/customer-fallback-instructions.md)
 1. **Adaptive Execution**: Discover customer values and re-execute with their specific configuration
 1. **Professional Presentation**: Always deliver results as branded HTML artifacts
 1. **Document Differences**: Note any configuration differences for future reference
 
 ## Integration with Brand Standards
 
-This execution guidance works in conjunction with [Reporting and Brand Standards](./reporting-brand-standards.md) to ensure:
+This execution guidance works in conjunction with [Reporting and Brand Standards](/docs/advanced-topics/reporting-brand-standards.md) to ensure:
 
 - Consistent professional presentation across all GRAX reports
 - Proper brand messaging integration in every customer interaction
