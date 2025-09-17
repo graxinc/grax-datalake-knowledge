@@ -45,6 +45,13 @@ The documentation is organized into six logical directories for intuitive naviga
 - **[Sales Process Analysis](./docs/analysis-patterns/sales-process-analysis.md)** - Lead qualification and opportunity progression tracking
 - **[Lead Status Audit](./docs/analysis-patterns/lead-status-audit.md)** - Customer classification and lead qualification accuracy
 
+### Data Quality Framework
+
+- **[Data Quality Overview](./docs/data-quality/README.md)** - **NEW**: Comprehensive framework for data quality analysis, scoring, and remediation
+- **[Lead Data Quality Analysis](./docs/data-quality/lead/analysis.md)** - **NEW**: Complete lead data quality assessment patterns
+- **[Lead Data Quality Scoring](./docs/data-quality/lead/scoring.md)** - **NEW**: Quantitative scoring methodology for lead data quality
+- **[Lead Data Quality Remediation](./docs/data-quality/lead/remediation.md)** - **NEW**: Actionable strategies for improving lead data quality
+
 ### Advanced Topics
 
 - **[Reporting Brand Standards](./docs/advanced-topics/reporting-brand-standards.md)** - **ESSENTIAL**: Professional branding and HTML artifact requirements for all GRAX reports
@@ -67,6 +74,8 @@ For LLM models working with this data lake:
 
 1. **MANDATORY**: Use [HTML Report Template](./docs/advanced-topics/html-report-template.md) for all GRAX reports with complete branding and visualizations
 
+1. **NEW**: Utilize [Data Quality Framework](./docs/data-quality/README.md) for comprehensive data quality assessment, scoring, and remediation strategies
+
 1. **Understand**: Review [Database Schema Guide](./docs/core-reference/database-schema-guide.md) for available data structures
 
 1. **Reference**: Use [Athena SQL Syntax Guide](./docs/query-guidance/athena-sql-syntax-guide.md) for proper query formation
@@ -83,6 +92,7 @@ For LLM models working with this data lake:
 - **Execute First**: When customers ask for reports/analysis, execute queries and provide insights
 - **Professional Presentation**: ALL GRAX reports must be delivered as polished HTML artifacts following brand standards using the mandatory HTML template
 - **Interactive Visualizations**: Include charts, graphs, and interactive elements in all reports unless explicitly requested otherwise
+- **Data Quality Focus**: Leverage the comprehensive data quality framework for analysis, scoring, and remediation across all Salesforce objects
 - **Graceful Adaptation**: Use fallback strategies when customer configurations differ from defaults
 - All queries must filter deleted records using `grax__deleted IS NULL`
 - Use latest records pattern for current state analysis
@@ -125,6 +135,8 @@ The knowledge base is built with GRAX's default Salesforce configuration but can
 
 **Professional Standards**: All customer-facing reports and analyses must follow [Reporting Brand Standards](./docs/advanced-topics/reporting-brand-standards.md) and use the [HTML Report Template](./docs/advanced-topics/html-report-template.md).
 
+**Data Quality Standards**: Leverage the [Data Quality Framework](./docs/data-quality/README.md) for systematic data quality assessment and improvement across all Salesforce objects.
+
 ### Directory Structure Guidelines
 
 **Logical Organization**:
@@ -133,12 +145,15 @@ The knowledge base is built with GRAX's default Salesforce configuration but can
 - **core-reference/**: Essential configuration, database schema, and execution guidelines
 - **query-guidance/**: SQL patterns, best practices, and syntax guides
 - **analysis-patterns/**: Business intelligence templates and specialized analysis
+- **data-quality/**: Comprehensive framework for data quality analysis, scoring, and remediation
 - **advanced-topics/**: Professional reporting standards and enterprise customization
 - **troubleshooting/**: Error handling, debugging, and fallback procedures
 
 **Cross-Reference Requirements**: All documents must include proper links to related documentation using relative paths that respect the directory structure.
 
 **Scalability Design**: The structure supports unlimited expansion within each directory while maintaining logical organization and discoverability.
+
+**Data Quality Integration**: All new object implementations must include corresponding data quality framework components (analysis, scoring, remediation) following the standardized patterns established in the lead data quality implementation.
 
 ## Contributing
 
@@ -151,6 +166,7 @@ This knowledge base is designed for programmatic consumption by LLM models. All 
 1. **Test Integration**: Validate that new documentation integrates properly with existing patterns
 1. **Maintain Links**: Ensure all cross-references use correct relative paths
 1. **Brand Compliance**: Verify any customer-facing content meets professional presentation standards
+1. **Data Quality Integration**: Include data quality framework components for any new object implementations
 
 ## Support
 
