@@ -24,7 +24,7 @@ This document provides comprehensive guidelines for creating, updating, and main
 
 **Required Settings**:
 
-- Database: `lakehouse`  
+- Database: `lakehouse`
 - Workgroup: `lakehouse`
 - Catalog: `lakehouse`
 - Never use `information_schema` (users lack access)
@@ -157,7 +157,7 @@ When encountering customer-specific values different from defaults:
 **Six-Directory Structure**:
 
 - `getting-started/`: New user onboarding and basic concepts
-- `core-reference/`: Essential configuration, database schema, execution guidelines  
+- `core-reference/`: Essential configuration, database schema, execution guidelines
 - `query-guidance/`: SQL patterns, best practices, syntax guides
 - `analysis-patterns/`: Business intelligence templates, specialized analysis
 - `advanced-topics/`: Professional reporting standards, enterprise customization
@@ -179,7 +179,7 @@ When encountering customer-specific values different from defaults:
 **Required Patterns Documentation**: [Query Best Practices](./docs/query-guidance/query-best-practices.md) contains comprehensive guidance on:
 
 - Latest Records Pattern (always required)
-- Deleted Record Filtering (always required) 
+- Deleted Record Filtering (always required)
 - Date Boundaries (required for performance)
 
 ### Configuration Value Usage
