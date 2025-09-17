@@ -90,70 +90,34 @@ Before providing any response, Claude must:
 
 **EVERY file must pass ALL linting rules** as defined in `.markdownlint-cli2.yaml`. No exceptions.
 
-### Critical Linting Rules Reference
+### Mandatory Pre-Commit Validation
 
-**File Structure Requirements**: Refer to `.markdownlint-cli2.yaml` for complete specifications including:
+Before ANY documentation commits, you MUST:
 
-- Files must end with single newline character (MD047)
-- No duplicate headings at any level (MD024)
-- First line must be top-level heading (MD041)
-- Proper heading hierarchy - increment only by one level (MD001)
+1. **Review .markdownlint-cli2.yaml**: Examine the complete linting configuration file to understand all active rules and formatting requirements
+1. **Validate Against Every Rule**: Check content line-by-line against each rule specified in `.markdownlint-cli2.yaml`
+1. **Test with Linter**: If possible, run the markdownlint-cli2 tool against your content before committing
+1. **Fix All Violations**: Address every linting error - partial compliance is not acceptable
 
-**Formatting Standards**: All formatting requirements are defined in `.markdownlint-cli2.yaml`:
+### Critical Linting Configuration Reference
 
-- Emphasis with asterisks (not underscores)
-- Strong emphasis with asterisks (not underscores)
-- Unordered lists with dashes (not asterisks)
-- Code blocks must be fenced with backticks
-- ATX headings only (no underlined format)
-- Horizontal rules with exactly 9 dashes
+**All formatting and structural requirements are defined in `.markdownlint-cli2.yaml`**. This file specifies:
 
-**Content Standards**: Complete requirements available in `.markdownlint-cli2.yaml`:
+- File structure requirements (MD047, MD041, MD001, MD024)
+- Formatting standards for emphasis, lists, and code blocks
+- Content standards for spacing and HTML usage
+- Heading hierarchy and link formatting rules
 
-- No trailing spaces at line endings (MD009)
-- No multiple consecutive blank lines
-- Headings surrounded by blank lines (MD022)
-- Lists surrounded by blank lines (MD032)
-- Fenced code blocks surrounded by blank lines (MD031)
-- No HTML tags except `<img>` elements
-- All links must be valid and properly formatted
-- Fenced code blocks must specify language (MD040)
-
-### Critical Ordered List Requirements (MD029)
-
-**MANDATORY**: All ordered lists must use "1." for EVERY item, never sequential numbers.
-
-**❌ WRONG FORMAT**:
-
-```text
-1. First item
-2. Second item
-3. Third item
-```
-
-**✅ CORRECT FORMAT**:
-
-```text
-1. First item
-1. Second item
-1. Third item
-```
-
-**Why This Matters**: Markdown automatically handles numbering. Using sequential numbers causes MD029 linting failures.
+**Claude must reference `.markdownlint-cli2.yaml` directly** rather than memorizing or hardcoding any specific rule details, as the configuration file is the authoritative source for all linting requirements.
 
 ### Validation Process
 
 **Before Every Commit**:
 
-1. Review content against each `.markdownlint-cli2.yaml` rule
-1. Ensure proper heading hierarchy and no duplicates
-1. Add blank lines around all headings and lists
-1. Add blank lines around all fenced code blocks
-1. Specify language for all fenced code blocks
-1. Remove trailing spaces from all lines
-1. Verify file ends with single newline
-1. Check all links and references work correctly
-1. Validate formatting follows exact standards
+1. **Open `.markdownlint-cli2.yaml`**: Review the current linting configuration
+1. **Rule-by-Rule Check**: Validate content against each active rule in the configuration
+1. **Fix All Issues**: Address every violation found during validation
+1. **Verify Compliance**: Ensure 100% compliance before committing
 
 **Consequence of Non-Compliance**: Failed linting = Failed PR = Wasted effort requiring fixes and recommit.
 
@@ -198,27 +162,20 @@ When Claude encounters query exceptions or errors:
 
 **If user reports linting errors, Claude must**:
 
-1. **Fix all reported errors immediately** in the affected documents
-1. **Update this CONTRIBUTING.md file** to add specific prevention guidance for the error types encountered
-1. **Reference existing documentation** rather than embedding problematic code samples
-1. **Test the fixes** to ensure errors are resolved
-1. **Document the learning** to prevent similar issues
+1. **Reference .markdownlint-cli2.yaml**: Review the linting configuration file to understand the specific rule violations
+1. **Fix All Errors**: Address every reported error immediately in the affected documents
+1. **Update Prevention Guidance**: If needed, enhance this CONTRIBUTING.md with better reference to linting configuration
+1. **Validate Fixes**: Ensure all errors are resolved by checking against `.markdownlint-cli2.yaml`
+1. **Document Learning**: Record patterns for future prevention
 
-### Common Error Prevention Guidelines
+### Common Error Prevention Strategy
 
-**MD024 - Duplicate Headings**: Every heading must be unique within the entire document. Use different wording or combine sections to avoid duplicates.
+**Instead of memorizing specific rules**, always:
 
-**MD029 - Ordered List Prefix**: ALL ordered list items must use "1." prefix, never sequential numbers (1., 2., 3.). Markdown handles automatic numbering.
-
-**MD022 - Headings Spacing**: Ensure all headings have blank lines both above and below. See existing documents in this repository for proper examples of heading formatting.
-
-**MD031 - Code Block Spacing**: All fenced code blocks require blank lines both before and after the code block. Reference [Query Templates](./docs/query-guidance/query-templates.md) for proper code block formatting examples.
-
-**MD032 - Lists Spacing**: All lists must have blank lines before and after the entire list. See [Configuration Reference](./docs/core-reference/configuration-reference.md) for examples of proper list formatting.
-
-**MD040 - Code Block Language**: All fenced code blocks must specify a language. For SQL queries, use `sql`. For directory structures, use `text`. For shell commands, use `bash`. Reference existing files in the repository for proper language usage.
-
-**MD009 - Trailing Spaces**: Never leave trailing spaces at line endings. Configure your editor to show and remove trailing whitespace automatically.
+1. **Consult `.markdownlint-cli2.yaml`**: Reference the authoritative configuration file
+1. **Follow Existing Examples**: Use patterns from successfully linting files in the repository
+1. **Validate Before Committing**: Check content against the linting configuration
+1. **Fix Systematically**: Address all violations, not just the ones that are easy to spot
 
 ## Configuration Reference Integration
 
@@ -243,32 +200,32 @@ When encountering customer-specific values different from defaults:
 
 **Before committing any SQL examples**, ensure all database and environment settings follow values defined in [Configuration Reference](./docs/core-reference/configuration-reference.md):
 
-- [ ] Database parameter from Configuration Reference
-- [ ] Workgroup parameter from Configuration Reference
-- [ ] All queries include `grax__deleted IS NULL` filtering
-- [ ] Latest records pattern applied using `grax__idseq`
-- [ ] Configuration values referenced from [Configuration Reference](./docs/core-reference/configuration-reference.md)
-- [ ] Query tested with customer fallback patterns from [Customer Fallback Instructions](./docs/troubleshooting/customer-fallback-instructions.md)
+- Database parameter from Configuration Reference
+- Workgroup parameter from Configuration Reference
+- All queries include `grax__deleted IS NULL` filtering
+- Latest records pattern applied using `grax__idseq`
+- Configuration values referenced from [Configuration Reference](./docs/core-reference/configuration-reference.md)
+- Query tested with customer fallback patterns from [Customer Fallback Instructions](./docs/troubleshooting/customer-fallback-instructions.md)
 
 ### HTML Artifact Validation
 
 **Before delivering reports to customers**:
 
-- [ ] Complete GRAX branding implementation per [Reporting Brand Standards](./docs/advanced-topics/reporting-brand-standards.md)
-- [ ] Interactive elements included where appropriate
-- [ ] Mobile responsiveness verified
-- [ ] Professional polish meeting enterprise standards
-- [ ] Executive summary with actionable insights included
-- [ ] Charts and visualizations using brand colors
-- [ ] Proper semantic HTML5 structure
+- Complete GRAX branding implementation per [Reporting Brand Standards](./docs/advanced-topics/reporting-brand-standards.md)
+- Interactive elements included where appropriate
+- Mobile responsiveness verified
+- Professional polish meeting enterprise standards
+- Executive summary with actionable insights included
+- Charts and visualizations using brand colors
+- Proper semantic HTML5 structure
 
 ### Integration Testing
 
-- [ ] New documentation integrates with existing patterns
-- [ ] No duplicate or conflicting guidance
-- [ ] Directory structure maintained correctly
-- [ ] Appropriate directory README.md updated to reference new content
-- [ ] Cross-references use proper relative paths
+- New documentation integrates with existing patterns
+- No duplicate or conflicting guidance
+- Directory structure maintained correctly
+- Appropriate directory README.md updated to reference new content
+- Cross-references use proper relative paths
 
 ## Branch and Pull Request Management Protocol
 
@@ -416,7 +373,7 @@ When encountering exceptions or query errors:
 
 ### Visual Presentation
 
-- Consistent formatting using markdown standards per `.markdownlint-cli2.yaml`
+- Consistent formatting following `.markdownlint-cli2.yaml` standards
 - Proper code block syntax highlighting as shown in existing repository files
 - Clear table structures for reference data (see Configuration Reference)
 - Appropriate heading hierarchy for navigation
@@ -432,51 +389,32 @@ When encountering exceptions or query errors:
 
 ### Pre-Commit Checklist
 
-- [ ] Document passes all markdown linting rules defined in `.markdownlint-cli2.yaml`
-- [ ] Blank lines added around ALL headings and lists
-- [ ] Blank lines added around ALL fenced code blocks
-- [ ] Language specified for ALL code blocks
-- [ ] No trailing spaces anywhere in document
-- [ ] All configuration values reference centralized source
-- [ ] Code examples follow patterns shown in [Query Templates](./docs/query-guidance/query-templates.md)
-- [ ] Links and cross-references work correctly
-- [ ] Professional presentation standards per [Reporting Brand Standards](./docs/advanced-topics/reporting-brand-standards.md)
-- [ ] File ends with single newline character
-- [ ] No duplicate content - all examples reference authoritative sources
-- [ ] Directory README files updated if adding new documents
-- [ ] ALL ordered lists use "1." for every item (never sequential numbers)
-- [ ] NO duplicate headings anywhere in the document
+- Document passes all markdown linting rules defined in `.markdownlint-cli2.yaml`
+- All configuration values reference centralized source
+- Code examples follow patterns shown in [Query Templates](./docs/query-guidance/query-templates.md)
+- Links and cross-references work correctly
+- Professional presentation standards per [Reporting Brand Standards](./docs/advanced-topics/reporting-brand-standards.md)
+- No duplicate content - all examples reference authoritative sources
+- Directory README files updated if adding new documents
 
-### Enhanced Linting Prevention Checklist
+### Enhanced Linting Prevention Strategy
 
-**Critical MD029 Prevention**:
+**Reference `.markdownlint-cli2.yaml` directly** for all specific formatting requirements rather than memorizing rule details. The linting configuration file is the authoritative source for:
 
-- [ ] Every ordered list item uses "1." prefix only
-- [ ] Never use sequential numbering (2., 3., 4., etc.)
-- [ ] Markdown automatically handles visual numbering
-
-**Critical MD024 Prevention**:
-
-- [ ] Every heading is unique within the entire document
-- [ ] Similar topics use different heading text or are combined
-- [ ] Search document for duplicate headings before committing
-
-**Additional Critical Checks**:
-
-- [ ] All headings have blank lines above and below (MD022)
-- [ ] All code blocks have blank lines above and below (MD031)
-- [ ] All code blocks specify language (MD040)
-- [ ] No trailing spaces on any lines (MD009)
+- File structure and content requirements
+- Formatting standards for all markdown elements
+- Spacing and organizational rules
+- Code block and link formatting specifications
 
 ### Continuous Improvement Protocol
 
 **When ANY linting error is reported**:
 
-1. **Immediate Response**: Fix all errors in affected documents
-1. **Prevention Update**: Add specific guidance to this CONTRIBUTING.md by referencing existing documentation
-1. **Reference Integration**: Point to existing files rather than embedding problematic samples
-1. **Documentation Enhancement**: Strengthen prevention guidelines through better cross-references
-1. **Knowledge Transfer**: Update training materials and procedures
+1. **Consult .markdownlint-cli2.yaml**: Review the linting configuration to understand the violated rule
+1. **Fix All Errors**: Address every violation in affected documents
+1. **Update Process**: Improve this CONTRIBUTING.md if better guidance on using the linting file is needed
+1. **Validate Resolution**: Ensure all fixes comply with `.markdownlint-cli2.yaml` requirements
+1. **Document Learning**: Update procedures to prevent similar issues
 
 ## Success Metrics
 
