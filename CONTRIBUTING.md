@@ -248,35 +248,6 @@ When encountering customer-specific values different from defaults:
 1. **Test all templates** work with new configuration values
 1. **Maintain backward compatibility** with existing implementations
 
-## Professional Reporting Standards
-
-### HTML Artifact Requirements
-
-**For ALL customer-facing reports and analyses**:
-
-- Must follow [Reporting Brand Standards](./docs/advanced-topics/reporting-brand-standards.md)
-- Must use [HTML Report Template](./docs/advanced-topics/html-report-template.md)
-- Required branding: GRAX Primary Purple (#552C98), Secondary Blue (#5F6FE6)
-- Professional typography using Work Sans font family
-- Interactive elements where appropriate
-- Executive summary with actionable insights
-
-### When to Create HTML vs Code Templates
-
-**Execute Queries and Create HTML When**:
-
-- "Build/Show/Analyze/Report" language in requests
-- Customer wants insights, trends, or business intelligence
-- Request implies deliverable report or presentation
-- Analysis requires data visualization
-
-**Provide Code Templates When**:
-
-- Customer asks "how to" or requests syntax
-- Request explicitly asks for templates or examples
-- Educational/learning context
-- Customer wants to run queries themselves
-
 ## Enhanced Testing and Validation Requirements
 
 ### Athena Query Testing Standards
