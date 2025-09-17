@@ -35,25 +35,25 @@ This document provides comprehensive guidelines for creating, updating, and main
 
 **EVERY file must pass ALL linting rules** as defined in `.markdownlint-cli2.yaml`. No exceptions.
 
-### Critical Linting Rules
+### Critical Linting Rules Reference
 
-**File Structure Requirements**:
+**File Structure Requirements**: Refer to `.markdownlint-cli2.yaml` for complete specifications including:
 
 - Files must end with single newline character (MD047)
 - No duplicate headings at any level (MD024)
 - First line must be top-level heading (MD041)
 - Proper heading hierarchy - increment only by one level (MD001)
 
-**Formatting Standards**:
+**Formatting Standards**: All formatting requirements are defined in `.markdownlint-cli2.yaml`:
 
-- Emphasis with asterisks: `*italic*` not `_italic_`
-- Strong emphasis with asterisks: `**bold**` not `__bold__`
-- Unordered lists with dashes: `- item` not `* item`
+- Emphasis with asterisks (not underscores)
+- Strong emphasis with asterisks (not underscores)
+- Unordered lists with dashes (not asterisks)
 - Code blocks must be fenced with backticks
-- ATX headings only: `## Heading` not underlined format
-- Horizontal rules: `---------` (exactly 9 dashes)
+- ATX headings only (no underlined format)
+- Horizontal rules with exactly 9 dashes
 
-**Content Standards**:
+**Content Standards**: Complete requirements available in `.markdownlint-cli2.yaml`:
 
 - No trailing spaces at line endings (MD009)
 - No multiple consecutive blank lines
@@ -64,75 +64,16 @@ This document provides comprehensive guidelines for creating, updating, and main
 - All links must be valid and properly formatted
 - Fenced code blocks must specify language (MD040)
 
-### Specific Formatting Requirements
-
-**CRITICAL: Always add blank lines around headings and lists**:
-
-```markdown
-## Heading Above
-
-Content here.
-
-### Subheading Below
-
-**List Requirements**:
-
-- Always add blank line before list
-- Keep list items properly formatted
-- Always add blank line after list
-
-Next paragraph starts here.
-```
-
-**Code Block Formatting Requirements**:
-
-```text
-<!-- WRONG: Missing language specification and blank lines -->
-Content before code block.
-
-```
-SELECT * FROM table;
-```
-
-Content immediately after.
-
-<!-- CORRECT: Language specified and surrounded by blank lines -->
-Content before code block.
-
-```sql
-SELECT * FROM table;
-```
-
-Content after code block.
-
-<!-- For directory structures, use 'text' -->
-Directory structure example:
-
-```text
-docs/
-├── file1.md
-└── file2.md
-```
-
-Next section continues here.
-```
-
-**Trailing Spaces Elimination**:
-
-- Never leave trailing spaces at end of lines
-- Use editor settings to show/remove trailing whitespace
-- Particularly check after bold/italic formatting and lists
-
 ### Validation Process
 
 **Before Every Commit**:
 
 1. Review content against each `.markdownlint-cli2.yaml` rule
 1. Ensure proper heading hierarchy and no duplicates
-1. **ADD BLANK LINES** around all headings and lists
-1. **ADD BLANK LINES** around all fenced code blocks
-1. **SPECIFY LANGUAGE** for all fenced code blocks
-1. **REMOVE TRAILING SPACES** from all lines
+1. Add blank lines around all headings and lists
+1. Add blank lines around all fenced code blocks
+1. Specify language for all fenced code blocks
+1. Remove trailing spaces from all lines
 1. Verify file ends with single newline
 1. Check all links and references work correctly
 1. Validate formatting follows exact standards
@@ -147,101 +88,21 @@ Next section continues here.
 
 1. **Fix all reported errors immediately** in the affected documents
 1. **Update this CONTRIBUTING.md file** to add specific prevention guidance for the error types encountered
-1. **Add examples** showing correct vs incorrect formatting for future reference
+1. **Reference existing documentation** rather than embedding problematic code samples
 1. **Test the fixes** to ensure errors are resolved
 1. **Document the learning** to prevent similar issues
 
-### Common Error Prevention Examples
+### Common Error Prevention Guidelines
 
-**MD022 - Headings must be surrounded by blank lines**:
+**MD022 - Headings Spacing**: Ensure all headings have blank lines both above and below. See existing documents in this repository for proper examples of heading formatting.
 
-```markdown
-<!-- WRONG -->
-Some content here.
-### Heading Without Space
-More content immediately after.
+**MD031 - Code Block Spacing**: All fenced code blocks require blank lines both before and after the code block. Reference [Query Templates](./docs/query-guidance/query-templates.md) for proper code block formatting examples.
 
-<!-- CORRECT -->
-Some content here.
+**MD032 - Lists Spacing**: All lists must have blank lines before and after the entire list. See [Configuration Reference](./docs/core-reference/configuration-reference.md) for examples of proper list formatting.
 
-### Heading With Proper Spacing
+**MD040 - Code Block Language**: All fenced code blocks must specify a language. For SQL queries, use `sql`. For directory structures, use `text`. For shell commands, use `bash`. Reference existing files in the repository for proper language usage.
 
-More content with blank lines above and below heading.
-```
-
-**MD031 - Fenced code blocks must be surrounded by blank lines**:
-
-```text
-<!-- WRONG -->
-Content before code block.
-
-```
-SELECT * FROM table;
-```
-
-Content immediately after.
-
-<!-- CORRECT -->
-Content before code block.
-
-```sql
-SELECT * FROM table;
-```
-
-Content after code block with proper spacing.
-```
-
-**MD032 - Lists must be surrounded by blank lines**:
-
-```markdown
-<!-- WRONG -->
-Content before list.
-- List item one
-- List item two
-Next paragraph without space.
-
-<!-- CORRECT -->
-Content before list.
-
-- List item one
-- List item two
-
-Next paragraph with proper spacing.
-```
-
-**MD040 - Code blocks must specify language**:
-
-```text
-<!-- WRONG -->
-Example query:
-
-```
-SELECT * FROM table;
-```
-
-Use this pattern for all queries.
-
-<!-- CORRECT -->
-Example query:
-
-```sql
-SELECT * FROM table;
-```
-
-Use this pattern for all queries.
-```
-
-**MD009 - No trailing spaces**:
-
-```markdown
-<!-- WRONG (trailing space after 'here') -->
-Content here •
-Next line.
-
-<!-- CORRECT -->
-Content here
-Next line.
-```
+**MD009 - Trailing Spaces**: Never leave trailing spaces at line endings. Configure your editor to show and remove trailing whitespace automatically.
 
 ## Configuration Reference Integration
 
@@ -249,16 +110,7 @@ Next line.
 
 **Never hardcode business values** in documentation or queries. All business-specific values must reference the centralized [Configuration Reference](./docs/core-reference/configuration-reference.md).
 
-**Examples**:
-
-```markdown
-<!-- DON'T: Hardcoded values -->
-WHERE status IN ('Open', 'Working', 'Qualified')
-
-<!-- DO: Reference configuration -->
--- Lead status values from Configuration Reference
-WHERE status IN ('MQL', 'SAL', 'SQL')  
-```
+**Examples Available In**: [Configuration Reference](./docs/core-reference/configuration-reference.md) contains all proper patterns for referencing configuration values instead of hardcoding business logic.
 
 ### Configuration Updates
 
@@ -320,44 +172,21 @@ When encountering customer-specific values different from defaults:
 
 ## SQL Query Standards
 
-### Mandatory Patterns
+### Mandatory Patterns Reference
 
-**Latest Records Pattern** (always required):
+**All SQL query patterns and examples are available in**: [Query Templates](./docs/query-guidance/query-templates.md)
 
-```sql
-WITH latest_records AS (
-    SELECT 
-        *,
-        ROW_NUMBER() OVER (PARTITION BY id ORDER BY grax__idseq DESC) as rn
-    FROM lakehouse.object_[table]
-    WHERE grax__deleted IS NULL
-)
-SELECT * FROM latest_records WHERE rn = 1
-```
+**Required Patterns Documentation**: [Query Best Practices](./docs/query-guidance/query-best-practices.md) contains comprehensive guidance on:
 
-**Deleted Record Filtering** (always required):
-
-```sql
-WHERE grax__deleted IS NULL
-```
-
-**Date Boundaries** (required for performance):
-
-```sql
-WHERE createddate_ts >= DATE_ADD('month', -24, CURRENT_DATE)
-```
+- Latest Records Pattern (always required)
+- Deleted Record Filtering (always required) 
+- Date Boundaries (required for performance)
 
 ### Configuration Value Usage
 
-All SQL examples must use configuration references, not hardcoded values:
+**All examples of proper configuration value usage are documented in**: [Configuration Reference](./docs/core-reference/configuration-reference.md)
 
-```sql
--- Configuration Reference values for lead status
-WHERE status IN (/* MQL, SAL, SQL from Configuration Reference */)
-
--- Configuration Reference values for opportunity stages  
-WHERE stagename IN (/* Closed Won, Closed Lost from Configuration Reference */)
-```
+**Query syntax patterns are available in**: [Athena SQL Syntax Guide](./docs/query-guidance/athena-sql-syntax-guide.md)
 
 ## Error Handling and Adaptation
 
@@ -392,9 +221,9 @@ When encountering exceptions or query errors:
 
 ### Visual Presentation
 
-- Consistent formatting using markdown standards
-- Proper code block syntax highlighting
-- Clear table structures for reference data
+- Consistent formatting using markdown standards per `.markdownlint-cli2.yaml`
+- Proper code block syntax highlighting as shown in existing repository files
+- Clear table structures for reference data (see Configuration Reference)
 - Appropriate heading hierarchy for navigation
 
 ### Business Value Focus
@@ -408,15 +237,15 @@ When encountering exceptions or query errors:
 
 ### Pre-Commit Checklist
 
-- [ ] Document passes all markdown linting rules
-- [ ] **Blank lines added around ALL headings and lists**
-- [ ] **Blank lines added around ALL fenced code blocks**
-- [ ] **Language specified for ALL code blocks**
-- [ ] **No trailing spaces anywhere in document**
+- [ ] Document passes all markdown linting rules defined in `.markdownlint-cli2.yaml`
+- [ ] Blank lines added around ALL headings and lists
+- [ ] Blank lines added around ALL fenced code blocks
+- [ ] Language specified for ALL code blocks
+- [ ] No trailing spaces anywhere in document
 - [ ] All configuration values reference centralized source
-- [ ] Code examples follow mandatory SQL patterns
+- [ ] Code examples follow patterns shown in [Query Templates](./docs/query-guidance/query-templates.md)
 - [ ] Links and cross-references work correctly
-- [ ] Professional presentation standards met
+- [ ] Professional presentation standards per [Reporting Brand Standards](./docs/advanced-topics/reporting-brand-standards.md)
 - [ ] File ends with single newline character
 
 ### Integration Testing
@@ -431,27 +260,27 @@ When encountering exceptions or query errors:
 **When ANY linting error is reported**:
 
 1. **Immediate Response**: Fix all errors in affected documents
-1. **Prevention Update**: Add specific guidance to this CONTRIBUTING.md
-1. **Example Addition**: Include correct/incorrect examples for the error type
-1. **Documentation Enhancement**: Strengthen prevention guidelines
+1. **Prevention Update**: Add specific guidance to this CONTRIBUTING.md by referencing existing documentation
+1. **Reference Integration**: Point to existing files rather than embedding problematic samples
+1. **Documentation Enhancement**: Strengthen prevention guidelines through better cross-references
 1. **Knowledge Transfer**: Update training materials and procedures
 
 ## Success Metrics
 
 ### Quality Indicators
 
-- Zero markdown linting violations
-- Consistent use of configuration references
-- Professional HTML artifacts for all customer reports
+- Zero markdown linting violations per `.markdownlint-cli2.yaml` standards
+- Consistent use of configuration references per [Configuration Reference](./docs/core-reference/configuration-reference.md)
+- Professional HTML artifacts following [HTML Report Template](./docs/advanced-topics/html-report-template.md)
 - Clear, actionable business intelligence delivery
 - Scalable documentation structure
 
 ### Customer Success
 
-- Queries execute successfully with customer data
-- Reports provide meaningful business insights
-- Professional presentation enhances GRAX brand
-- Documentation enables faster customer adaptation
+- Queries execute successfully with customer data using patterns from [Query Templates](./docs/query-guidance/query-templates.md)
+- Reports provide meaningful business insights following [Business Intelligence Patterns](./docs/analysis-patterns/business-intelligence-patterns.md)
+- Professional presentation enhances GRAX brand per [Reporting Brand Standards](./docs/advanced-topics/reporting-brand-standards.md)
+- Documentation enables faster customer adaptation via [Customer Fallback Instructions](./docs/troubleshooting/customer-fallback-instructions.md)
 - Error resolution maintains productivity
 
 This contributing guide ensures all documentation meets enterprise-grade standards while remaining accessible and actionable for both technical and business users. Following these guidelines maintains the knowledge base's effectiveness as a comprehensive resource for GRAX Data Lake analytics.
