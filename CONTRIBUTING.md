@@ -89,9 +89,11 @@ Next paragraph starts here.
 ```markdown
 <!-- WRONG: Missing language specification and blank lines -->
 Content before code block.
-```
+
+```text
 SELECT * FROM table;
 ```
+
 Content immediately after.
 
 <!-- CORRECT: Language specified and surrounded by blank lines -->
@@ -172,9 +174,11 @@ More content with blank lines above and below heading.
 ```markdown
 <!-- WRONG -->
 Content before code block.
+
 ```sql
 SELECT * FROM table;
 ```
+
 Content immediately after.
 
 <!-- CORRECT -->
