@@ -167,8 +167,7 @@ When encountering customer-specific values different from defaults:
 
 - Database parameter from Configuration Reference
 - Workgroup parameter from Configuration Reference
-- All queries include `grax__deleted IS NULL` filtering
-- Latest records pattern applied using `grax__idseq`
+- All queries follow query patterns and guidelines established in this repository
 - Configuration values referenced from patterns established in this repository
 - Query tested with customer fallback patterns from patterns established in this repository
 
@@ -189,13 +188,6 @@ When encountering customer-specific values different from defaults:
 **When to create new branch**: Only when no current active branch exists or for major structural changes
 
 ### Pull Request Integration
-
-**When updating documentation due to exceptions**:
-
-1. **Use Active PR**: Add improvements to existing active pull request when available
-1. **Comprehensive Updates**: Include all related documentation improvements, not just the specific error fix
-1. **Cross-Reference Updates**: Ensure all related documents maintain consistency
-1. **Testing Verification**: Validate that fixes prevent the original error
 
 ### Branch Naming Standards
 
@@ -237,28 +229,6 @@ When encountering customer-specific values different from defaults:
 
 **Documentation Evolution**: The repository continuously improves and expands. All documentation should be written with the assumption that content will grow, change, and be refined over time.
 
-## Error Handling and Adaptation
-
-### Customer Configuration Differences
-
-When queries fail due to customer Salesforce differences:
-
-1. **Identify the issue**: Compare expected vs actual configuration values
-1. **Execute discovery queries** to find customer-specific values
-1. **Adapt the analysis** using customer's actual configuration
-1. **Communicate changes** made and why
-1. **Follow** All patterns established in this repository
-
-### Documentation Improvement Process
-
-When encountering exceptions or query errors:
-
-1. **Understand the root cause** and what documentation caused the issue
-1. **Use existing branch** with current date format or create new one
-1. **Update affected documents** with recommended improvements
-1. **Test the fixes** prevent the error
-1. **Update pull request** with comprehensive description of changes
-
 ## Quality Assurance and Success Metrics
 
 ### Documentation Quality Standards
@@ -269,24 +239,6 @@ When encountering exceptions or query errors:
 - Zero hardcoded business values (all referenced from Configuration Reference)
 - 100% cross-reference accuracy using relative paths
 - Professional HTML artifact delivery rate: 100% for customer-facing reports
-
-### Claude Performance Standards
-
-**Behavioral Compliance**:
-
-- Execute queries first for analysis requests (not code templates)
-- Professional HTML artifacts for all reports
-- Graceful adaptation when customer configurations differ
-- Comprehensive error recovery using established fallback patterns
-
-### Error Prevention and Learning Protocol
-
-**When any error occurs**:
-
-1. **Immediate Fix**: Resolve the specific issue
-1. **Pattern Analysis**: Identify if this represents a broader documentation gap
-1. **Prevention Enhancement**: Strengthen documentation to prevent similar issues
-1. **Knowledge Integration**: Ensure fixes align with existing knowledge patterns
 
 ## Content Quality Standards
 
@@ -303,13 +255,6 @@ When encountering exceptions or query errors:
 - Proper code block syntax highlighting as shown in existing repository files
 - Clear table structures for reference data (see Configuration Reference)
 - Appropriate heading hierarchy for navigation
-
-### Business Value Focus
-
-- Emphasize how GRAX enables customers to "Adapt Faster"
-- Connect technical analysis to business outcomes
-- Provide strategic recommendations alongside data insights
-- Highlight unique value of complete historical data
 
 ## Testing and Validation
 
