@@ -161,6 +161,7 @@ When encountering customer-specific values different from defaults:
 **Before committing any SQL examples**, ensure all database and environment settings follow from patterns established in this repository
 
 - Database parameter from Configuration Reference
+- Catalog parameter from Configuration Reference
 - Workgroup parameter from Configuration Reference
 - All queries follow query patterns and guidelines established in this repository
 - Configuration values referenced from patterns established in this repository
