@@ -24,47 +24,6 @@ This document provides comprehensive guidelines for creating, updating, and main
 
 **Database and Environment Settings**: All database configuration values are defined in [Configuration Reference](./docs/core-reference/configuration-reference.md). Always reference this document for current database, workgroup, and catalog settings.
 
-## Exception Handling and Query Error Recovery
-
-### Systematic Error Resolution Process
-
-When Claude encounters query exceptions or errors:
-
-1. **Immediate Diagnosis**: Identify the specific error type and root cause
-1. **Customer Adaptation**: Use [Customer Fallback Instructions](./docs/troubleshooting/customer-fallback-instructions.md) to adapt queries for customer-specific configurations
-1. **Documentation Updates**: Update relevant documentation to prevent similar errors
-1. **Pull Request Integration**: Add improvements to the active branch using the format `Documentation-Improvements-YYYY-MM-DD`
-
-### Common Exception Categories
-
-**Query Execution Errors**:
-
-- Column resolution failures → Use field discovery patterns from [Database Schema Guide](./docs/core-reference/database-schema-guide.md)
-- Configuration mismatches → Apply [Customer Fallback Instructions](./docs/troubleshooting/customer-fallback-instructions.md)
-- Performance timeouts → Follow optimization patterns in [Query Best Practices](./docs/query-guidance/query-best-practices.md)
-
-**Linting Violations**:
-
-- MD022 (heading spacing) → Reference proper formatting in existing docs
-- MD031 (code block spacing) → Follow patterns from [Query Templates](./docs/query-guidance/query-templates.md)
-- MD040 (language specification) → Use `sql`, `bash`, or `text` as appropriate
-
-**Configuration Mismatches**:
-
-- Lead status value differences → Implement discovery patterns from [Customer Fallback Instructions](./docs/troubleshooting/customer-fallback-instructions.md)
-- Opportunity stage variations → Apply adaptive query reconstruction
-- Account classification differences → Use dynamic value discovery
-
-### Exception Response Protocol
-
-**When any error occurs**:
-
-1. **Acknowledge the Issue**: Confirm understanding of the specific error
-1. **Implement Immediate Fix**: Provide working solution for the customer
-1. **Update Documentation**: Enhance relevant sections to prevent recurrence
-1. **Test Prevention**: Validate that documentation improvements prevent the error
-1. **Document Learning**: Record patterns for future prevention
-
 ## Claude Integration and Behavioral Standards
 
 ### Mandatory Response Patterns
@@ -197,6 +156,42 @@ Before providing any response, Claude must:
 1. Validate formatting follows exact standards
 
 **Consequence of Non-Compliance**: Failed linting = Failed PR = Wasted effort requiring fixes and recommit.
+
+
+## Exception Handling and Query Error Recovery
+
+### Systematic Error Resolution Process
+
+When Claude encounters query exceptions or errors:
+
+1. **Immediate Diagnosis**: Identify the specific error type and root cause
+1. **Customer Adaptation**: Use [Customer Fallback Instructions](./docs/troubleshooting/customer-fallback-instructions.md) to adapt queries for customer-specific configurations
+1. **Documentation Updates**: Update relevant documentation to prevent similar errors
+1. **Pull Request Integration**: Add improvements to the active branch using the format `Documentation-Improvements-YYYY-MM-DD`
+
+### Common Exception Categories
+
+**Query Execution Errors**:
+
+- Column resolution failures → Use field discovery patterns from [Database Schema Guide](./docs/core-reference/database-schema-guide.md)
+- Configuration mismatches → Apply [Customer Fallback Instructions](./docs/troubleshooting/customer-fallback-instructions.md)
+- Performance timeouts → Follow optimization patterns in [Query Best Practices](./docs/query-guidance/query-best-practices.md)
+
+**Configuration Mismatches**:
+
+- Lead status value differences → Implement discovery patterns from [Customer Fallback Instructions](./docs/troubleshooting/customer-fallback-instructions.md)
+- Opportunity stage variations → Apply adaptive query reconstruction
+- Account classification differences → Use dynamic value discovery
+
+### Exception Response Protocol
+
+**When any error occurs**:
+
+1. **Acknowledge the Issue**: Confirm understanding of the specific error
+1. **Implement Immediate Fix**: Provide working solution for the customer
+1. **Update Documentation**: Enhance relevant sections to prevent recurrence
+1. **Test Prevention**: Validate that documentation improvements prevent the error
+1. **Document Learning**: Record patterns for future prevention
 
 ## Linting Error Response Protocol
 
