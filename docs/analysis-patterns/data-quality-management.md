@@ -2,424 +2,203 @@
 
 ## Overview
 
-Data quality directly impacts sales funnel accuracy, customer segmentation precision, and business intelligence reliability. This guide provides comprehensive strategies for identifying, analyzing, and remedying data quality issues across Salesforce objects.
+Data quality directly impacts sales funnel accuracy, customer segmentation precision, and business intelligence reliability. This document provides global analysis instructions and strategic guidance that complements the comprehensive [Data Quality Framework](../data-quality/README.md).
 
-**Configuration Dependencies**: All validation patterns and data quality checks in this document use standardized values from [Configuration Reference](/docs/core-reference/configuration-reference.md). Organizations with different Salesforce configurations should update that document to match their specific validation rules and field values.
+**IMPORTANT**: For detailed data quality analysis, scoring, and remediation implementations, use the dedicated [Data Quality Framework](../data-quality/README.md). This document focuses on strategic guidance and cross-object considerations that apply universally across the framework.
 
-## Data Quality Dimensions
+## Strategic Data Quality Approach
+
+### Framework Integration Strategy
+
+**Comprehensive Coverage**: The [Data Quality Framework](../data-quality/README.md) provides systematic tools for analyzing, scoring, and remediating data quality issues across all Salesforce objects with standardized methodologies.
+
+**Object-Specific Implementation**: Each Salesforce object has dedicated analysis, scoring, and remediation documentation within the framework:
+
+- **Lead Data Quality**: [Analysis](../data-quality/lead/analysis.md) | [Scoring](../data-quality/lead/scoring.md) | [Remediation](../data-quality/lead/remediation.md)
+- **Future Objects**: Opportunity, Account, Contact, and Case implementations follow identical patterns for consistency and scalability
+
+**Configuration Integration**: All data quality assessments reference standardized values from [Configuration Reference](../core-reference/configuration-reference.md) to ensure adaptability across different Salesforce implementations.
+
+## Data Quality Dimensions Framework
 
 ### 1. Completeness
+**Definition**: Presence of critical fields required for business processes
 
-**Definition**: Missing critical fields required for business processes
+**Strategic Impact**:
+- Lead qualification accuracy and conversion tracking
+- Customer segmentation capability and territory assignment  
+- Contact information completeness for effective outreach campaigns
+- Account relationship mapping and corporate family analysis
 
-**Impact Areas**:
+### 2. Accuracy  
+**Definition**: Correctness and validity of data values
 
-- Lead qualification accuracy
-- Customer segmentation capability
-- Contact information for outreach
-
-### 2. Accuracy
-
-**Definition**: Correctness of data values
-
-**Common Issues**:
-
-- Invalid email formats
-- Unrealistic revenue or employee counts
-- Outdated company information
+**Common Accuracy Issues**:
+- Email format violations and deliverability problems
+- Unrealistic firmographic data (revenue, employee counts)
+- Outdated or incorrect company information
+- Invalid geographic and contact information
 
 ### 3. Consistency
+**Definition**: Uniformity of data across related records and objects
 
-**Definition**: Uniformity of data across related records
-
-**Examples**:
-
-- Inconsistent company names across leads and accounts
-- Mismatched segmentation classifications
-- Conflicting data between related objects
+**Cross-Object Consistency Examples**:
+- Lead company names matching account names after conversion
+- Consistent segmentation classifications between leads and accounts
+- Opportunity amounts aligning with account potential revenue
+- Contact information consistency between leads and contacts
 
 ### 4. Validity
-
 **Definition**: Data conforming to defined formats and business rules
 
-**Validation Rules** (from [Configuration Reference](/docs/core-reference/configuration-reference.md)):
-
-- Email format validation patterns
-- Phone number structure requirements
-- Realistic value ranges for revenue and employee counts
+**Validation Categories**:
+- Format compliance (email patterns, phone structures)
+- Business rule adherence (status progressions, stage sequences)  
+- Value range validation (realistic financial and sizing data)
+- Temporal integrity (dates, timestamps, progression logic)
 
 ### 5. Uniqueness
+**Definition**: Absence of inappropriate duplicate records
 
-**Definition**: Absence of duplicate records
+**Duplicate Management Strategy**:
+- Email-based lead deduplication (highest priority)
+- Company name standardization across objects
+- Contact consolidation and relationship mapping
+- Account hierarchy and corporate family management
 
-**Duplicate Types**:
+## Cross-Object Data Quality Strategy
 
-- Same person with multiple lead records
-- Company with multiple account records
-- Email addresses appearing multiple times
+### Multi-Object Relationship Integrity
 
-## Lead Data Quality Analysis
+**Lead-to-Opportunity Consistency**:
+- Conversion relationship validation using [Lead Data Quality Framework](../data-quality/lead/)
+- Account linking accuracy and corporate family relationships
+- Stage progression logic and timeline consistency
 
-### Completeness Assessment
+**Account-Opportunity Alignment**:
+- Account segmentation consistency with opportunity sizing
+- Territory alignment and ownership management
+- Corporate hierarchy and subsidiary relationship integrity
 
-```sql
-WITH latest_lead AS (
-    SELECT A.* 
-    FROM lakehouse.object_lead A 
-    INNER JOIN (
-        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
-        FROM lakehouse.object_lead B 
-        GROUP BY B.Id
-    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
-    WHERE A.grax__deleted IS NULL
-),
-completeness_analysis AS (
-    SELECT 
-        COUNT(*) as total_leads,
-        
-        -- Critical Contact Fields (from docs/configuration-reference.md)
-        COUNT(email) as email_populated,
-        COUNT(firstname) as firstname_populated,
-        COUNT(lastname) as lastname_populated,
-        COUNT(phone) as phone_populated,
-        
-        -- Critical Company Fields for Segmentation
-        COUNT(company) as company_populated,
-        COUNT(industry) as industry_populated,
-        COUNT(annualrevenue_f) as revenue_populated,
-        COUNT(numberofemployees_f) as employees_populated,
-        
-        -- Critical Qualification Fields 
-        COUNT(status) as status_populated,
-        COUNT(leadsource) as source_populated,
-        
-        -- Geographic Fields
-        COUNT(country) as country_populated,
-        COUNT(state) as state_populated
-        
-    FROM latest_lead
-)
-SELECT 
-    total_leads,
-    
-    -- Calculate Completeness Percentages
-    ROUND(email_populated * 100.0 / total_leads, 2) as email_completeness_pct,
-    ROUND(firstname_populated * 100.0 / total_leads, 2) as firstname_completeness_pct,
-    ROUND(lastname_populated * 100.0 / total_leads, 2) as lastname_completeness_pct,
-    ROUND(phone_populated * 100.0 / total_leads, 2) as phone_completeness_pct,
-    
-    -- Company Information Completeness
-    ROUND(company_populated * 100.0 / total_leads, 2) as company_completeness_pct,
-    ROUND(industry_populated * 100.0 / total_leads, 2) as industry_completeness_pct,
-    ROUND(revenue_populated * 100.0 / total_leads, 2) as revenue_completeness_pct,
-    ROUND(employees_populated * 100.0 / total_leads, 2) as employees_completeness_pct,
-    
-    -- Qualification Fields Completeness
-    ROUND(status_populated * 100.0 / total_leads, 2) as status_completeness_pct,
-    ROUND(source_populated * 100.0 / total_leads, 2) as source_completeness_pct,
-    
-    -- Geographic Completeness
-    ROUND(country_populated * 100.0 / total_leads, 2) as country_completeness_pct
-    
-FROM completeness_analysis
-```
+**Contact-Lead Integration**:
+- Email uniqueness across lead and contact objects
+- Role and title consistency for same individuals
+- Communication preference and engagement history alignment
 
-### Validity Assessment
+### Data Quality Scoring Integration
 
-```sql
-WITH latest_lead AS (
-    SELECT A.* 
-    FROM lakehouse.object_lead A 
-    INNER JOIN (
-        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
-        FROM lakehouse.object_lead B 
-        GROUP BY B.Id
-    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
-    WHERE A.grax__deleted IS NULL
-),
-validity_issues AS (
-    SELECT 
-        id,
-        email,
-        company,
-        annualrevenue_f,
-        numberofemployees_f,
-        
-        -- Email Validity Checks using patterns from docs/configuration-reference.md
-        CASE 
-            WHEN email IS NOT NULL AND email NOT LIKE '%@%.%' THEN 'Invalid Email Format'
-            WHEN email LIKE '%@example.com' OR email LIKE '%@test.%' THEN 'Test Email Address'
-            ELSE NULL
-        END as email_issue,
-        
-        -- Company Data Validity
-        CASE 
-            WHEN company IS NOT NULL AND (
-                LOWER(company) LIKE '%test%' OR 
-                LOWER(company) LIKE '%example%' OR
-                LOWER(company) = 'n/a' OR
-                LENGTH(TRIM(company)) < 2
-            ) THEN 'Invalid Company Name'
-            ELSE NULL
-        END as company_issue,
-        
-        -- Revenue Validity using thresholds from docs/configuration-reference.md
-        CASE 
-            WHEN annualrevenue_f IS NOT NULL AND annualrevenue_f <= 0 THEN 'Invalid Revenue Amount'
-            WHEN annualrevenue_f IS NOT NULL AND annualrevenue_f > 1000000000000 THEN 'Unrealistic Revenue Amount'
-            ELSE NULL
-        END as revenue_issue,
-        
-        -- Employee Count Validity using thresholds from docs/configuration-reference.md
-        CASE 
-            WHEN numberofemployees_f IS NOT NULL AND numberofemployees_f <= 0 THEN 'Invalid Employee Count'
-            WHEN numberofemployees_f IS NOT NULL AND numberofemployees_f > 10000000 THEN 'Unrealistic Employee Count'
-            ELSE NULL
-        END as employee_issue,
-        
-        -- Status/Conversion Consistency using status values from docs/configuration-reference.md
-        CASE 
-            WHEN status = 'Converted' AND isconverted_b != true THEN 'Status/Conversion Flag Mismatch'
-            WHEN isconverted_b = true AND converteddate_d IS NULL THEN 'Missing Conversion Date'
-            ELSE NULL
-        END as status_issue
-        
-    FROM latest_lead
-)
-SELECT 
-    'Email Issues' as issue_type,
-    COUNT(CASE WHEN email_issue IS NOT NULL THEN 1 END) as issue_count,
-    ROUND(COUNT(CASE WHEN email_issue IS NOT NULL THEN 1 END) * 100.0 / COUNT(*), 2) as issue_percentage
-FROM validity_issues
+**Object-Level Scoring**: Each object maintains independent quality scores using standardized 0-100 methodologies from the [Data Quality Framework](../data-quality/README.md).
 
-UNION ALL
+**Cross-Object Impact Assessment**: 
+- Conversion quality affects both lead and opportunity scores
+- Account data quality impacts related opportunity and contact assessments
+- Contact consistency influences lead qualification accuracy
 
-SELECT 
-    'Company Issues' as issue_type,
-    COUNT(CASE WHEN company_issue IS NOT NULL THEN 1 END),
-    ROUND(COUNT(CASE WHEN company_issue IS NOT NULL THEN 1 END) * 100.0 / COUNT(*), 2)
-FROM validity_issues
+**Aggregate Quality Metrics**:
+- Overall CRM health score combining all object quality assessments
+- Process-specific quality scores (lead generation, opportunity management, customer success)
+- Trend analysis across objects to identify systemic quality issues
 
-UNION ALL
+## Implementation Priorities by Business Impact
 
-SELECT 
-    'Revenue Issues' as issue_type,
-    COUNT(CASE WHEN revenue_issue IS NOT NULL THEN 1 END),
-    ROUND(COUNT(CASE WHEN revenue_issue IS NOT NULL THEN 1 END) * 100.0 / COUNT(*), 2)
-FROM validity_issues
+### Critical Priority (Immediate Action Required)
+**Revenue Impact**: Direct effect on sales pipeline and conversion accuracy
 
-UNION ALL
+1. **Lead Qualification Data**: Complete implementation of [Lead Data Quality Framework](../data-quality/lead/) for MCL/MQL accuracy
+1. **Conversion Relationship Integrity**: Ensure accurate lead-to-opportunity tracking
+1. **Account Segmentation Data**: Enable proper territory and quota management
+1. **Email Deliverability**: Prevent communication failures and nurturing disruption
 
-SELECT 
-    'Employee Issues' as issue_type,
-    COUNT(CASE WHEN employee_issue IS NOT NULL THEN 1 END),
-    ROUND(COUNT(CASE WHEN employee_issue IS NOT NULL THEN 1 END) * 100.0 / COUNT(*), 2)
-FROM validity_issues
+### High Priority (Address Within 30 Days)  
+**Operational Impact**: Affects daily sales and marketing operations
 
-UNION ALL
+1. **Contact Information Completeness**: Enable effective outreach and communication
+1. **Corporate Family Relationships**: Support account-based marketing and sales strategies
+1. **Geographic Data Standardization**: Enable territory-based analysis and assignment
+1. **Lead Source Attribution**: Improve marketing ROI analysis and channel optimization
 
-SELECT 
-    'Status Issues' as issue_type,
-    COUNT(CASE WHEN status_issue IS NOT NULL THEN 1 END),
-    ROUND(COUNT(CASE WHEN status_issue IS NOT NULL THEN 1 END) * 100.0 / COUNT(*), 2)
-FROM validity_issues
-```
+### Medium Priority (Address Within 90 Days)
+**Strategic Impact**: Supports long-term business intelligence and optimization
 
-### Duplicate Detection
+1. **Industry Classification**: Enhance targeting and personalization capabilities
+1. **Duplicate Record Management**: Reduce confusion and improve user experience
+1. **Historical Data Consistency**: Support trend analysis and forecasting accuracy
+1. **Custom Field Standardization**: Ensure consistent business-specific data collection
 
-```sql
-WITH latest_lead AS (
-    SELECT A.* 
-    FROM lakehouse.object_lead A 
-    INNER JOIN (
-        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
-        FROM lakehouse.object_lead B 
-        GROUP BY B.Id
-    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
-    WHERE A.grax__deleted IS NULL
-),
-email_duplicates AS (
-    SELECT 
-        email,
-        COUNT(*) as duplicate_count,
-        STRING_AGG(id, ', ') as duplicate_ids
-    FROM latest_lead
-    WHERE email IS NOT NULL 
-      AND email != ''
-    GROUP BY email
-    HAVING COUNT(*) > 1
-),
-company_name_duplicates AS (
-    SELECT 
-        LOWER(TRIM(company)) as normalized_company,
-        firstname,
-        lastname,
-        COUNT(*) as duplicate_count,
-        STRING_AGG(id, ', ') as duplicate_ids
-    FROM latest_lead
-    WHERE company IS NOT NULL 
-      AND firstname IS NOT NULL 
-      AND lastname IS NOT NULL
-    GROUP BY LOWER(TRIM(company)), firstname, lastname
-    HAVING COUNT(*) > 1
-)
--- Email-based duplicates (highest priority)
-SELECT 
-    'Email Duplicates' as duplicate_type,
-    COUNT(*) as duplicate_groups,
-    SUM(duplicate_count - 1) as excess_records
-FROM email_duplicates
+## Success Measurement Framework
 
-UNION ALL
+### Executive-Level KPIs
 
--- Company + Name duplicates (medium priority)
-SELECT 
-    'Company+Name Duplicates' as duplicate_type,
-    COUNT(*) as duplicate_groups,
-    SUM(duplicate_count - 1) as excess_records
-FROM company_name_duplicates
-```
+**Revenue Quality Impact**:
+- Conversion rate accuracy and funnel reliability  
+- Pipeline forecasting precision and predictability
+- Customer segmentation effectiveness and targeting ROI
+- Sales cycle accuracy and stage progression reliability
 
-## Data Quality Monitoring Framework
+**Operational Efficiency Gains**:
+- Reduction in data-related support tickets and user confusion
+- Improvement in campaign targeting accuracy and response rates
+- Enhancement in territory management and quota achievement
+- Increase in user adoption of CRM features and capabilities
 
-### Daily Quality Scorecard
+### Quality Trend Monitoring
 
-```sql
-WITH latest_lead AS (
-    SELECT A.* 
-    FROM lakehouse.object_lead A 
-    INNER JOIN (
-        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
-        FROM lakehouse.object_lead B 
-        GROUP BY B.Id
-    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
-    WHERE A.grax__deleted IS NULL
-),
-latest_account AS (
-    SELECT A.* 
-    FROM lakehouse.object_account A 
-    INNER JOIN (
-        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
-        FROM lakehouse.object_account B 
-        GROUP BY B.Id
-    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
-    WHERE A.grax__deleted IS NULL
-),
-latest_opportunity AS (
-    SELECT A.* 
-    FROM lakehouse.object_opportunity A 
-    INNER JOIN (
-        SELECT B.Id, MAX(B.grax__idseq) AS Latest 
-        FROM lakehouse.object_opportunity B 
-        GROUP BY B.Id
-    ) B ON A.Id = B.Id AND A.grax__idseq = B.Latest
-    WHERE A.grax__deleted IS NULL
-),
-daily_metrics AS (
-    SELECT 
-        CURRENT_DATE as report_date,
-        
-        -- Lead Quality Metrics using field requirements from docs/configuration-reference.md
-        (SELECT COUNT(*) FROM latest_lead WHERE email IS NULL) as leads_missing_email,
-        (SELECT COUNT(*) FROM latest_lead WHERE company IS NULL) as leads_missing_company,
-        (SELECT COUNT(*) FROM latest_lead WHERE firstname IS NULL OR lastname IS NULL) as leads_missing_names,
-        
-        -- Account Segmentation Metrics using thresholds from docs/configuration-reference.md
-        (SELECT COUNT(*) FROM latest_account 
-         WHERE annualrevenue_f IS NULL AND numberofemployees_f IS NULL) as unsegmentable_accounts,
-        
-        -- Opportunity Pipeline Integrity using stage names from docs/configuration-reference.md
-        (SELECT COUNT(*) FROM latest_opportunity 
-         WHERE amount_f IS NULL AND stagename NOT IN ('Closed Lost')) as opps_missing_amount,
-         
-        -- Data Validity Issues using validation patterns from docs/configuration-reference.md
-        (SELECT COUNT(*) FROM latest_lead 
-         WHERE email IS NOT NULL AND email NOT LIKE '%@%.%') as invalid_email_formats
-)
-SELECT 
-    report_date,
-    leads_missing_email,
-    leads_missing_company,
-    leads_missing_names,
-    unsegmentable_accounts,
-    opps_missing_amount,
-    invalid_email_formats,
-    
-    -- Calculate overall quality score (higher is better)
-    CASE 
-        WHEN (leads_missing_email + leads_missing_company + unsegmentable_accounts + invalid_email_formats) = 0 
-        THEN 100
-        ELSE GREATEST(0, 100 - (leads_missing_email + leads_missing_company + unsegmentable_accounts + invalid_email_formats))
-    END as daily_quality_score
-    
-FROM daily_metrics
-```
+**Monthly Quality Assessment**:
+- Overall CRM quality score combining all object assessments
+- Quality improvement rate and sustained enhancement tracking
+- Issue resolution time and remediation effectiveness
+- User satisfaction with data reliability and completeness
 
-## Data Remediation Priorities
+**Quarterly Business Impact Review**:
+- Revenue attribution accuracy and marketing ROI precision
+- Sales productivity improvements and cycle time reduction
+- Customer experience enhancement through accurate data
+- Business intelligence reliability and decision-making confidence
 
-### High Impact Issues (Address First)
+## Framework Extension Strategy
 
-1. **Missing Email Addresses**: Prevents lead nurturing and outreach
+### New Object Implementation
 
-1. **Invalid Email Formats**: Causes bounce rates and delivery issues (using validation patterns from [Configuration Reference](/docs/core-reference/configuration-reference.md))
+**Standardized Approach**: When extending data quality coverage to additional Salesforce objects, follow the established framework patterns:
 
-1. **Missing Company Names**: Blocks account matching and segmentation
+1. **Analysis Implementation**: Create comprehensive analysis patterns following [Lead Analysis](../data-quality/lead/analysis.md) structure
+1. **Scoring Methodology**: Implement 0-100 scoring using [Lead Scoring](../data-quality/lead/scoring.md) patterns  
+1. **Remediation Strategy**: Develop actionable improvement plans following [Lead Remediation](../data-quality/lead/remediation.md) approach
+1. **Configuration Integration**: Ensure all business-specific values reference [Configuration Reference](../core-reference/configuration-reference.md)
 
-1. **Incomplete Segmentation Data**: Impacts territory assignment and targeting based on thresholds in [Configuration Reference](/docs/core-reference/configuration-reference.md)
+### Advanced Quality Analytics
 
-1. **Broken Conversion Relationships**: Corrupts funnel analysis
+**Predictive Quality Modeling**: 
+- Identify data quality patterns that predict conversion success
+- Forecast data degradation and proactively address quality issues
+- Model relationships between data quality and business outcomes
 
-### Medium Impact Issues (Address Second)
+**Automated Quality Monitoring**:
+- Real-time quality score tracking and alerting systems
+- Automated remediation workflows for common quality issues
+- Integration with business processes for quality enforcement
 
-1. **Phone Number Formatting**: Standardize for consistent communication
+## Configuration Management for Data Quality
 
-1. **Industry Classification**: Improve targeting and personalization
+### Universal Configuration Requirements
 
-1. **Geographic Data**: Enable territory-based analysis
+**Business Rule Validation**: All data quality assessments must reference centralized [Configuration Reference](../core-reference/configuration-reference.md) values to ensure:
+- Consistent validation across all objects and analysis types
+- Easy adaptation for different Salesforce implementations
+- Maintainable quality standards and threshold management
 
-1. **Duplicate Records**: Clean up to prevent confusion
+**Quality Standard Definitions**:
+- Acceptable completion rates for critical fields by object type
+- Validation pattern requirements for format compliance
+- Business logic rules for cross-object consistency checking
+- Threshold values for realistic data ranges and limits
 
-### Low Impact Issues (Address Last)
+### Testing and Validation Process
 
-1. **Standardized Company Suffixes**: Aesthetic improvement
+**Configuration Testing**:
+1. **Update Standards**: Modify quality thresholds in [Configuration Reference](../core-reference/configuration-reference.md)
+1. **Execute Analysis**: Run object-specific quality assessments from [Data Quality Framework](../data-quality/README.md)
+1. **Validate Results**: Ensure quality scores align with business expectations
+1. **Document Standards**: Record organization-specific quality requirements and benchmarks
 
-1. **Complete Address Information**: Nice-to-have for full profiles
-
-1. **Additional Contact Fields**: Enhanced profiling
-
-## Success Metrics
-
-### Primary KPIs
-
-- **Lead Qualification Accuracy**: % of MCL/MQL with complete segmentation data (using status values from [Configuration Reference](/docs/core-reference/configuration-reference.md))
-- **Conversion Data Integrity**: % of conversions with valid relationships
-- **Segmentation Accuracy**: % of accounts properly classified using thresholds from [Configuration Reference](/docs/core-reference/configuration-reference.md)
-- **Duplicate Reduction**: Month-over-month reduction in duplicate records
-
-### Secondary KPIs
-
-- **Field Completion Rates**: Trending completion percentages for critical fields
-- **Data Validation Compliance**: % of records passing validation rules from [Configuration Reference](/docs/core-reference/configuration-reference.md)
-- **Email Deliverability**: Improvement in valid email percentages
-- **Contact Reachability**: % of leads with valid phone/email combinations
-
-## Configuration Adaptation
-
-For organizations with different Salesforce implementations, update the [Configuration Reference](/docs/core-reference/configuration-reference.md) document with your specific values:
-
-### Data Quality Configuration Updates
-
-1. **Validation Patterns**: Update email format validation rules and field requirements
-1. **Revenue Thresholds**: Modify unrealistic revenue limits for your industry context
-1. **Employee Count Limits**: Adjust maximum reasonable employee counts
-1. **Status Values**: Update lead status values used in consistency checks
-1. **Stage Names**: Modify opportunity stage names used in pipeline integrity checks
-
-### Testing Process
-
-1. **Update Validation Rules**: Modify patterns in [Configuration Reference](/docs/core-reference/configuration-reference.md)
-1. **Test Quality Checks**: Execute validation queries with your configuration
-1. **Validate Results**: Ensure quality metrics make sense for your data
-1. **Document Standards**: Record your organization's data quality standards
-
-This comprehensive data quality framework ensures reliable, complete, and actionable customer intelligence throughout the entire sales lifecycle while maintaining data integrity standards that support accurate business decision-making across different Salesforce implementations.
+This strategic data quality management approach ensures comprehensive coverage while avoiding duplication with the detailed [Data Quality Framework](../data-quality/README.md) implementation. Focus on cross-object considerations and strategic guidance while leveraging the framework for specific analysis, scoring, and remediation activities.
