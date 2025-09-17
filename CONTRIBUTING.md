@@ -154,21 +154,42 @@ When encountering customer-specific values different from defaults:
 
 ### Logical Organization
 
-**Six-Directory Structure**:
+**Scalable Directory Structure**: The repository uses a logical organization system where each major topic area has its own directory. Each directory contains a README.md file that explains the directory's purpose and provides links to all documentation within that area.
 
-- `getting-started/`: New user onboarding and basic concepts
-- `core-reference/`: Essential configuration, database schema, execution guidelines
-- `query-guidance/`: SQL patterns, best practices, syntax guides
-- `analysis-patterns/`: Business intelligence templates, specialized analysis
-- `advanced-topics/`: Professional reporting standards, enterprise customization
-- `troubleshooting/`: Error handling, debugging, fallback procedures
+**Current Major Areas** (subject to expansion as repository grows):
+
+- `getting-started/`: Access via [Getting Started README](./docs/getting-started/README.md)
+- `core-reference/`: Access via [Core Reference README](./docs/core-reference/README.md)
+- `query-guidance/`: Access via [Query Guidance README](./docs/query-guidance/README.md)
+- `analysis-patterns/`: Access via [Analysis Patterns README](./docs/analysis-patterns/README.md)
+- `advanced-topics/`: Access via [Advanced Topics README](./docs/advanced-topics/README.md)
+- `troubleshooting/`: Access via [Troubleshooting README](./docs/troubleshooting/README.md)
+
+**Directory Expansion Principles**:
+
+- Each new topic area receives its own directory with descriptive naming
+- Every directory must contain a README.md explaining its purpose and scope
+- Directory README files must link to all child documentation
+- New directories follow the same organizational patterns as existing ones
+- Directory structure supports unlimited growth while maintaining logical organization
 
 ### Cross-Reference Requirements
 
 - Use relative paths for all internal links
 - Respect directory structure in navigation
 - Link to related documentation appropriately
-- Update README.md when adding new documents
+- Update README.md files when adding new documents to directories
+- Maintain consistency in directory README structure across the repository
+
+## Content Standards
+
+### Avoid Duplication
+
+**Single Source of Truth**: Each piece of information should exist in exactly one authoritative location within the repository. All other references should link to that authoritative source rather than duplicating content.
+
+**Reference-Based Approach**: Rather than embedding examples or samples in multiple documents, create comprehensive examples in their appropriate domain-specific locations and reference them from other documents.
+
+**Documentation Evolution**: The repository continuously improves and expands. All documentation should be written with the assumption that content will grow, change, and be refined over time.
 
 ## SQL Query Standards
 
@@ -247,13 +268,16 @@ When encountering exceptions or query errors:
 - [ ] Links and cross-references work correctly
 - [ ] Professional presentation standards per [Reporting Brand Standards](./docs/advanced-topics/reporting-brand-standards.md)
 - [ ] File ends with single newline character
+- [ ] No duplicate content - all examples reference authoritative sources
+- [ ] Directory README files updated if adding new documents
 
 ### Integration Testing
 
 - [ ] New documentation integrates with existing patterns
 - [ ] No duplicate or conflicting guidance
 - [ ] Directory structure maintained correctly
-- [ ] README.md updated to reference new content
+- [ ] Appropriate directory README.md updated to reference new content
+- [ ] Cross-references use proper relative paths
 
 ### Continuous Improvement Protocol
 
@@ -273,7 +297,9 @@ When encountering exceptions or query errors:
 - Consistent use of configuration references per [Configuration Reference](./docs/core-reference/configuration-reference.md)
 - Professional HTML artifacts following [HTML Report Template](./docs/advanced-topics/html-report-template.md)
 - Clear, actionable business intelligence delivery
-- Scalable documentation structure
+- Scalable documentation structure with proper directory organization
+- No duplicate content across repository
+- Comprehensive directory README files providing clear navigation
 
 ### Customer Success
 
@@ -283,4 +309,4 @@ When encountering exceptions or query errors:
 - Documentation enables faster customer adaptation via [Customer Fallback Instructions](./docs/troubleshooting/customer-fallback-instructions.md)
 - Error resolution maintains productivity
 
-This contributing guide ensures all documentation meets enterprise-grade standards while remaining accessible and actionable for both technical and business users. Following these guidelines maintains the knowledge base's effectiveness as a comprehensive resource for GRAX Data Lake analytics.
+This contributing guide ensures all documentation meets enterprise-grade standards while remaining accessible and actionable for both technical and business users. Following these guidelines maintains the knowledge base's effectiveness as a comprehensive resource for GRAX Data Lake analytics that grows and improves continuously.
