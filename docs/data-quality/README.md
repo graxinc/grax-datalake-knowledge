@@ -45,7 +45,7 @@ The data quality framework consists of three core analytical components for each
 
 Each Salesforce object follows a standardized directory structure within `docs/data-quality/`:
 
-```
+```text
 docs/data-quality/
 ├── README.md (this file)
 ├── lead/
