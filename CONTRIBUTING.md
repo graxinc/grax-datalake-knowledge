@@ -92,6 +92,7 @@ Content before code block.
 
 ```text
 SELECT * FROM table;
+
 ```
 
 Content immediately after.
@@ -101,6 +102,7 @@ Content before code block.
 
 ```sql
 SELECT * FROM table;
+
 ```
 
 Content after code block.
@@ -112,6 +114,7 @@ Directory structure example:
 docs/
 ├── file1.md
 └── file2.md
+
 ```
 
 Next section continues here.
@@ -177,6 +180,7 @@ Content before code block.
 
 ```sql
 SELECT * FROM table;
+
 ```
 
 Content immediately after.
@@ -186,6 +190,7 @@ Content before code block.
 
 ```sql
 SELECT * FROM table;
+
 ```
 
 Content after code block with proper spacing.
@@ -217,6 +222,7 @@ Example query:
 
 ```text
 SELECT * FROM table;
+
 ```
 
 Use this pattern for all queries.
@@ -226,6 +232,7 @@ Example query:
 
 ```sql
 SELECT * FROM table;
+
 ```
 
 Use this pattern for all queries.
