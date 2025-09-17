@@ -157,7 +157,6 @@ Before providing any response, Claude must:
 
 **Consequence of Non-Compliance**: Failed linting = Failed PR = Wasted effort requiring fixes and recommit.
 
-
 ## Exception Handling and Query Error Recovery
 
 ### Systematic Error Resolution Process
