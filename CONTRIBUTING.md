@@ -28,11 +28,6 @@ This document provides comprehensive guidelines for creating, updating, and main
 
 Claude must follow the explicit decision tree patterns established in this repository
 
-- Execute queries for "Build/Show/Analyze" requests
-- Provide code templates only for "How to/Template/Syntax" requests
-- Always deliver professional HTML reports with complete GRAX branding
-- Include interactive visualizations unless explicitly requested otherwise
-
 ### Behavioral Compliance Standards
 
 **Required Behaviors**:
