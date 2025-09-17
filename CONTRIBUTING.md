@@ -22,12 +22,7 @@ This document provides comprehensive guidelines for creating, updating, and main
 
 **Target Repository**: `graxinc/grax-datalake-knowledge`
 
-**Required Settings**:
-
-- Database: `lakehouse`
-- Workgroup: `lakehouse`
-- Catalog: `lakehouse`
-- Never use `information_schema` (users lack access)
+**Database and Environment Settings**: All database configuration values are defined in [Configuration Reference](./docs/core-reference/configuration-reference.md). Always reference this document for current database, workgroup, and catalog settings.
 
 ## Exception Handling and Query Error Recovery
 
@@ -252,10 +247,10 @@ When encountering customer-specific values different from defaults:
 
 ### Athena Query Testing Standards
 
-**Before committing any SQL examples**:
+**Before committing any SQL examples**, ensure all database and environment settings follow values defined in [Configuration Reference](./docs/core-reference/configuration-reference.md):
 
-- [ ] Database parameter: `lakehouse`
-- [ ] Workgroup parameter: `lakehouse`
+- [ ] Database parameter from Configuration Reference
+- [ ] Workgroup parameter from Configuration Reference
 - [ ] All queries include `grax__deleted IS NULL` filtering
 - [ ] Latest records pattern applied using `grax__idseq`
 - [ ] Configuration values referenced from [Configuration Reference](./docs/core-reference/configuration-reference.md)
