@@ -55,11 +55,60 @@ This document provides comprehensive guidelines for creating, updating, and main
 
 **Content Standards**:
 
-- No trailing spaces at line endings
+- No trailing spaces at line endings (MD009)
 - No multiple consecutive blank lines
 - Headings surrounded by blank lines (MD022)
+- Lists surrounded by blank lines (MD032)
 - No HTML tags except `<img>` elements
 - All links must be valid and properly formatted
+- Fenced code blocks must specify language (MD040)
+
+### Specific Formatting Requirements
+
+**CRITICAL: Always add blank lines around headings and lists**:
+
+```markdown
+## Heading Above
+
+Content here.
+
+### Subheading Below
+
+**List Requirements**:
+
+- Always add blank line before list
+- Keep list items properly formatted
+- Always add blank line after list
+
+Next paragraph starts here.
+```
+
+**Code Block Language Specification**:
+
+```markdown
+<!-- WRONG: Missing language specification -->
+```
+SELECT * FROM table;
+```
+
+<!-- CORRECT: Always specify language -->
+```sql
+SELECT * FROM table;
+```
+
+<!-- For directory structures, use 'text' -->
+```text
+docs/
+├── file1.md
+└── file2.md
+```
+```
+
+**Trailing Spaces Elimination**:
+
+- Never leave trailing spaces at end of lines
+- Use editor settings to show/remove trailing whitespace
+- Particularly check after bold/italic formatting and lists
 
 ### Validation Process
 
@@ -67,11 +116,88 @@ This document provides comprehensive guidelines for creating, updating, and main
 
 1. Review content against each `.markdownlint-cli2.yaml` rule
 1. Ensure proper heading hierarchy and no duplicates
+1. **ADD BLANK LINES** around all headings and lists
+1. **SPECIFY LANGUAGE** for all fenced code blocks
+1. **REMOVE TRAILING SPACES** from all lines
 1. Verify file ends with single newline
 1. Check all links and references work correctly
 1. Validate formatting follows exact standards
 
 **Consequence of Non-Compliance**: Failed linting = Failed PR = Wasted effort requiring fixes and recommit.
+
+## Linting Error Response Protocol
+
+### When Linting Errors Occur
+
+**If user reports linting errors, Claude must**:
+
+1. **Fix all reported errors immediately** in the affected documents
+1. **Update this CONTRIBUTING.md file** to add specific prevention guidance for the error types encountered
+1. **Add examples** showing correct vs incorrect formatting for future reference
+1. **Test the fixes** to ensure errors are resolved
+1. **Document the learning** to prevent similar issues
+
+### Common Error Prevention Examples
+
+**MD022 - Headings must be surrounded by blank lines**:
+
+```markdown
+<!-- WRONG -->
+Some content here.
+### Heading Without Space
+More content immediately after.
+
+<!-- CORRECT -->
+Some content here.
+
+### Heading With Proper Spacing
+
+More content with blank lines above and below heading.
+```
+
+**MD032 - Lists must be surrounded by blank lines**:
+
+```markdown
+<!-- WRONG -->
+Content before list.
+- List item one
+- List item two
+Next paragraph without space.
+
+<!-- CORRECT -->
+Content before list.
+
+- List item one
+- List item two
+
+Next paragraph with proper spacing.
+```
+
+**MD040 - Code blocks must specify language**:
+
+```markdown
+<!-- WRONG -->
+```
+SELECT * FROM table;
+```
+
+<!-- CORRECT -->
+```sql
+SELECT * FROM table;
+```
+```
+
+**MD009 - No trailing spaces**:
+
+```markdown
+<!-- WRONG (trailing space after 'here') -->
+Content here •
+Next line.
+
+<!-- CORRECT -->
+Content here
+Next line.
+```
 
 ## Configuration Reference Integration
 
@@ -239,6 +365,9 @@ When encountering exceptions or query errors:
 ### Pre-Commit Checklist
 
 - [ ] Document passes all markdown linting rules
+- [ ] **Blank lines added around ALL headings and lists**
+- [ ] **Language specified for ALL code blocks**
+- [ ] **No trailing spaces anywhere in document**
 - [ ] All configuration values reference centralized source
 - [ ] Code examples follow mandatory SQL patterns
 - [ ] Links and cross-references work correctly
@@ -251,6 +380,16 @@ When encountering exceptions or query errors:
 - [ ] No duplicate or conflicting guidance
 - [ ] Directory structure maintained correctly
 - [ ] README.md updated to reference new content
+
+### Continuous Improvement Protocol
+
+**When ANY linting error is reported**:
+
+1. **Immediate Response**: Fix all errors in affected documents
+1. **Prevention Update**: Add specific guidance to this CONTRIBUTING.md
+1. **Example Addition**: Include correct/incorrect examples for the error type
+1. **Documentation Enhancement**: Strengthen prevention guidelines
+1. **Knowledge Transfer**: Update training materials and procedures
 
 ## Success Metrics
 
