@@ -168,6 +168,49 @@ This knowledge base is designed for programmatic consumption by LLM models. All 
 1. **Brand Compliance**: Verify any customer-facing content meets professional presentation standards
 1. **Data Quality Integration**: Include data quality framework components for any new object implementations
 
+## Repository Contribution Guidelines
+
+### MANDATORY Compliance for All Contributors and LLM Models
+
+**ALL CONTRIBUTORS AND LLM MODELS** must follow the comprehensive guidelines documented in [CONTRIBUTING.md](./CONTRIBUTING.md) **WITHOUT EXCEPTION**. These guidelines are **MANDATORY** and **NON-NEGOTIABLE**.
+
+### Critical Requirements
+
+**Zero-Tolerance Standards**: Every contribution must pass complete markdown linting validation as defined in `.markdownlint-cli2.yaml`. **NO EXCEPTIONS**.
+
+**Immediate Consequence**: Pull requests that fail linting validation **WILL NOT BE APPROVED** and must be fixed and recommitted.
+
+**Comprehensive Standards Coverage**:
+
+- Repository Standards (branch naming, PR requirements)
+- Markdown Linting Requirements (every file, every rule)
+- Configuration Reference Integration (never hardcode values)
+- Professional Reporting Standards (HTML artifacts, branding)
+- Directory Structure Standards (logical organization)
+- Content Standards (avoid duplication, reference authoritative sources)
+- SQL Query Standards (mandatory patterns, configuration usage)
+- Error Handling and Adaptation (customer configuration differences)
+- Testing and Validation (pre-commit checklists)
+
+### Essential Understanding
+
+**Before making ANY contribution to this repository**, you **MUST**:
+
+1. **READ** the complete [CONTRIBUTING.md](./CONTRIBUTING.md) document
+1. **UNDERSTAND** every standard and requirement
+1. **FOLLOW** all guidelines precisely as documented
+1. **VALIDATE** your contributions against every requirement
+1. **ENSURE** zero linting violations before submission
+
+### Consequences of Non-Compliance
+
+- **Failed linting = Failed PR = Wasted effort requiring fixes and recommit**
+- **Non-compliance with standards = Rejection of contributions**
+- **Hardcoded values instead of configuration references = Rework required**
+- **Missing professional presentation standards = Customer impact**
+
+**READ [CONTRIBUTING.md](./CONTRIBUTING.md) NOW** - It contains the complete, authoritative guidelines that **MUST** be followed for successful contributions.
+
 ## Support
 
 We'd love to help you get the most out of the GRAX Data Lake Knowledge Base! If you need assistance, have questions, or run into any issues:
