@@ -104,7 +104,7 @@ The [Database Schema Guide](database-schema-guide.md) requires updates when:
 - Relationship patterns are discovered or modified
 - Data type specifications need clarification
 
-### Execution Guidelines
+### Execution Guidelines Updates
 
 The [Claude Execution Guidelines](claude-execution-guidelines.md) require updates when:
 
