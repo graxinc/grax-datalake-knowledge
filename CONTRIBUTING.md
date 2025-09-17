@@ -29,6 +29,107 @@ This document provides comprehensive guidelines for creating, updating, and main
 - Catalog: `lakehouse`
 - Never use `information_schema` (users lack access)
 
+## Exception Handling and Query Error Recovery
+
+### Systematic Error Resolution Process
+
+When Claude encounters query exceptions or errors:
+
+1. **Immediate Diagnosis**: Identify the specific error type and root cause
+2. **Customer Adaptation**: Use [Customer Fallback Instructions](./docs/troubleshooting/customer-fallback-instructions.md) to adapt queries for customer-specific configurations
+3. **Documentation Updates**: Update relevant documentation to prevent similar errors
+4. **Pull Request Integration**: Add improvements to the active branch using the format `Documentation-Improvements-YYYY-MM-DD`
+
+### Common Exception Categories
+
+**Query Execution Errors**:
+
+- Column resolution failures → Use field discovery patterns from [Database Schema Guide](./docs/core-reference/database-schema-guide.md)
+- Configuration mismatches → Apply [Customer Fallback Instructions](./docs/troubleshooting/customer-fallback-instructions.md)
+- Performance timeouts → Follow optimization patterns in [Query Best Practices](./docs/query-guidance/query-best-practices.md)
+
+**Linting Violations**:
+
+- MD022 (heading spacing) → Reference proper formatting in existing docs
+- MD031 (code block spacing) → Follow patterns from [Query Templates](./docs/query-guidance/query-templates.md)
+- MD040 (language specification) → Use `sql`, `bash`, or `text` as appropriate
+
+**Configuration Mismatches**:
+
+- Lead status value differences → Implement discovery patterns from [Customer Fallback Instructions](./docs/troubleshooting/customer-fallback-instructions.md)
+- Opportunity stage variations → Apply adaptive query reconstruction
+- Account classification differences → Use dynamic value discovery
+
+### Exception Response Protocol
+
+**When any error occurs**:
+
+1. **Acknowledge the Issue**: Confirm understanding of the specific error
+2. **Implement Immediate Fix**: Provide working solution for the customer
+3. **Update Documentation**: Enhance relevant sections to prevent recurrence
+4. **Test Prevention**: Validate that documentation improvements prevent the error
+5. **Document Learning**: Record patterns for future prevention
+
+## Claude Integration and Behavioral Standards
+
+### Mandatory Response Patterns
+
+**When Claude encounters customer requests**:
+
+1. **Execute First Philosophy**: Always attempt to execute queries and provide insights rather than just providing code templates
+2. **HTML Artifact Requirement**: ALL analysis results must be delivered as professional HTML artifacts following [Reporting Brand Standards](./docs/advanced-topics/reporting-brand-standards.md)
+3. **Configuration Reference Priority**: Always use values from [Configuration Reference](./docs/core-reference/configuration-reference.md) before attempting queries
+4. **Graceful Adaptation**: When queries fail, implement [Customer Fallback Instructions](./docs/troubleshooting/customer-fallback-instructions.md) automatically
+
+### Decision Tree Integration
+
+Claude must follow the explicit decision tree in [Claude Execution Guidelines](./docs/core-reference/claude-execution-guidelines.md):
+
+- Execute queries for "Build/Show/Analyze" requests
+- Provide code templates only for "How to/Template/Syntax" requests
+- Always deliver professional HTML reports with complete GRAX branding
+- Include interactive visualizations unless explicitly requested otherwise
+
+### Behavioral Compliance Standards
+
+**Required Behaviors**:
+
+- **Project Knowledge First**: Search project knowledge before providing any response
+- **Configuration Integration**: Reference centralized configuration instead of hardcoding values
+- **Professional Presentation**: Deliver enterprise-grade HTML artifacts for all customer-facing reports
+- **Error Recovery**: Implement automatic fallback patterns when standard queries fail
+- **Documentation Updates**: Contribute improvements when encountering new patterns or errors
+
+## Project Knowledge Integration
+
+### Mandatory Knowledge Search Protocol
+
+Before providing any response, Claude must:
+
+1. **Search Project Knowledge**: Use project_knowledge_search to find relevant existing documentation
+2. **Reference Existing Patterns**: Link to established templates rather than creating new examples
+3. **Update Documentation**: When encountering new patterns, update appropriate sections
+4. **Maintain Consistency**: Ensure all responses align with established knowledge base patterns
+
+### Knowledge Base Navigation
+
+**Primary Reference Sources** (check in order):
+
+1. [Configuration Reference](./docs/core-reference/configuration-reference.md) - All business values
+2. [Claude Execution Guidelines](./docs/core-reference/claude-execution-guidelines.md) - Behavioral decisions
+3. [Query Templates](./docs/query-guidance/query-templates.md) - SQL patterns
+4. [Reporting Brand Standards](./docs/advanced-topics/reporting-brand-standards.md) - Presentation requirements
+5. [Customer Fallback Instructions](./docs/troubleshooting/customer-fallback-instructions.md) - Error recovery patterns
+
+### Documentation Priority Framework
+
+**When creating or updating content**:
+
+- **Single Source of Truth**: Maintain authoritative information in one location
+- **Reference Integration**: Link to existing patterns rather than duplicating content
+- **Cross-Reference Consistency**: Ensure all related documents remain synchronized
+- **Scalable Structure**: Support growth while maintaining logical organization
+
 ## Markdown Linting Requirements
 
 ### Zero-Tolerance Compliance
@@ -69,14 +170,14 @@ This document provides comprehensive guidelines for creating, updating, and main
 **Before Every Commit**:
 
 1. Review content against each `.markdownlint-cli2.yaml` rule
-1. Ensure proper heading hierarchy and no duplicates
-1. Add blank lines around all headings and lists
-1. Add blank lines around all fenced code blocks
-1. Specify language for all fenced code blocks
-1. Remove trailing spaces from all lines
-1. Verify file ends with single newline
-1. Check all links and references work correctly
-1. Validate formatting follows exact standards
+2. Ensure proper heading hierarchy and no duplicates
+3. Add blank lines around all headings and lists
+4. Add blank lines around all fenced code blocks
+5. Specify language for all fenced code blocks
+6. Remove trailing spaces from all lines
+7. Verify file ends with single newline
+8. Check all links and references work correctly
+9. Validate formatting follows exact standards
 
 **Consequence of Non-Compliance**: Failed linting = Failed PR = Wasted effort requiring fixes and recommit.
 
@@ -87,10 +188,10 @@ This document provides comprehensive guidelines for creating, updating, and main
 **If user reports linting errors, Claude must**:
 
 1. **Fix all reported errors immediately** in the affected documents
-1. **Update this CONTRIBUTING.md file** to add specific prevention guidance for the error types encountered
-1. **Reference existing documentation** rather than embedding problematic code samples
-1. **Test the fixes** to ensure errors are resolved
-1. **Document the learning** to prevent similar issues
+2. **Update this CONTRIBUTING.md file** to add specific prevention guidance for the error types encountered
+3. **Reference existing documentation** rather than embedding problematic code samples
+4. **Test the fixes** to ensure errors are resolved
+5. **Document the learning** to prevent similar issues
 
 ### Common Error Prevention Guidelines
 
@@ -117,9 +218,9 @@ This document provides comprehensive guidelines for creating, updating, and main
 When encountering customer-specific values different from defaults:
 
 1. **Document discoveries** in analysis comments
-1. **Consider updates** to Configuration Reference if common variations
-1. **Test all templates** work with new configuration values
-1. **Maintain backward compatibility** with existing implementations
+2. **Consider updates** to Configuration Reference if common variations
+3. **Test all templates** work with new configuration values
+4. **Maintain backward compatibility** with existing implementations
 
 ## Professional Reporting Standards
 
@@ -149,6 +250,64 @@ When encountering customer-specific values different from defaults:
 - Request explicitly asks for templates or examples
 - Educational/learning context
 - Customer wants to run queries themselves
+
+## Enhanced Testing and Validation Requirements
+
+### Athena Query Testing Standards
+
+**Before committing any SQL examples**:
+
+- [ ] Database parameter: `lakehouse`
+- [ ] Workgroup parameter: `lakehouse`
+- [ ] All queries include `grax__deleted IS NULL` filtering
+- [ ] Latest records pattern applied using `grax__idseq`
+- [ ] Configuration values referenced from [Configuration Reference](./docs/core-reference/configuration-reference.md)
+- [ ] Query tested with customer fallback patterns from [Customer Fallback Instructions](./docs/troubleshooting/customer-fallback-instructions.md)
+
+### HTML Artifact Validation
+
+**Before delivering reports to customers**:
+
+- [ ] Complete GRAX branding implementation per [Reporting Brand Standards](./docs/advanced-topics/reporting-brand-standards.md)
+- [ ] Interactive elements included where appropriate
+- [ ] Mobile responsiveness verified
+- [ ] Professional polish meeting enterprise standards
+- [ ] Executive summary with actionable insights included
+- [ ] Charts and visualizations using brand colors
+- [ ] Proper semantic HTML5 structure
+
+### Integration Testing
+
+- [ ] New documentation integrates with existing patterns
+- [ ] No duplicate or conflicting guidance
+- [ ] Directory structure maintained correctly
+- [ ] Appropriate directory README.md updated to reference new content
+- [ ] Cross-references use proper relative paths
+
+## Branch and Pull Request Management Protocol
+
+### Active Branch Usage
+
+**For ongoing improvements**: Use existing active branch with current date format when available
+
+**When to create new branch**: Only when no current active branch exists or for major structural changes
+
+### Pull Request Integration
+
+**When updating documentation due to exceptions**:
+
+1. **Use Active PR**: Add improvements to existing active pull request when available
+2. **Comprehensive Updates**: Include all related documentation improvements, not just the specific error fix
+3. **Cross-Reference Updates**: Ensure all related documents maintain consistency
+4. **Testing Verification**: Validate that fixes prevent the original error
+
+### Branch Naming Standards
+
+**Documentation Updates**: Use format `Documentation-Improvements-YYYY-MM-DD`
+
+**Feature Development**: Use descriptive names like `feature/new-analysis-pattern`
+
+**Bug Fixes**: Use format `fix/error-description`
 
 ## Directory Structure Standards
 
@@ -216,20 +375,49 @@ When encountering customer-specific values different from defaults:
 When queries fail due to customer Salesforce differences:
 
 1. **Identify the issue**: Compare expected vs actual configuration values
-1. **Execute discovery queries** to find customer-specific values
-1. **Adapt the analysis** using customer's actual configuration
-1. **Communicate changes** made and why
-1. **Follow** [Customer Fallback Instructions](./docs/troubleshooting/customer-fallback-instructions.md)
+2. **Execute discovery queries** to find customer-specific values
+3. **Adapt the analysis** using customer's actual configuration
+4. **Communicate changes** made and why
+5. **Follow** [Customer Fallback Instructions](./docs/troubleshooting/customer-fallback-instructions.md)
 
 ### Documentation Improvement Process
 
 When encountering exceptions or query errors:
 
 1. **Understand the root cause** and what documentation caused the issue
-1. **Use existing branch** `Documentation-Improvements-2025-09-17` or create new one
-1. **Update affected documents** with recommended improvements
-1. **Test the fixes** prevent the error
-1. **Update pull request** with comprehensive description of changes
+2. **Use existing branch** with current date format or create new one
+3. **Update affected documents** with recommended improvements
+4. **Test the fixes** prevent the error
+5. **Update pull request** with comprehensive description of changes
+
+## Quality Assurance and Success Metrics
+
+### Documentation Quality Standards
+
+**Zero Defect Goals**:
+
+- 100% markdown linting compliance per `.markdownlint-cli2.yaml`
+- Zero hardcoded business values (all referenced from Configuration Reference)
+- 100% cross-reference accuracy using relative paths
+- Professional HTML artifact delivery rate: 100% for customer-facing reports
+
+### Claude Performance Standards
+
+**Behavioral Compliance**:
+
+- Execute queries first for analysis requests (not code templates)
+- Professional HTML artifacts for all reports
+- Graceful adaptation when customer configurations differ
+- Comprehensive error recovery using established fallback patterns
+
+### Continuous Improvement Protocol
+
+**When any error occurs**:
+
+1. **Immediate Fix**: Resolve the specific issue
+2. **Pattern Analysis**: Identify if this represents a broader documentation gap
+3. **Prevention Enhancement**: Strengthen documentation to prevent similar issues
+4. **Knowledge Integration**: Ensure fixes align with existing knowledge patterns
 
 ## Content Quality Standards
 
@@ -271,23 +459,15 @@ When encountering exceptions or query errors:
 - [ ] No duplicate content - all examples reference authoritative sources
 - [ ] Directory README files updated if adding new documents
 
-### Integration Testing
-
-- [ ] New documentation integrates with existing patterns
-- [ ] No duplicate or conflicting guidance
-- [ ] Directory structure maintained correctly
-- [ ] Appropriate directory README.md updated to reference new content
-- [ ] Cross-references use proper relative paths
-
 ### Continuous Improvement Protocol
 
 **When ANY linting error is reported**:
 
 1. **Immediate Response**: Fix all errors in affected documents
-1. **Prevention Update**: Add specific guidance to this CONTRIBUTING.md by referencing existing documentation
-1. **Reference Integration**: Point to existing files rather than embedding problematic samples
-1. **Documentation Enhancement**: Strengthen prevention guidelines through better cross-references
-1. **Knowledge Transfer**: Update training materials and procedures
+2. **Prevention Update**: Add specific guidance to this CONTRIBUTING.md by referencing existing documentation
+3. **Reference Integration**: Point to existing files rather than embedding problematic samples
+4. **Documentation Enhancement**: Strengthen prevention guidelines through better cross-references
+5. **Knowledge Transfer**: Update training materials and procedures
 
 ## Success Metrics
 
