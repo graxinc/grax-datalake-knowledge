@@ -86,13 +86,12 @@ Next paragraph starts here.
 
 **Code Block Formatting Requirements**:
 
-```markdown
+```text
 <!-- WRONG: Missing language specification and blank lines -->
 Content before code block.
 
-```text
+```
 SELECT * FROM table;
-
 ```
 
 Content immediately after.
@@ -102,7 +101,6 @@ Content before code block.
 
 ```sql
 SELECT * FROM table;
-
 ```
 
 Content after code block.
@@ -114,7 +112,6 @@ Directory structure example:
 docs/
 ├── file1.md
 └── file2.md
-
 ```
 
 Next section continues here.
@@ -174,13 +171,12 @@ More content with blank lines above and below heading.
 
 **MD031 - Fenced code blocks must be surrounded by blank lines**:
 
-```markdown
+```text
 <!-- WRONG -->
 Content before code block.
 
-```sql
+```
 SELECT * FROM table;
-
 ```
 
 Content immediately after.
@@ -190,7 +186,6 @@ Content before code block.
 
 ```sql
 SELECT * FROM table;
-
 ```
 
 Content after code block with proper spacing.
@@ -216,13 +211,12 @@ Next paragraph with proper spacing.
 
 **MD040 - Code blocks must specify language**:
 
-```markdown
+```text
 <!-- WRONG -->
 Example query:
 
-```text
+```
 SELECT * FROM table;
-
 ```
 
 Use this pattern for all queries.
@@ -232,7 +226,6 @@ Example query:
 
 ```sql
 SELECT * FROM table;
-
 ```
 
 Use this pattern for all queries.
