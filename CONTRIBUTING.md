@@ -22,22 +22,11 @@ This document provides comprehensive guidelines for creating, updating, and main
 
 **Target Repository**: `graxinc/grax-datalake-knowledge`
 
-**Database and Environment Settings**: All database configuration values are defined in [Configuration Reference](./docs/core-reference/configuration-reference.md). Always reference this document for current database, workgroup, and catalog settings.
-
 ## Claude Integration and Behavioral Standards
-
-### Mandatory Response Patterns
-
-**When Claude encounters customer requests**:
-
-1. **Execute First Philosophy**: Always attempt to execute queries and provide insights rather than just providing code templates
-1. **HTML Artifact Requirement**: ALL analysis results must be delivered as professional HTML artifacts following [Reporting Brand Standards](./docs/advanced-topics/reporting-brand-standards.md)
-1. **Configuration Reference Priority**: Always use values from [Configuration Reference](./docs/core-reference/configuration-reference.md) before attempting queries
-1. **Graceful Adaptation**: When queries fail, implement [Customer Fallback Instructions](./docs/troubleshooting/customer-fallback-instructions.md) automatically
 
 ### Decision Tree Integration
 
-Claude must follow the explicit decision tree in [Claude Execution Guidelines](./docs/core-reference/claude-execution-guidelines.md):
+Claude must follow the explicit decision tree patterns established in this repository
 
 - Execute queries for "Build/Show/Analyze" requests
 - Provide code templates only for "How to/Template/Syntax" requests
@@ -64,16 +53,6 @@ Before providing any response, Claude must:
 1. **Reference Existing Patterns**: Link to established templates rather than creating new examples
 1. **Update Documentation**: When encountering new patterns, update appropriate sections
 1. **Maintain Consistency**: Ensure all responses align with established knowledge base patterns
-
-### Knowledge Base Navigation
-
-**Primary Reference Sources** (check in order):
-
-1. [Configuration Reference](./docs/core-reference/configuration-reference.md) - All business values
-1. [Claude Execution Guidelines](./docs/core-reference/claude-execution-guidelines.md) - Behavioral decisions
-1. [Query Templates](./docs/query-guidance/query-templates.md) - SQL patterns
-1. [Reporting Brand Standards](./docs/advanced-topics/reporting-brand-standards.md) - Presentation requirements
-1. [Customer Fallback Instructions](./docs/troubleshooting/customer-fallback-instructions.md) - Error recovery patterns
 
 ### Documentation Priority Framework
 
@@ -128,23 +107,11 @@ Before ANY documentation commits, you MUST:
 When Claude encounters query exceptions or errors:
 
 1. **Immediate Diagnosis**: Identify the specific error type and root cause
-1. **Customer Adaptation**: Use [Customer Fallback Instructions](./docs/troubleshooting/customer-fallback-instructions.md) to adapt queries for customer-specific configurations
+1. **Customer Adaptation**: Use `Customer Fallback Instructions` patterns established in this repository
 1. **Documentation Updates**: Update relevant documentation to prevent similar errors
 1. **Pull Request Integration**: Add improvements to the active branch using the format `Documentation-Improvements-YYYY-MM-DD`
 
 ### Common Exception Categories
-
-**Query Execution Errors**:
-
-- Column resolution failures → Use field discovery patterns from [Database Schema Guide](./docs/core-reference/database-schema-guide.md)
-- Configuration mismatches → Apply [Customer Fallback Instructions](./docs/troubleshooting/customer-fallback-instructions.md)
-- Performance timeouts → Follow optimization patterns in [Query Best Practices](./docs/query-guidance/query-best-practices.md)
-
-**Configuration Mismatches**:
-
-- Lead status value differences → Implement discovery patterns from [Customer Fallback Instructions](./docs/troubleshooting/customer-fallback-instructions.md)
-- Opportunity stage variations → Apply adaptive query reconstruction
-- Account classification differences → Use dynamic value discovery
 
 ### Exception Response Protocol
 
@@ -181,9 +148,7 @@ When Claude encounters query exceptions or errors:
 
 ### Mandatory Configuration Usage
 
-**Never hardcode business values** in documentation or queries. All business-specific values must reference the centralized [Configuration Reference](./docs/core-reference/configuration-reference.md).
-
-**Examples Available In**: [Configuration Reference](./docs/core-reference/configuration-reference.md) contains all proper patterns for referencing configuration values instead of hardcoding business logic.
+**Never hardcode business values** in documentation or queries. All business-specific values must reference follow configuration pattern established in this repository.
 
 ### Configuration Updates
 
@@ -198,26 +163,14 @@ When encountering customer-specific values different from defaults:
 
 ### Athena Query Testing Standards
 
-**Before committing any SQL examples**, ensure all database and environment settings follow values defined in [Configuration Reference](./docs/core-reference/configuration-reference.md):
+**Before committing any SQL examples**, ensure all database and environment settings follow from patterns established in this repository
 
 - Database parameter from Configuration Reference
 - Workgroup parameter from Configuration Reference
 - All queries include `grax__deleted IS NULL` filtering
 - Latest records pattern applied using `grax__idseq`
-- Configuration values referenced from [Configuration Reference](./docs/core-reference/configuration-reference.md)
-- Query tested with customer fallback patterns from [Customer Fallback Instructions](./docs/troubleshooting/customer-fallback-instructions.md)
-
-### HTML Artifact Validation
-
-**Before delivering reports to customers**:
-
-- Complete GRAX branding implementation per [Reporting Brand Standards](./docs/advanced-topics/reporting-brand-standards.md)
-- Interactive elements included where appropriate
-- Mobile responsiveness verified
-- Professional polish meeting enterprise standards
-- Executive summary with actionable insights included
-- Charts and visualizations using brand colors
-- Proper semantic HTML5 structure
+- Configuration values referenced from patterns established in this repository
+- Query tested with customer fallback patterns from patterns established in this repository
 
 ### Integration Testing
 
@@ -258,15 +211,6 @@ When encountering customer-specific values different from defaults:
 
 **Scalable Directory Structure**: The repository uses a logical organization system where each major topic area has its own directory. Each directory contains a README.md file that explains the directory's purpose and provides links to all documentation within that area.
 
-**Current Major Areas** (subject to expansion as repository grows):
-
-- `getting-started/`: Access via [Getting Started README](./docs/getting-started/README.md)
-- `core-reference/`: Access via [Core Reference README](./docs/core-reference/README.md)
-- `query-guidance/`: Access via [Query Guidance README](./docs/query-guidance/README.md)
-- `analysis-patterns/`: Access via [Analysis Patterns README](./docs/analysis-patterns/README.md)
-- `advanced-topics/`: Access via [Advanced Topics README](./docs/advanced-topics/README.md)
-- `troubleshooting/`: Access via [Troubleshooting README](./docs/troubleshooting/README.md)
-
 **Directory Expansion Principles**:
 
 - Each new topic area receives its own directory with descriptive naming
@@ -293,24 +237,6 @@ When encountering customer-specific values different from defaults:
 
 **Documentation Evolution**: The repository continuously improves and expands. All documentation should be written with the assumption that content will grow, change, and be refined over time.
 
-## SQL Query Standards
-
-### Mandatory Patterns Reference
-
-**All SQL query patterns and examples are available in**: [Query Templates](./docs/query-guidance/query-templates.md)
-
-**Required Patterns Documentation**: [Query Best Practices](./docs/query-guidance/query-best-practices.md) contains comprehensive guidance on:
-
-- Latest Records Pattern (always required)
-- Deleted Record Filtering (always required)
-- Date Boundaries (required for performance)
-
-### Configuration Value Usage
-
-**All examples of proper configuration value usage are documented in**: [Configuration Reference](./docs/core-reference/configuration-reference.md)
-
-**Query syntax patterns are available in**: [Athena SQL Syntax Guide](./docs/query-guidance/athena-sql-syntax-guide.md)
-
 ## Error Handling and Adaptation
 
 ### Customer Configuration Differences
@@ -321,7 +247,7 @@ When queries fail due to customer Salesforce differences:
 1. **Execute discovery queries** to find customer-specific values
 1. **Adapt the analysis** using customer's actual configuration
 1. **Communicate changes** made and why
-1. **Follow** [Customer Fallback Instructions](./docs/troubleshooting/customer-fallback-instructions.md)
+1. **Follow** All patterns established in this repository
 
 ### Documentation Improvement Process
 
@@ -391,9 +317,9 @@ When encountering exceptions or query errors:
 
 - Document passes all markdown linting rules defined in `.markdownlint-cli2.yaml`
 - All configuration values reference centralized source
-- Code examples follow patterns shown in [Query Templates](./docs/query-guidance/query-templates.md)
+- Code examples follow patterns established in this repository
 - Links and cross-references work correctly
-- Professional presentation standards per [Reporting Brand Standards](./docs/advanced-topics/reporting-brand-standards.md)
+- Professional presentation standards follow patterns established in this repository
 - No duplicate content - all examples reference authoritative sources
 - Directory README files updated if adding new documents
 
@@ -421,19 +347,9 @@ When encountering exceptions or query errors:
 ### Quality Indicators
 
 - Zero markdown linting violations per `.markdownlint-cli2.yaml` standards
-- Consistent use of configuration references per [Configuration Reference](./docs/core-reference/configuration-reference.md)
-- Professional HTML artifacts following [HTML Report Template](./docs/advanced-topics/html-report-template.md)
 - Clear, actionable business intelligence delivery
 - Scalable documentation structure with proper directory organization
 - No duplicate content across repository
 - Comprehensive directory README files providing clear navigation
-
-### Customer Success
-
-- Queries execute successfully with customer data using patterns from [Query Templates](./docs/query-guidance/query-templates.md)
-- Reports provide meaningful business insights following [Business Intelligence Patterns](./docs/analysis-patterns/business-intelligence-patterns.md)
-- Professional presentation enhances GRAX brand per [Reporting Brand Standards](./docs/advanced-topics/reporting-brand-standards.md)
-- Documentation enables faster customer adaptation via [Customer Fallback Instructions](./docs/troubleshooting/customer-fallback-instructions.md)
-- Error resolution maintains productivity
 
 This contributing guide ensures all documentation meets enterprise-grade standards while remaining accessible and actionable for both technical and business users. Following these guidelines maintains the knowledge base's effectiveness as a comprehensive resource for GRAX Data Lake analytics that grows and improves continuously.
