@@ -77,7 +77,7 @@ Before ANY documentation commits, you MUST:
 
 **All formatting and structural requirements are defined in `.markdownlint-cli2.yaml`**. This file specifies:
 
-- File structure requirements (MD047, MD041, MD001, MD024)
+- File structure requirements reference `.markdownlint-cli2.yaml`
 - Formatting standards for emphasis, lists, and code blocks
 - Content standards for spacing and HTML usage
 - Heading hierarchy and link formatting rules
