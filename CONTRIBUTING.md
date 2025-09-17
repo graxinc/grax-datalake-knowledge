@@ -59,6 +59,7 @@ This document provides comprehensive guidelines for creating, updating, and main
 - No multiple consecutive blank lines
 - Headings surrounded by blank lines (MD022)
 - Lists surrounded by blank lines (MD032)
+- Fenced code blocks surrounded by blank lines (MD031)
 - No HTML tags except `<img>` elements
 - All links must be valid and properly formatted
 - Fenced code blocks must specify language (MD040)
@@ -83,25 +84,35 @@ Content here.
 Next paragraph starts here.
 ```
 
-**Code Block Language Specification**:
+**Code Block Formatting Requirements**:
 
 ```markdown
-<!-- WRONG: Missing language specification -->
+<!-- WRONG: Missing language specification and blank lines -->
+Content before code block.
 ```
 SELECT * FROM table;
 ```
+Content immediately after.
 
-<!-- CORRECT: Always specify language -->
+<!-- CORRECT: Language specified and surrounded by blank lines -->
+Content before code block.
+
 ```sql
 SELECT * FROM table;
 ```
 
+Content after code block.
+
 <!-- For directory structures, use 'text' -->
+Directory structure example:
+
 ```text
 docs/
 ├── file1.md
 └── file2.md
 ```
+
+Next section continues here.
 ```
 
 **Trailing Spaces Elimination**:
@@ -117,6 +128,7 @@ docs/
 1. Review content against each `.markdownlint-cli2.yaml` rule
 1. Ensure proper heading hierarchy and no duplicates
 1. **ADD BLANK LINES** around all headings and lists
+1. **ADD BLANK LINES** around all fenced code blocks
 1. **SPECIFY LANGUAGE** for all fenced code blocks
 1. **REMOVE TRAILING SPACES** from all lines
 1. Verify file ends with single newline
@@ -155,6 +167,26 @@ Some content here.
 More content with blank lines above and below heading.
 ```
 
+**MD031 - Fenced code blocks must be surrounded by blank lines**:
+
+```markdown
+<!-- WRONG -->
+Content before code block.
+```sql
+SELECT * FROM table;
+```
+Content immediately after.
+
+<!-- CORRECT -->
+Content before code block.
+
+```sql
+SELECT * FROM table;
+```
+
+Content after code block with proper spacing.
+```
+
 **MD032 - Lists must be surrounded by blank lines**:
 
 ```markdown
@@ -177,14 +209,22 @@ Next paragraph with proper spacing.
 
 ```markdown
 <!-- WRONG -->
-```
+Example query:
+
+```text
 SELECT * FROM table;
 ```
 
+Use this pattern for all queries.
+
 <!-- CORRECT -->
+Example query:
+
 ```sql
 SELECT * FROM table;
 ```
+
+Use this pattern for all queries.
 ```
 
 **MD009 - No trailing spaces**:
@@ -366,6 +406,7 @@ When encountering exceptions or query errors:
 
 - [ ] Document passes all markdown linting rules
 - [ ] **Blank lines added around ALL headings and lists**
+- [ ] **Blank lines added around ALL fenced code blocks**
 - [ ] **Language specified for ALL code blocks**
 - [ ] **No trailing spaces anywhere in document**
 - [ ] All configuration values reference centralized source
