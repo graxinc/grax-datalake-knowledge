@@ -44,6 +44,7 @@ The documentation is organized into six logical directories for intuitive naviga
 - **[Business Intelligence Patterns](./docs/analysis-patterns/business-intelligence-patterns.md)** - Advanced analytics and reporting templates
 - **[Sales Process Analysis](./docs/analysis-patterns/sales-process-analysis.md)** - Lead qualification and opportunity progression tracking
 - **[Lead Status Audit](./docs/analysis-patterns/lead-status-audit.md)** - Customer classification and lead qualification accuracy
+- **[Comprehensive Pipeline Analysis](./docs/analysis-patterns/comprehensive-pipeline-analysis.md)** - **NEW**: Complete pipeline health assessment with velocity metrics and risk analysis
 
 ### Data Quality Framework
 
@@ -51,6 +52,7 @@ The documentation is organized into six logical directories for intuitive naviga
 - **[Lead Data Quality Analysis](./docs/data-quality/lead/analysis.md)** - **NEW**: Complete lead data quality assessment patterns
 - **[Lead Data Quality Scoring](./docs/data-quality/lead/scoring.md)** - **NEW**: Quantitative scoring methodology for lead data quality
 - **[Lead Data Quality Remediation](./docs/data-quality/lead/remediation.md)** - **NEW**: Actionable strategies for improving lead data quality
+- **[Lead Deduplication](./docs/data-quality/lead/deduping.md)** - **NEW**: Advanced fuzzy matching patterns for identifying duplicate leads and contacts across objects
 
 ### Advanced Topics
 
@@ -76,6 +78,10 @@ For LLM models working with this data lake:
 
 1. **NEW**: Utilize [Data Quality Framework](./docs/data-quality/README.md) for comprehensive data quality assessment, scoring, and remediation strategies
 
+1. **NEW**: Use [Lead Deduplication](./docs/data-quality/lead/deduping.md) for advanced fuzzy matching patterns to identify duplicate leads and contacts
+
+1. **NEW**: Use [Comprehensive Pipeline Analysis](./docs/analysis-patterns/comprehensive-pipeline-analysis.md) for complete pipeline health assessment with velocity metrics and risk analysis
+
 1. **Understand**: Review [Database Schema Guide](./docs/core-reference/database-schema-guide.md) for available data structures
 
 1. **Reference**: Use [Athena SQL Syntax Guide](./docs/query-guidance/athena-sql-syntax-guide.md) for proper query formation
@@ -93,6 +99,8 @@ For LLM models working with this data lake:
 - **Professional Presentation**: ALL GRAX reports must be delivered as polished HTML artifacts following brand standards using the mandatory HTML template
 - **Interactive Visualizations**: Include charts, graphs, and interactive elements in all reports unless explicitly requested otherwise
 - **Data Quality Focus**: Leverage the comprehensive data quality framework for analysis, scoring, and remediation across all Salesforce objects
+- **Deduplication Intelligence**: Use advanced fuzzy matching patterns to identify and resolve duplicate person records across leads and contacts
+- **Pipeline Intelligence**: Use comprehensive pipeline analysis for complete health assessment, velocity tracking, and risk management
 - **Graceful Adaptation**: Use fallback strategies when customer configurations differ from defaults
 - All queries must filter deleted records using `grax__deleted IS NULL`
 - Use latest records pattern for current state analysis
@@ -137,6 +145,10 @@ The knowledge base is built with GRAX's default Salesforce configuration but can
 
 **Data Quality Standards**: Leverage the [Data Quality Framework](./docs/data-quality/README.md) for systematic data quality assessment and improvement across all Salesforce objects.
 
+**Deduplication Standards**: Use [Lead Deduplication](./docs/data-quality/lead/deduping.md) patterns for identifying and resolving duplicate person records with appropriate confidence scoring.
+
+**Pipeline Intelligence Standards**: Use [Comprehensive Pipeline Analysis](./docs/analysis-patterns/comprehensive-pipeline-analysis.md) for complete pipeline health assessment, velocity metrics, and risk analysis.
+
 ### Directory Structure Guidelines
 
 **Logical Organization**:
@@ -155,6 +167,10 @@ The knowledge base is built with GRAX's default Salesforce configuration but can
 
 **Data Quality Integration**: All new object implementations must include corresponding data quality framework components (analysis, scoring, remediation) following the standardized patterns established in the lead data quality implementation.
 
+**Deduplication Integration**: All person-related object implementations must include deduplication patterns following the advanced fuzzy matching approaches established in the lead deduplication framework.
+
+**Pipeline Analysis Integration**: All sales-related implementations must integrate with comprehensive pipeline analysis patterns for complete pipeline health, velocity, and risk assessment.
+
 ## Contributing
 
 This knowledge base is designed for programmatic consumption by LLM models. All documentation follows strict markdown linting rules and is optimized for clarity and precision in automated query generation.
@@ -167,6 +183,8 @@ This knowledge base is designed for programmatic consumption by LLM models. All 
 1. **Maintain Links**: Ensure all cross-references use correct relative paths
 1. **Brand Compliance**: Verify any customer-facing content meets professional presentation standards
 1. **Data Quality Integration**: Include data quality framework components for any new object implementations
+1. **Deduplication Integration**: Include fuzzy matching patterns for person-related object implementations
+1. **Pipeline Analysis Integration**: Include comprehensive pipeline analysis patterns for sales-related implementations
 
 ## Repository Contribution Guidelines
 

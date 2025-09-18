@@ -149,6 +149,71 @@ CASE
 END as company_size_category
 ```
 
+## Fuzzy Matching Configuration
+
+### Name Matching Parameters
+
+| Parameter | Value | Purpose | Application |
+|-----------|-------|---------|-------------|
+| **Name Prefix Length** | `3` | Fuzzy first name matching | `UPPER(SUBSTR(firstname, 1, 3))` |
+| **Nickname Tolerance** | Exact last name required | Account for name variations | Joseph vs Joe with same lastname |
+| **Case Sensitivity** | Case-insensitive matching | Normalize variations | `UPPER()` function application |
+| **Special Character Handling** | Strip non-alphanumeric | Clean comparison data | Remove punctuation and spaces |
+
+### Email Matching Patterns
+
+| Match Type | Confidence Level | Logic Pattern | Business Rule |
+|-----------|------------------|---------------|---------------|
+| **Exact Email** | High (95%+) | `l.email = c.email` | Same person across objects |
+| **Domain + Name Similarity** | Medium-High (80%+) | Email domain + 3-char name prefix | Same person, different email |
+| **Email Alias Detection** | Medium (70%+) | Exclude emails with `+` symbols | Filter out alias variations |
+| **Corporate Email Pattern** | Variable | Domain analysis required | Shared corporate emails excluded |
+
+### Phone Number Matching Standards
+
+| Match Type | Confidence Level | Validation Rules | Business Application |
+|-----------|------------------|------------------|----------------------|
+| **Exact Phone** | Medium (60%+) | `l.phone = c.phone AND phone IS NOT NULL` | Potential person match |
+| **Phone + Name Match** | High (90%+) | Phone match + name similarity | Strong duplicate indicator |
+| **Corporate Number Filter** | Exclusion rule | Identify shared corporate numbers | Avoid false positives |
+| **Format Normalization** | Preprocessing | Strip formatting characters | Consistent comparison |
+
+### Duplicate Confidence Scoring
+
+| Confidence Level | Score Range | Match Requirements | Recommended Action |
+|------------------|-------------|-------------------|-------------------|
+| **Critical** | 95-100% | Exact email + name match | Immediate consolidation |
+| **High** | 80-94% | Multiple strong indicators | Manual review priority |
+| **Medium** | 60-79% | Single strong or multiple weak | Investigation queue |
+| **Low** | 40-59% | Weak indicators only | Monitor for patterns |
+
+### Deduplication Processing Rules
+
+| Processing Stage | Configuration Value | Business Logic | Implementation |
+|------------------|-------------------|----------------|----------------|
+| **Lead-to-Lead** | Primary deduplication | Same person, multiple lead records | Merge to most recent |
+| **Lead-to-Contact** | Cross-object matching | Lead may already be contact | Convert vs merge decision |
+| **Contact-to-Contact** | Secondary deduplication | Same person, multiple contact records | Account-based consolidation |
+| **Account Relationship** | Context validation | Verify company relationships | Prevent cross-company merges |
+
+### Exclusion Patterns
+
+| Exclusion Type | Pattern | Reason | Implementation |
+|---------------|---------|--------|----------------|
+| **Test Emails** | `%@example.%`, `%@test.%` | Non-production data | Filter from matching |
+| **Email Aliases** | `%+%` in email | Single person, multiple addresses | Exclude from exact matching |
+| **Corporate Phones** | Shared by 5+ people | Central office numbers | Flag for manual review |
+| **Invalid Emails** | Missing `@` or `.` | Data quality issues | Clean before matching |
+
+### Performance Optimization
+
+| Setting | Value | Purpose | Impact |
+|---------|-------|---------|--------|
+| **Batch Size** | 10,000 records | Memory management | Process in chunks |
+| **Index Requirements** | email, phone, names | Query performance | Fast duplicate detection |
+| **Date Boundaries** | Last 24 months | Scope limitation | Focus on active records |
+| **Early Filtering** | Latest records only | Reduce data volume | Current state matching |
+
 ## Field Naming Standards
 
 ### Data Type Suffixes
@@ -249,6 +314,7 @@ WHERE grax__deleted IS NULL
 1. **Account Types**: Adjust customer classification values
 1. **Segmentation Thresholds**: Change employee/revenue thresholds for company sizing
 1. **Field Names**: Update field naming if custom fields are used
+1. **Fuzzy Matching Parameters**: Adjust confidence thresholds and matching rules for organization-specific needs
 
 ### Implementation Process
 
