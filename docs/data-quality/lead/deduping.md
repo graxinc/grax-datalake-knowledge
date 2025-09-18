@@ -126,12 +126,14 @@ When generating deduplication reports, include direct Salesforce hyperlinks for 
 ### Salesforce URL Structure
 
 **Lead Record URLs**:
-```
+
+```text
 https://[your-instance].lightning.force.com/lightning/r/Lead/[LEAD_ID]/view
 ```
 
 **Contact Record URLs**:
-```
+
+```text
 https://[your-instance].lightning.force.com/lightning/r/Contact/[CONTACT_ID]/view
 ```
 
@@ -160,6 +162,7 @@ FROM duplicate_analysis
 ```
 
 **Example Output Format**:
+
 - [Joseph Smith](https://myorg.lightning.force.com/lightning/r/Lead/00Q123456789ABC/view) Should Be Merged/Deleted → [Joseph Smith](https://myorg.lightning.force.com/lightning/r/Contact/003123456789XYZ/view)
 - [Jane Doe](https://myorg.lightning.force.com/lightning/r/Lead/00Q987654321DEF/view) Should Be Merged Into → [Jane Doe](https://myorg.lightning.force.com/lightning/r/Lead/00Q456789012GHI/view)
 
@@ -170,12 +173,14 @@ FROM duplicate_analysis
 **Business Rule**: When multiple leads represent the same person, merge the **newest lead into the oldest lead** to preserve the original creation date and first contact history.
 
 **Reasoning**:
+
 - **First Contact Tracking**: Original creation date indicates initial interest or contact
 - **Campaign Attribution**: Preserves original lead source and marketing campaign data
 - **Lead Scoring History**: Maintains complete behavioral and engagement timeline
 - **Data Integrity**: Retains the authoritative record with complete lifecycle
 
 **Implementation Logic**:
+
 ```sql
 -- Determine merge direction for lead-to-lead duplicates
 CASE 
@@ -196,12 +201,14 @@ END as source_record
 **Business Rule**: When a lead matches an existing contact, the **lead should be merged or deleted** as the contact typically represents the established customer relationship.
 
 **Reasoning**:
+
 - **Customer Relationship Priority**: Contacts represent established business relationships
 - **Data Hierarchy**: Contact records are typically more complete and authoritative
 - **Campaign Data Preservation**: Merge to retain new campaign or email engagement data
 - **Non-Overwrite Policy**: Do not overwrite existing contact data with lead information
 
 **Implementation Logic**:
+
 ```sql
 -- Lead-to-Contact processing recommendations
 CASE confidence_level
@@ -227,12 +234,14 @@ END as merge_guidance
 ### Data Preservation Guidelines
 
 **What to Preserve During Merges**:
+
 - **Campaign Responses**: New lead engagement and campaign interaction data
 - **Activity History**: Recent emails, calls, and touchpoints from lead record
 - **Lead Source**: Original attribution and lead generation source
 - **Custom Field Values**: Business-specific lead qualification or scoring data
 
 **What NOT to Overwrite**:
+
 - **Contact Master Data**: Name, title, company, primary contact information
 - **Account Relationships**: Existing account associations and hierarchy
 - **Historical Activities**: Established contact communication history
