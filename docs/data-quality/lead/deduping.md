@@ -119,6 +119,151 @@ WITH phone_frequency AS (
 )
 ```
 
+## Salesforce Hyperlink Integration for Reports
+
+When generating deduplication reports, include direct Salesforce hyperlinks for immediate action. This enables sales operations teams to navigate directly to records for processing.
+
+### Salesforce URL Structure
+
+**Lead Record URLs**:
+```
+https://[your-instance].lightning.force.com/lightning/r/Lead/[LEAD_ID]/view
+```
+
+**Contact Record URLs**:
+```
+https://[your-instance].lightning.force.com/lightning/r/Contact/[CONTACT_ID]/view
+```
+
+### Professional Report Format with Hyperlinks
+
+When presenting duplicate findings, use this format for professional merge/delete recommendations:
+
+```sql
+-- Example report query with hyperlink formatting
+SELECT 
+    -- Merge/Delete recommendation with hyperlinks
+    '[' || l.firstname || ' ' || l.lastname || '](https://your-org.lightning.force.com/lightning/r/Lead/' || l.id || '/view) Should Be ' ||
+    CASE 
+        WHEN duplicate_type = 'Lead-to-Contact' THEN 'Merged/Deleted'
+        WHEN duplicate_type = 'Lead-to-Lead' THEN 'Merged Into'
+    END || ' → [' ||
+    CASE 
+        WHEN duplicate_type = 'Lead-to-Contact' THEN c.firstname || ' ' || c.lastname || '](https://your-org.lightning.force.com/lightning/r/Contact/' || c.id || '/view)'
+        WHEN duplicate_type = 'Lead-to-Lead' THEN target_lead_name || '](https://your-org.lightning.force.com/lightning/r/Lead/' || target_lead_id || '/view)'
+    END as recommended_action_with_links,
+    
+    confidence_level,
+    match_reason,
+    business_justification
+FROM duplicate_analysis
+```
+
+**Example Output Format**:
+- [Joseph Smith](https://myorg.lightning.force.com/lightning/r/Lead/00Q123456789ABC/view) Should Be Merged/Deleted → [Joseph Smith](https://myorg.lightning.force.com/lightning/r/Contact/003123456789XYZ/view)
+- [Jane Doe](https://myorg.lightning.force.com/lightning/r/Lead/00Q987654321DEF/view) Should Be Merged Into → [Jane Doe](https://myorg.lightning.force.com/lightning/r/Lead/00Q456789012GHI/view)
+
+## Merge/Delete Logic and Business Rules
+
+### Lead-to-Lead Duplicates
+
+**Business Rule**: When multiple leads represent the same person, merge the **newest lead into the oldest lead** to preserve the original creation date and first contact history.
+
+**Reasoning**:
+- **First Contact Tracking**: Original creation date indicates initial interest or contact
+- **Campaign Attribution**: Preserves original lead source and marketing campaign data
+- **Lead Scoring History**: Maintains complete behavioral and engagement timeline
+- **Data Integrity**: Retains the authoritative record with complete lifecycle
+
+**Implementation Logic**:
+```sql
+-- Determine merge direction for lead-to-lead duplicates
+CASE 
+    WHEN l1.createddate_ts < l2.createddate_ts 
+    THEN l1.id || ' (Keep - Older Record)' 
+    ELSE l2.id || ' (Keep - Older Record)'
+END as target_record,
+
+CASE 
+    WHEN l1.createddate_ts < l2.createddate_ts 
+    THEN l2.id || ' (Merge/Delete - Newer Record)'
+    ELSE l1.id || ' (Merge/Delete - Newer Record)' 
+END as source_record
+```
+
+### Lead-to-Contact Duplicates
+
+**Business Rule**: When a lead matches an existing contact, the **lead should be merged or deleted** as the contact typically represents the established customer relationship.
+
+**Reasoning**:
+- **Customer Relationship Priority**: Contacts represent established business relationships
+- **Data Hierarchy**: Contact records are typically more complete and authoritative
+- **Campaign Data Preservation**: Merge to retain new campaign or email engagement data
+- **Non-Overwrite Policy**: Do not overwrite existing contact data with lead information
+
+**Implementation Logic**:
+```sql
+-- Lead-to-Contact processing recommendations
+CASE confidence_level
+    WHEN 'Critical' THEN 
+        'MERGE: Transfer lead campaign/activity data to contact, then delete lead'
+    WHEN 'High' THEN 
+        'REVIEW: Manually verify before merging lead data to contact'
+    WHEN 'Medium' THEN 
+        'INVESTIGATE: Validate relationship before processing'
+END as processing_action,
+
+-- Specific merge guidance
+CASE 
+    WHEN l.email = c.email THEN 
+        'Merge lead activities and campaign responses to contact record, preserve contact master data'
+    WHEN SPLIT_PART(l.email, '@', 2) = SPLIT_PART(c.email, '@', 2) THEN
+        'Verify same person before merging - may be different individuals at same company'
+    ELSE 
+        'Additional validation required - phone match may indicate shared corporate line'
+END as merge_guidance
+```
+
+### Data Preservation Guidelines
+
+**What to Preserve During Merges**:
+- **Campaign Responses**: New lead engagement and campaign interaction data
+- **Activity History**: Recent emails, calls, and touchpoints from lead record
+- **Lead Source**: Original attribution and lead generation source
+- **Custom Field Values**: Business-specific lead qualification or scoring data
+
+**What NOT to Overwrite**:
+- **Contact Master Data**: Name, title, company, primary contact information
+- **Account Relationships**: Existing account associations and hierarchy
+- **Historical Activities**: Established contact communication history
+- **Opportunity Relationships**: Existing sales opportunity associations
+
+### Professional Report Presentation
+
+**Recommended Report Structure**:
+
+1. **Executive Summary**: Total duplicates identified with confidence breakdown
+1. **Immediate Actions**: Critical confidence duplicates with direct merge recommendations
+1. **Review Queue**: High confidence matches requiring manual verification
+1. **Investigation Items**: Medium confidence matches needing additional validation
+1. **Processing Timeline**: Recommended completion schedule for each confidence level
+
+**Example Report Section**:
+
+```markdown
+## Immediate Actions Required (Critical Confidence - 95%+)
+
+1. [Christophe Poirier](https://myorg.lightning.force.com/lightning/r/Lead/00Q1234567890AB/view) Should Be Merged/Deleted → [Christophe Poirier](https://myorg.lightning.force.com/lightning/r/Contact/0031234567890CD/view)
+   - **Confidence**: 95%+ (Exact Email Match)
+   - **Action**: Merge lead campaign data to contact, then delete lead
+   - **Business Impact**: Prevents duplicate outreach to KONE contact
+
+1. [George Santora](https://myorg.lightning.force.com/lightning/r/Lead/00Q2345678901EF/view) Should Be Merged/Deleted → [George Santora](https://myorg.lightning.force.com/lightning/r/Contact/0032345678901GH/view)
+   - **Confidence**: 95%+ (Exact Email Match)
+   - **Action**: Merge lead activities to contact, preserve contact master data
+   - **Business Impact**: Eliminates confusion for Ethos customer relationship
+```
+
 ## Comprehensive Deduplication Query
 
 This query demonstrates the complete deduplication approach, combining all matching techniques with confidence scoring:
@@ -267,6 +412,12 @@ WITH exact_email_duplicates AS (
 )
 ```
 
+**Sample Results**:
+
+- **Prajwal Kumar** (prajwal.kumar@kone.com) appears as both lead and contact at Kone
+- **Christian Cordova** (christian.cordova@lashgroup.com) exists in both objects at AmerisourceBergen
+- **Alexander Furzeman** (afurzeman@deloitte.com.invalid) duplicated across Ethias records
+
 ### High Confidence (80-94%) - Domain + Name Similarity
 
 ```sql
@@ -332,9 +483,9 @@ WITH internal_lead_duplicates AS (
             ELSE 'Medium - Other Match'
         END as duplicate_confidence,
         
-        -- Recommend keeping the most recent record
+        -- Recommend keeping the OLDER record (first contact)
         CASE 
-            WHEN l1.createddate_ts > l2.createddate_ts THEN l1.id
+            WHEN l1.createddate_ts < l2.createddate_ts THEN l1.id
             ELSE l2.id
         END as recommended_primary
         
