@@ -22,6 +22,7 @@ This directory contains advanced business intelligence templates and specialized
 - **[Business Intelligence Patterns](business-intelligence-patterns.md)** - Advanced analytics and reporting templates for executive insights
 - **[Sales Process Analysis](sales-process-analysis.md)** - Lead qualification and opportunity progression tracking with velocity metrics
 - **[Lead Status Audit](lead-status-audit.md)** - Customer classification and lead qualification accuracy validation
+- **[Comprehensive Pipeline Analysis](comprehensive-pipeline-analysis.md)** - Complete pipeline health assessment with velocity metrics and risk analysis
 
 ### Specialized Analysis
 
@@ -72,6 +73,15 @@ Historical Context → Current State Analysis → Trend Intelligence → Strateg
 - **Win/Loss Analysis**: Factors contributing to deal outcomes with historical context
 - **Territory Performance**: Geographic and account segmentation effectiveness
 - **Team Performance**: Individual and team productivity with trend analysis
+
+### Pipeline Health Monitoring
+
+**Comprehensive Pipeline Assessment**:
+
+- **Current State Analysis**: Real-time pipeline health with risk indicators
+- **Velocity Trends**: Historical sales cycle analysis and forecasting
+- **Risk Assessment**: Identification of stalled or at-risk opportunities
+- **Forecasting Models**: Predictive revenue modeling based on historical patterns
 
 ### Corporate Relationship Analysis
 
