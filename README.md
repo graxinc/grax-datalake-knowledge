@@ -44,6 +44,7 @@ The documentation is organized into six logical directories for intuitive naviga
 - **[Business Intelligence Patterns](./docs/analysis-patterns/business-intelligence-patterns.md)** - Advanced analytics and reporting templates
 - **[Sales Process Analysis](./docs/analysis-patterns/sales-process-analysis.md)** - Lead qualification and opportunity progression tracking
 - **[Lead Status Audit](./docs/analysis-patterns/lead-status-audit.md)** - Customer classification and lead qualification accuracy
+- **[Comprehensive Pipeline Analysis](./docs/analysis-patterns/comprehensive-pipeline-analysis.md)** - **NEW**: Complete pipeline health assessment with velocity metrics and risk analysis
 
 ### Data Quality Framework
 
@@ -76,6 +77,8 @@ For LLM models working with this data lake:
 
 1. **NEW**: Utilize [Data Quality Framework](./docs/data-quality/README.md) for comprehensive data quality assessment, scoring, and remediation strategies
 
+1. **NEW**: Use [Comprehensive Pipeline Analysis](./docs/analysis-patterns/comprehensive-pipeline-analysis.md) for complete pipeline health assessment with velocity metrics and risk analysis
+
 1. **Understand**: Review [Database Schema Guide](./docs/core-reference/database-schema-guide.md) for available data structures
 
 1. **Reference**: Use [Athena SQL Syntax Guide](./docs/query-guidance/athena-sql-syntax-guide.md) for proper query formation
@@ -93,6 +96,7 @@ For LLM models working with this data lake:
 - **Professional Presentation**: ALL GRAX reports must be delivered as polished HTML artifacts following brand standards using the mandatory HTML template
 - **Interactive Visualizations**: Include charts, graphs, and interactive elements in all reports unless explicitly requested otherwise
 - **Data Quality Focus**: Leverage the comprehensive data quality framework for analysis, scoring, and remediation across all Salesforce objects
+- **Pipeline Intelligence**: Use comprehensive pipeline analysis for complete health assessment, velocity tracking, and risk management
 - **Graceful Adaptation**: Use fallback strategies when customer configurations differ from defaults
 - All queries must filter deleted records using `grax__deleted IS NULL`
 - Use latest records pattern for current state analysis
@@ -137,6 +141,8 @@ The knowledge base is built with GRAX's default Salesforce configuration but can
 
 **Data Quality Standards**: Leverage the [Data Quality Framework](./docs/data-quality/README.md) for systematic data quality assessment and improvement across all Salesforce objects.
 
+**Pipeline Intelligence Standards**: Use [Comprehensive Pipeline Analysis](./docs/analysis-patterns/comprehensive-pipeline-analysis.md) for complete pipeline health assessment, velocity metrics, and risk analysis.
+
 ### Directory Structure Guidelines
 
 **Logical Organization**:
@@ -155,6 +161,8 @@ The knowledge base is built with GRAX's default Salesforce configuration but can
 
 **Data Quality Integration**: All new object implementations must include corresponding data quality framework components (analysis, scoring, remediation) following the standardized patterns established in the lead data quality implementation.
 
+**Pipeline Analysis Integration**: All sales-related implementations must integrate with comprehensive pipeline analysis patterns for complete pipeline health, velocity, and risk assessment.
+
 ## Contributing
 
 This knowledge base is designed for programmatic consumption by LLM models. All documentation follows strict markdown linting rules and is optimized for clarity and precision in automated query generation.
@@ -167,6 +175,7 @@ This knowledge base is designed for programmatic consumption by LLM models. All 
 1. **Maintain Links**: Ensure all cross-references use correct relative paths
 1. **Brand Compliance**: Verify any customer-facing content meets professional presentation standards
 1. **Data Quality Integration**: Include data quality framework components for any new object implementations
+1. **Pipeline Analysis Integration**: Include comprehensive pipeline analysis patterns for sales-related implementations
 
 ## Repository Contribution Guidelines
 
