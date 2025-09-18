@@ -4,7 +4,35 @@
 
 This document provides comprehensive data quality analysis patterns for lead records in the GRAX Data Lake. All analysis queries reference configuration values from [Configuration Reference](../../core-reference/configuration-reference.md) to ensure adaptability across different Salesforce implementations.
 
-**IMPORTANT**: All queries use Athena-compatible SQL patterns with proper latest record selection using window functions and filtering rather than QUALIFY syntax.
+**Lead-Specific Requirements**: This document contains lead-specific analysis patterns only. For general query syntax and best practices, see [Query Best Practices](../../query-guidance/query-best-practices.md) and [Athena SQL Syntax Guide](../../query-guidance/athena-sql-syntax-guide.md).
+
+## Lead-Specific Athena Syntax Requirements
+
+### Critical Lead Analysis Syntax
+
+**Window Functions for Median Calculations**: Use `APPROX_PERCENTILE` instead of `PERCENTILE_CONT` for lead analysis:
+
+```sql
+-- ❌ INCORRECT (Will fail in Athena):
+ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY days_in_status), 1) as median_days
+
+-- ✅ CORRECT (Athena-compatible):
+ROUND(APPROX_PERCENTILE(days_in_status, 0.5), 1) as median_days
+```
+
+**Lead Status Values**: Always reference Configuration Reference values:
+
+```sql
+-- Lead status filtering using Configuration Reference values
+WHERE current_status IN ('Open', 'Working')  -- MCL and MQL statuses
+```
+
+**Lead Date Calculations**: Use proper Athena date syntax for lead progression analysis:
+
+```sql
+-- Time in current status calculation
+DATE_DIFF('day', lastmodifieddate_ts, CURRENT_DATE) as days_in_current_status
+```
 
 ## Lead Record Foundation Analysis
 
@@ -165,6 +193,8 @@ This analysis tracks the complete status progression history for leads that are 
 
 **Business Value**: Identifies leads stuck in qualification stages, measures progression velocity, and reveals process inefficiencies that impact conversion rates.
 
+**Lead-Specific Pattern**: Uses simplified aggregation without problematic PERCENTILE_CONT syntax.
+
 ```sql
 WITH all_lead_history AS (
     SELECT 
@@ -231,9 +261,6 @@ current_status_duration AS (
     GROUP BY c.lead_id, c.current_status
 )
 SELECT 
-    -- Lead Status Progression Summary
-    'Lead Status Progression Summary for Open Leads' as analysis_type,
-    
     -- Current status distribution
     COUNT(DISTINCT csd.lead_id) as total_open_leads,
     COUNT(DISTINCT CASE WHEN csd.current_status = 'Open' THEN csd.lead_id END) as mcl_leads,
@@ -243,9 +270,9 @@ SELECT
     COUNT(DISTINCT CASE WHEN sp.progression_direction = 'Forward' THEN sp.lead_id END) as leads_with_forward_progression,
     COUNT(DISTINCT CASE WHEN sp.progression_direction = 'Backward' THEN sp.lead_id END) as leads_with_regression,
     
-    -- Time in status analysis
+    -- Time in status analysis (using APPROX_PERCENTILE for Athena compatibility)
     ROUND(AVG(csd.days_in_current_status), 1) as avg_days_in_current_status,
-    ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY csd.days_in_current_status), 1) as median_days_in_current_status,
+    ROUND(APPROX_PERCENTILE(csd.days_in_current_status, 0.5), 1) as median_days_in_current_status,
     
     -- Long-stale lead identification (using industry best practice thresholds)
     COUNT(CASE WHEN csd.current_status = 'Open' AND csd.days_in_current_status > 30 THEN 1 END) as stale_mcl_leads_30_days,
@@ -259,23 +286,68 @@ SELECT
               
 FROM current_status_duration csd
 LEFT JOIN status_progressions sp ON csd.lead_id = sp.lead_id
+```
 
-UNION ALL
+### Lead Status Progression Patterns Detail
 
--- Detailed progression patterns
+For detailed progression pattern analysis, use this separate query to avoid complex UNION with different column structures:
+
+```sql
+WITH all_lead_history AS (
+    SELECT 
+        id as lead_id,
+        status,
+        createddate_ts,
+        lastmodifieddate_ts,
+        grax__idseq,
+        LAG(status) OVER (PARTITION BY id ORDER BY grax__idseq) as previous_status,
+        LAG(lastmodifieddate_ts) OVER (PARTITION BY id ORDER BY grax__idseq) as previous_modified_date
+    FROM lakehouse.object_lead
+    WHERE grax__deleted IS NULL
+),
+current_lead_status AS (
+    SELECT 
+        lead_id,
+        status as current_status,
+        ROW_NUMBER() OVER (PARTITION BY lead_id ORDER BY grax__idseq DESC) as row_num
+    FROM all_lead_history
+),
+current_open_leads AS (
+    SELECT lead_id, current_status
+    FROM current_lead_status 
+    WHERE row_num = 1 
+      AND current_status IN ('Open', 'Working')
+),
+status_progressions AS (
+    SELECT 
+        h.lead_id,
+        h.status,
+        h.previous_status,
+        CASE 
+            WHEN h.previous_status IS NOT NULL AND h.previous_modified_date IS NOT NULL 
+            THEN DATE_DIFF('day', h.previous_modified_date, h.lastmodifieddate_ts)
+            ELSE NULL
+        END as days_in_previous_status,
+        CASE 
+            WHEN h.previous_status = 'Open' AND h.status = 'Working' THEN 'Forward'
+            WHEN h.previous_status = 'Working' AND h.status = 'Open' THEN 'Backward'
+            WHEN h.previous_status IS NULL THEN 'Initial'
+            ELSE 'Other'
+        END as progression_direction
+    FROM all_lead_history h
+    INNER JOIN current_open_leads c ON h.lead_id = c.lead_id
+    WHERE h.previous_status IS NOT NULL AND h.previous_modified_date IS NOT NULL
+)
 SELECT 
-    'Status Progression Patterns' as analysis_type,
     progression_direction,
     COUNT(*) as progression_count,
     COUNT(DISTINCT lead_id) as unique_leads,
     ROUND(AVG(days_in_previous_status), 1) as avg_days_in_previous_status,
-    ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY days_in_previous_status), 1) as median_days_in_previous_status,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+    ROUND(APPROX_PERCENTILE(days_in_previous_status, 0.5), 1) as median_days_in_previous_status
 FROM status_progressions
 WHERE days_in_previous_status IS NOT NULL
 GROUP BY progression_direction
-
-ORDER BY analysis_type, progression_direction
+ORDER BY progression_direction
 ```
 
 ### Lead Velocity Analysis by Segmentation
@@ -318,7 +390,7 @@ segment_velocity AS (
         industry,
         COUNT(*) as lead_count,
         ROUND(AVG(DATE_DIFF('day', lastmodifieddate_ts, CURRENT_DATE)), 1) as avg_days_in_status,
-        ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY DATE_DIFF('day', lastmodifieddate_ts, CURRENT_DATE)), 1) as median_days_in_status,
+        ROUND(APPROX_PERCENTILE(DATE_DIFF('day', lastmodifieddate_ts, CURRENT_DATE), 0.5), 1) as median_days_in_status,
         -- Industry best practice benchmarks
         COUNT(CASE WHEN status = 'Open' AND DATE_DIFF('day', lastmodifieddate_ts, CURRENT_DATE) > 30 THEN 1 END) as leads_exceeding_mcl_sla,
         COUNT(CASE WHEN status = 'Working' AND DATE_DIFF('day', lastmodifieddate_ts, CURRENT_DATE) > 14 THEN 1 END) as leads_exceeding_mql_sla
@@ -414,6 +486,45 @@ WHERE total_leads >= 10  -- Only analyze sources with meaningful volume
 ORDER BY overall_conversion_rate DESC, total_leads DESC
 ```
 
+## Lead-Specific Best Practices
+
+### Lead Analysis Query Patterns
+
+**Always Filter for Latest Records First**:
+
+```sql
+WITH latest_leads AS (
+    SELECT 
+        *,
+        ROW_NUMBER() OVER (PARTITION BY id ORDER BY grax__idseq DESC) as row_num
+    FROM lakehouse.object_lead
+    WHERE grax__deleted IS NULL
+),
+current_leads AS (
+    SELECT * FROM latest_leads WHERE row_num = 1
+)
+-- Continue with analysis
+```
+
+**Lead Status Progression Logic**:
+
+```sql
+-- Track status changes chronologically
+LAG(status) OVER (PARTITION BY id ORDER BY grax__idseq) as previous_status,
+LAG(lastmodifieddate_ts) OVER (PARTITION BY id ORDER BY grax__idseq) as previous_modified_date
+```
+
+**Lead Segmentation Using Configuration Values**:
+
+```sql
+-- Company segmentation using thresholds from Configuration Reference
+CASE 
+    WHEN numberofemployees_f > 250 OR annualrevenue_f > 100000000 THEN 'Enterprise'
+    WHEN numberofemployees_f > 50 OR annualrevenue_f > 10000000 THEN 'SMB'
+    ELSE 'Self Service'
+END as company_segment
+```
+
 ## Industry Best Practice Benchmarks
 
 ### Lead Status SLA Standards
@@ -444,4 +555,13 @@ ORDER BY overall_conversion_rate DESC, total_leads DESC
 - **MQL Progression**: 5-14 days average time from Working to Conversion
 - **Total Lead Lifecycle**: 30-60 days from creation to conversion
 
-This comprehensive lead data quality analysis framework provides customers with detailed insights into their lead data integrity, status progression efficiency, and performance benchmarking against industry standards. All patterns use Athena-compatible SQL syntax and integrate with the established Configuration Reference for adaptability across different Salesforce implementations.
+## Configuration Adaptation
+
+For organizations with different Salesforce implementations, update the [Configuration Reference](../../core-reference/configuration-reference.md) document with your specific values:
+
+- **Lead Status Values**: Update `'Open'`, `'Working'`, etc. to match your lead qualification stages
+- **Segmentation Thresholds**: Modify employee count and revenue thresholds for company sizing
+- **SLA Timeframes**: Adjust day thresholds based on your business requirements
+- **Industry Benchmarks**: Customize quality rating thresholds for your market
+
+This comprehensive lead data quality analysis framework provides detailed insights into lead data integrity, status progression efficiency, and performance benchmarking against industry standards while maintaining full Athena compatibility and avoiding problematic SQL syntax patterns.
