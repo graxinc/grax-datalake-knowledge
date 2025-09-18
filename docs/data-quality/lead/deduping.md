@@ -421,12 +421,6 @@ WITH exact_email_duplicates AS (
 )
 ```
 
-**Sample Results**:
-
-- **Prajwal Kumar** (prajwal.kumar@kone.com) appears as both lead and contact at Kone
-- **Christian Cordova** (christian.cordova@lashgroup.com) exists in both objects at AmerisourceBergen
-- **Alexander Furzeman** (afurzeman@deloitte.com.invalid) duplicated across Ethias records
-
 ### High Confidence (80-94%) - Domain + Name Similarity
 
 ```sql
